@@ -161,7 +161,7 @@ fun SignInScreen(navController: NavHostController) {
             },
             modifier = Modifier
                 .fillMaxWidth(0.9f)
-                .padding(start = 32.dp, end = 32.dp, top = 8.dp),
+                .padding(top = 8.dp),
             border = BorderStroke(1.dp, colorResource(id = R.color.purple_500)),
             colors = ButtonDefaults.buttonColors(
                 containerColor = colorResource(id = R.color.purple_500),
