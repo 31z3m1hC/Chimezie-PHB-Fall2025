@@ -11,7 +11,7 @@ import androidx.compose.material3.Text
 fun AppNavigation() {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "signup") {
-        composable("signup") { SignUpScreen(navController) }
+        composable("sign-up") { SignUpScreen(navController) }
         composable("sign-in") { Text("Sign In Screen") }
         composable("home") { Text("Home Screen") }
         composable("welcome") { Text("Welcome Screen") }
