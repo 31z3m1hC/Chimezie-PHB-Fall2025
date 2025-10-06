@@ -24,7 +24,7 @@ fun performSignUp(
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     Log.d("SignUp", "createUserWithEmail:success")
-                    navController.navigate("home")
+                    navController.navigate("sign-in")
                 } else {
                     Log.w("SignUp", "createUserWithEmail:failure", task.exception)
                 }
