@@ -1,11 +1,16 @@
 package com.unh.personal_health_buddy.screens
 
+import android.content.Intent
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
@@ -15,9 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -27,16 +30,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.FirebaseAuth
 import com.unh.personal_health_buddy.R
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import androidx.compose.runtime.Composable
-import androidx.navigation.compose.rememberNavController
-
 
 @Composable
-fun SignInScreen(navController: NavHostController) {
+fun SignInScreen(
+    navController: NavHostController,
+    googleSignInClient: GoogleSignInClient?,
+    launcher: ManagedActivityResultLauncher<Intent, ActivityResult>?
+) {
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -44,7 +49,6 @@ fun SignInScreen(navController: NavHostController) {
 
     val coroutineScope = rememberCoroutineScope()
     val auth = FirebaseAuth.getInstance()
-    val focusManager = LocalFocusManager.current
 
     Column(
         modifier = Modifier
@@ -62,7 +66,7 @@ fun SignInScreen(navController: NavHostController) {
         ) {
             IconButton(onClick = { navController.navigate("welcome") }) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    imageVector = Icons.Filled.ArrowBackIosNew,
                     contentDescription = "Back to Welcome"
                 )
             }
@@ -142,20 +146,25 @@ fun SignInScreen(navController: NavHostController) {
             )
         }
 
-        // Sign In button
+        // Sign In button (Email/Password)
         Button(
             onClick = {
                 coroutineScope.launch {
+                    if (email.value.isBlank() || password.value.isBlank()) {
+                        signInMessage.value = "Please enter both email and password."
+                        return@launch
+                    }
                     try {
                         auth.signInWithEmailAndPassword(email.value, password.value).await()
                         signInMessage.value = "Sign in successful! Welcome back."
                         email.value = ""
                         password.value = ""
                         passwordVisible = false
-                        // Navigate to home/dashboard
-                        navController.navigate("home")
+                        navController.navigate("home") {
+                            popUpTo("sign-in") { inclusive = true }
+                        }
                     } catch (e: Exception) {
-                        signInMessage.value = "Sign in failed: ${e.localizedMessage}"
+                        signInMessage.value = e.message ?: "Sign in failed. Please try again."
                     }
                 }
             },
@@ -171,6 +180,28 @@ fun SignInScreen(navController: NavHostController) {
             Text(text = "Sign In")
         }
 
+        // OR separator
+        Spacer(modifier = Modifier.height(24.dp))
+        Text("OR", style = MaterialTheme.typography.bodyMedium)
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Google Sign-In button — only launches; navigation handled in MainActivity
+        OutlinedButton(
+            onClick = {
+                val intent = googleSignInClient?.signInIntent
+                if (intent != null && launcher != null) {
+                    launcher.launch(intent)
+                } else {
+                    signInMessage.value = "Google Sign-In is unavailable right now."
+                }
+            },
+            modifier = Modifier.fillMaxWidth(0.9f),
+            border = BorderStroke(1.dp, colorResource(id = R.color.teal_700)),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = colorResource(id = R.color.teal_700))
+        ) {
+            Text("Sign in with Google")
+        }
+
         // Don't have an account? Sign up
         Row(
             modifier = Modifier
@@ -178,7 +209,7 @@ fun SignInScreen(navController: NavHostController) {
                 .padding(top = 16.dp),
             horizontalArrangement = Arrangement.Center
         ) {
-            Text(text = "Don't have any account? ")
+            Text(text = "Don't have an account? ")
             Text(
                 text = "Sign up",
                 color = colorResource(id = R.color.teal_700),
@@ -188,11 +219,9 @@ fun SignInScreen(navController: NavHostController) {
     }
 }
 
-
-
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun SignInScreenPreview() {
     val navController = rememberNavController()
-    SignInScreen(navController = navController)
+    SignInScreen(navController = navController, googleSignInClient = null, launcher = null)
 }
