@@ -11,6 +11,9 @@ import androidx.navigation.NavController
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
+import com.unh.personal_health_buddy.BuildConfig
+
+
 
 fun performSignUp(
     email: String,
@@ -107,15 +110,15 @@ fun isValidEmail(email: String): Boolean =
 fun isValidPassword(password: String): Boolean =
     password.length >= 6
 
-
-fun performGoogleAuthentication(launcher: ManagedActivityResultLauncher<Intent, Instrumentation.ActivityResult>, context: Context){
-    val token = "72921513891-le6qo3tvndfvkmltlu2adhst3ph1899f.apps.googleusercontent.com.googleusercontent.com"
+fun performGoogleAuthentication(
+    launcher: ManagedActivityResultLauncher<Intent, Instrumentation.ActivityResult>,
+    context: Context
+) {
+    val token = BuildConfig.GOOGLE_CLIENT_ID  // <- correct BuildConfig
     val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
         .requestIdToken(token)
         .requestEmail()
         .build()
     val googleSignInClient = GoogleSignIn.getClient(context, gso)
     launcher.launch(googleSignInClient.signInIntent)
-
-
 }

@@ -89,3 +89,44 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
+
+# Gradle files
+.gradle/
+build/
+*/build/
+
+# Local configuration
+local.properties
+.idea/
+*.iml
+*.hprof
+
+# Kotlin/Java
+*.class
+*.log
+
+# Android Studio
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.ap_
+*.aab
+
+# IntelliJ
+*.iws
+*.ipr
+*.iml
+out/
+
+# Firebase / API keys
+google-services.json
+
+# Mac OS
+.DS_Store
+
+# Logs
+*.log
+
+# ProGuard
+proguard/

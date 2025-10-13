@@ -1,11 +1,8 @@
-import org.gradle.kotlin.dsl.implementation
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
-
 }
 
 android {
@@ -20,6 +17,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Read GOOGLE_CLIENT_ID from gradle.properties
+        val googleClientId: String = project.findProperty("GOOGLE_CLIENT_ID") as? String
+            ?: throw GradleException("GOOGLE_CLIENT_ID is missing! Add it to gradle.properties file.")
+
+        buildConfigField("String", "GOOGLE_CLIENT_ID", "\"$googleClientId\"")
     }
 
     buildTypes {
@@ -31,20 +34,23 @@ android {
             )
         }
     }
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
+
     kotlinOptions {
-        jvmTarget = "21"
+        jvmTarget = "17"
     }
+
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -57,6 +63,7 @@ dependencies {
     implementation(libs.ui.graphics)
     implementation(libs.material3)
     implementation(libs.androidx.foundation)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -64,14 +71,13 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    // Import the Firebase BoM
+
+    // Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:34.3.0"))
-    // When using the BoM, don't specify versions in Firebase dependencies
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth-ktx:23.2.1")
+
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
-
-
 
     val nav_version = "2.9.5"
     implementation("androidx.navigation:navigation-compose:$nav_version")
@@ -80,8 +86,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
     implementation("com.google.android.gms:play-services-auth:21.0.0")
 
-    implementation ("androidx.compose.material:material:1.5.4")
-    implementation ("androidx.navigation:navigation-compose:2.7.6")
-
+    implementation("androidx.compose.material:material:1.5.4")
+    implementation("androidx.navigation:navigation-compose:2.7.6")
 }
-
