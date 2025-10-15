@@ -1,66 +1,41 @@
 package com.unh.personal_health_buddy.screens
 
+import android.R.attr.text
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-
-data class NavigationItem(
-    val route: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector,
-    val title: String
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmergencyContactScreen(navController: NavHostController) {
-    val items = listOf(
-        NavigationItem("home", Icons.Filled.Home, "Home"),
-        NavigationItem("map", Icons.Filled.Map, "Map"),
-        NavigationItem("notification", Icons.Filled.Notifications, "Notification"),
-        NavigationItem("profile", Icons.Filled.Person, "Profile"),
-        NavigationItem("emergency-contacts", Icons.Filled.Call, "Emergency")
-    )
-
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("") })
-        },
-        bottomBar = {
-            NavigationBar(containerColor = Color.White) {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Emergency Contacts",
 
-                items.forEach { item ->
-                    NavigationBarItem(
-                        icon = { Icon(item.icon, contentDescription = item.title) },
-                        label = { Text(item.title) },
-                        selected = currentRoute == item.route,
-                        onClick = {
-                            if (currentRoute != item.route) {
-                                navController.navigate(item.route) {
-                                    popUpTo("home") { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        }
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 16.dp),
+                        textAlign = TextAlign.Center
                     )
                 }
-            }
+            )
         }
     ) { padding ->
         EmergencyContactsDisplayScreen(
@@ -75,7 +50,7 @@ fun EmergencyContactScreen(navController: NavHostController) {
 fun EmergencyContactsDisplayScreen(modifier: Modifier = Modifier) {
     val contacts = listOf(
         "Nabin Bamma" to "(555) 123-4567",
-        "Rajesh Kumar" to "(555) 987-6543",
+        "Raj Lama" to "(555) 987-6543",
         "Chimezie Onwuegbuchulem" to "(555) 246-8101"
     )
 
@@ -86,11 +61,9 @@ fun EmergencyContactsDisplayScreen(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.Start
     ) {
         Text(
-            text = "In case of emergency, contact:",
+            text = "",
             style = MaterialTheme.typography.titleMedium,
-
             modifier = Modifier.padding(bottom = 16.dp)
-
         )
 
         contacts.forEach { (name, number) ->

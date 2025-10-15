@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -61,21 +62,26 @@ class MainActivity : ComponentActivity() {
                         Log.e("MainActivity", "Authentication failed: ${it.message}", it)
                     }
                 )
+
                 val auth = FirebaseAuth.getInstance()
-                val startDestination = if (auth.currentUser != null) "sign-in" else "home"
-                Log.d("Auth", "Start destination: $startDestination")
+                val startDestination = if (auth.currentUser != null) "home" else "sign-in"
 
-
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    bottomBar = {
+                        val navBackStackEntry by navController.currentBackStackEntryAsState()
+                        val currentRoute = navBackStackEntry?.destination?.route
+                        if (currentRoute !in listOf("sign-in", "sign-up", "reset-password", "welcome")) {
+                            BottomBar(navController = navController)
+                        }
+                    }
+                ) { innerPadding ->
                     NavHost(
                         navController = navController,
                         startDestination = startDestination,
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        composable("welcome") {
-                            WelcomeScreen(navController)
-                        }
+                        composable("welcome") { WelcomeScreen(navController) }
                         composable("sign-up") {
                             SignUpScreen(
                                 navController = navController,
@@ -90,21 +96,19 @@ class MainActivity : ComponentActivity() {
                                 launcher = launcher
                             )
                         }
-                        composable("home") {
-                            HomeScreen(navController = navController)
-                        }
-                        composable("reset-password") {
-                            ResetPasswordScreen(navController = navController)
-                        }
-                        composable("emergency-contacts") {
-                            EmergencyContactScreen(navController = navController)
-                        }
+                        composable("home") { HomeScreen(navController) }
+                        composable("reset-password") { ResetPasswordScreen(navController) }
+                        composable("emergency-contacts") { EmergencyContactScreen(navController) }
+                        composable("map") { MapScreen(navController) }
+                        composable("notification") { NotificationScreen(navController) }
+                        composable("profile") { ProfileScreen(navController) }
                     }
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
@@ -116,27 +120,27 @@ fun HomeScreen(navController: NavHostController) {
         horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
     ) {
         Text(
-            text = "🏠 Home Screen",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 30.dp)
+            text = "Home Screen",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
 
         // Button that navigates to Emergency Contact screen
-        Button(
-            onClick = { navController.navigate("emergency-contacts") },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
-        ) {
-            Icon(
-                imageVector = Icons.Default.Call,
-                contentDescription = "Emergency Contacts",
-                tint = Color.White
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Go to Emergency Contacts",
-                color = Color.White
-            )
-        }
+//        Button(
+//            onClick = { navController.navigate("") },
+//            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
+//        ) {
+//            Icon(
+//                imageVector = Icons.Default.Call,
+//                contentDescription = "Emergency Contacts",
+//                tint = Color.White
+//            )
+//            Spacer(modifier = Modifier.width(8.dp))
+//            Text(
+//                text = "Go to Emergency Contacts",
+//                color = Color.White
+//            )
+//        }
     }
 }
 
@@ -179,5 +183,27 @@ fun rememberFirebaseAuthLauncher(
         } catch (e: ApiException) {
             onAuthError(e)
         }
+    }
+}
+
+
+@Composable
+fun MapScreen(navController: NavHostController) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text("Map Screen")
+    }
+}
+
+@Composable
+fun NotificationScreen(navController: NavHostController) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text("Notification Screen")
+    }
+}
+
+@Composable
+fun ProfileScreen(navController: NavHostController) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text("Profile Screen")
     }
 }
