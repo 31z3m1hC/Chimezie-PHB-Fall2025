@@ -197,14 +197,27 @@ fun SignUpScreen(
                         val signInMethods = result.signInMethods
                         if (!signInMethods.isNullOrEmpty()) {
                             registrationMessage.value = "Account already exists. Please sign in."
+                            navController.navigate("sign-in") {
+                                popUpTo("sign-up") { inclusive = true }
+                            }
                         } else {
                             auth.createUserWithEmailAndPassword(email.value, password.value).await()
-                            registrationMessage.value = "Registration successful! Welcome ${email.value}"
+                            registrationMessage.value = "Registration successful! Redirecting to Sign In..."
+
+                            // Clear fields
                             username.value = ""
                             email.value = ""
                             password.value = ""
                             isChecked = false
                             passwordVisible = false
+
+                            // Delay briefly before navigating
+                            kotlinx.coroutines.delay(1500)
+
+                            // Navigate to sign-in screen automatically
+                            navController.navigate("sign-in") {
+                                popUpTo("sign-up") { inclusive = true }
+                            }
                         }
                     } catch (e: Exception) {
                         registrationMessage.value = "Registration failed: ${e.localizedMessage}"
@@ -213,7 +226,7 @@ fun SignUpScreen(
             },
             modifier = Modifier
                 .fillMaxWidth(0.9f)
-                .padding( top = 8.dp),
+                .padding(top = 8.dp),
             border = BorderStroke(1.dp, colorResource(id = R.color.purple_500)),
             colors = ButtonDefaults.buttonColors(
                 containerColor = colorResource(id = R.color.purple_500),

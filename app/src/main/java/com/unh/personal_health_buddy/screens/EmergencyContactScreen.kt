@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.unh.personal_health_buddy.BottomBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,7 +29,6 @@ fun EmergencyContactScreen(navController: NavHostController) {
                 title = {
                     Text(
                         text = "Emergency Contacts",
-
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(end = 16.dp),
@@ -36,6 +36,9 @@ fun EmergencyContactScreen(navController: NavHostController) {
                     )
                 }
             )
+        },
+        bottomBar = {
+            BottomBar(navController = navController)
         }
     ) { padding ->
         EmergencyContactsDisplayScreen(
