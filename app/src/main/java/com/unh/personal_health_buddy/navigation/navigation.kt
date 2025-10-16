@@ -19,7 +19,7 @@ fun AppNavigation(
     launcher: ManagedActivityResultLauncher<Intent, ActivityResult>
 ) {
     val auth = FirebaseAuth.getInstance()
-    val startDestination = if (auth.currentUser != null) "emergency-contacts" else "sign-in"
+    val startDestination = if (auth.currentUser != null) "sign-in" else "emergency-contacts"
 
     NavHost(
         navController = navController,
@@ -27,7 +27,14 @@ fun AppNavigation(
     ) {
         composable("welcome") { WelcomeScreen(navController) }
         composable ("home") { HomeScreen(navController) }
-        composable("sign-in") { SignInScreen(navController, googleSignInClient, launcher) }
+        composable("sign-in") {
+            SignInScreen(
+                navController = navController,
+                googleSignInClient = googleSignInClient,
+                launcher = launcher,
+                context = navController.context
+            )
+        }
         composable("sign-up") { SignUpScreen(navController, googleSignInClient, launcher) }
         composable("reset-password") { ResetPasswordScreen(navController) }
         composable("main") { MainScreen(navController) }

@@ -1,13 +1,11 @@
 package com.unh.personal_health_buddy.screens
 
 import android.content.Intent
-import androidx.activity.result.ActivityResult
 import androidx.activity.compose.ManagedActivityResultLauncher
-import androidx.compose.foundation.BorderStroke
+import androidx.activity.result.ActivityResult
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
@@ -19,24 +17,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.firebase.auth.FirebaseAuth
 import com.unh.personal_health_buddy.R
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import com.unh.personal_health_buddy.firebase.performGoogleAuthentication
+import com.unh.personal_health_buddy.firebase.performSignIn
 
 @Composable
 fun GoogleSignInScreen(
@@ -44,14 +34,13 @@ fun GoogleSignInScreen(
     googleSignInClient: GoogleSignInClient?,
     launcher: ManagedActivityResultLauncher<Intent, ActivityResult>?
 ) {
+    val context = LocalContext.current
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
+    val emailErrorState = remember { mutableStateOf(false) }
+    val passwordErrorState = remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
     val signInMessage = remember { mutableStateOf("") }
-
-    val coroutineScope = rememberCoroutineScope()
-    val auth = FirebaseAuth.getInstance()
-    val focusManager = LocalFocusManager.current
 
     Column(
         modifier = Modifier
@@ -60,7 +49,6 @@ fun GoogleSignInScreen(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Back button
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -68,180 +56,112 @@ fun GoogleSignInScreen(
             contentAlignment = Alignment.TopStart
         ) {
             IconButton(onClick = { navController.navigate("welcome") }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back to Welcome"
-                )
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
             }
         }
 
-        // Title
         Text(
             text = "Sign In",
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 30.dp, top = 16.dp)
         )
 
-        // Email field
         OutlinedTextField(
             value = email.value,
             onValueChange = { email.value = it },
-            label = { Text("Enter your email") },
+            isError = emailErrorState.value,
+            label = { Text("Email") },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next
-            ),
-            modifier = Modifier
-                .padding(bottom = 16.dp)
-                .fillMaxWidth(0.9f)
+            modifier = Modifier.fillMaxWidth(0.9f)
         )
 
-        // Password field
         OutlinedTextField(
             value = password.value,
             onValueChange = { password.value = it },
-            label = { Text("Enter your password") },
+            isError = passwordErrorState.value,
+            label = { Text("Password") },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
             trailingIcon = {
-                val image = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                val icon =
+                    if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(imageVector = image, contentDescription = "Toggle Password Visibility")
+                    Icon(imageVector = icon, contentDescription = "Toggle Password")
                 }
             },
             singleLine = true,
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done
-            ),
-            modifier = Modifier
-                .padding(bottom = 8.dp)
-                .fillMaxWidth(0.9f)
+            modifier = Modifier.fillMaxWidth(0.9f)
         )
 
-        // Forgot password link
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .padding(bottom = 16.dp),
-            horizontalArrangement = Arrangement.End
-        ) {
-            Text(
-                text = "Forgot password?",
-                color = colorResource(id = R.color.teal_700),
-                modifier = Modifier.clickable {
-                    navController.navigate("reset-password")
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                performSignIn(
+                    email.value,
+                    password.value,
+                    emailErrorState,
+                    passwordErrorState,
+                    context,
+                    navController
+                )
+            },
+            modifier = Modifier.fillMaxWidth(0.9f)
+        ) { Text("Sign In") }
+
+        Spacer(modifier = Modifier.height(24.dp))
+        Text("OR")
+        Spacer(modifier = Modifier.height(24.dp))
+
+        OutlinedButton(
+            onClick = {
+                if (googleSignInClient != null && launcher != null) {
+                    performGoogleAuthentication(
+                        launcher,
+                        context,
+                        context.getString(R.string.default_web_client_id)
+                    )
+                } else {
+                    signInMessage.value = "Google Sign-In unavailable"
                 }
-            )
+            },
+            modifier = Modifier.fillMaxWidth(0.9f)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.google),
+                    contentDescription = "Google Logo",
+                    modifier = Modifier.size(40.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = "Sign in with Google")
+            }
         }
 
-        // Error / success message
         if (signInMessage.value.isNotEmpty()) {
             Text(
                 text = signInMessage.value,
                 color = if (signInMessage.value.contains("successful")) Color.Green else Color.Red,
-                modifier = Modifier
-                    .padding(start = 32.dp, top = 4.dp, bottom = 8.dp)
-                    .fillMaxWidth(0.9f),
-                textAlign = TextAlign.Start
+                modifier = Modifier.padding(top = 8.dp)
             )
         }
 
-        // Sign In button
-        Button(
-            onClick = {
-                coroutineScope.launch {
-                    try {
-                        auth.signInWithEmailAndPassword(email.value, password.value).await()
-                        signInMessage.value = "Sign in successful! Welcome back."
-                        email.value = ""
-                        password.value = ""
-                        passwordVisible = false
-                        navController.navigate("home") {
-                            popUpTo("sign-in") { inclusive = true }
-                        }
-                    } catch (e: Exception) {
-                        signInMessage.value = "Sign in failed: ${e.localizedMessage}"
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .padding(top = 8.dp),
-            border = BorderStroke(1.dp, colorResource(id = R.color.purple_500)),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = colorResource(id = R.color.purple_500),
-                contentColor = Color.White
-            )
-        ) {
-            Text(text = "Sign In")
-        }
-
-        // Spacer before Google Sign-In
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Google Sign-In row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .clickable {
-                    val intent = googleSignInClient?.signInIntent
-                    if (intent != null) {
-                        launcher?.launch(intent)
-                    } else {
-                        signInMessage.value = "Google Sign-In failed: Google Sign-In client is null"
-                    }
-                }
-                .padding(vertical = 12.dp)
-                .align(Alignment.Start),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-
-            Image(
-                painter = painterResource(id = R.drawable.google),
-                contentDescription = "App Logo",
-                modifier = Modifier
-                    .size(60.dp)
-                    .padding( top = 2.dp, bottom = 8.dp)
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                fontSize = 16.sp,
-                text = "Sign in with Google",
-                color = colorResource(id = R.color.teal_700),
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-
-        // Don't have an account? Sign up
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp),
             horizontalArrangement = Arrangement.Center
         ) {
-            Text(text = "Don't have any account? ")
+            Text(text = "Don't have an account? ")
             Text(
                 text = "Sign up",
-                color = colorResource(id = R.color.teal_700),
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.clickable { navController.navigate("sign-up") }
             )
         }
     }
-}
-
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun GoogleSignInScreenPreview() {
-    val navController = rememberNavController()
-    SignInScreen(
-        navController = navController,
-        googleSignInClient = null,
-        launcher = null
-    )
 }

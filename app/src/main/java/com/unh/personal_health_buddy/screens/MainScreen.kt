@@ -42,7 +42,7 @@ private val bottomNavItems = listOf(
 )
 
 @Composable
-fun MainScreen(navController: NavHostController, startDestination: String = "home") {
+fun MainScreen(navController: NavHostController, startDestination: String = "sign-in") {
     Scaffold(
         bottomBar = { BottomBar(navController) }
     ) { padding ->

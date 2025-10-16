@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -30,7 +31,7 @@ fun performSignUp(
     password: String,
     emailErrorState: MutableState<Boolean>,
     passwordErrorState: MutableState<Boolean>,
-    navController: androidx.navigation.NavController
+    navController: NavController
 ) {
     val isEmailValid = isValidEmail(email)
     val isPasswordValid = isValidPassword(password)
@@ -57,25 +58,35 @@ fun performSignIn(
     password: String,
     emailErrorState: MutableState<Boolean>,
     passwordErrorState: MutableState<Boolean>,
-    navController: androidx.navigation.NavController
+    context: Context,
+    navController: NavHostController
 ) {
-    val isEmailValid = isValidEmail(email)
-    val isPasswordValid = isValidPassword(password)
-    emailErrorState.value = !isEmailValid
-    passwordErrorState.value = !isPasswordValid
-
-    if (isEmailValid && isPasswordValid) {
-        FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.d("SignIn", "User signed in")
-                    navController.navigate("home")
-                } else {
-                    Log.w("SignIn", "Sign in failed", task.exception)
-                }
-            }
-            .addOnFailureListener { e -> Log.e("SignIn", "Exception: ", e) }
+    if (email.isBlank()) {
+        emailErrorState.value = true
+        return
     }
+    if (password.isBlank()) {
+        passwordErrorState.value = true
+        return
+    }
+
+    val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
+    auth.signInWithEmailAndPassword(email, password)
+        .addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                navController.navigate("home") {
+                    popUpTo("sign-in") { inclusive = true }
+                }
+            } else {
+                emailErrorState.value = true
+                passwordErrorState.value = true
+                android.widget.Toast.makeText(
+                    context,
+                    task.exception?.localizedMessage ?: "Sign-in failed",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
+        }
 }
 
 fun performResetPassword(email: String, emailErrorState: MutableState<Boolean>) {
@@ -91,7 +102,7 @@ fun performResetPassword(email: String, emailErrorState: MutableState<Boolean>) 
     }
 }
 
-fun performLogOut(navController: androidx.navigation.NavController) {
+fun performLogOut(navController: NavController) {
     FirebaseAuth.getInstance().signOut()
     Log.d("LogOut", "User signed out")
     navController.navigate("sign-in")
@@ -103,7 +114,7 @@ fun isValidPassword(password: String): Boolean = password.length >= 6
 
 
 fun performGoogleAuthentication(
-    launcher: ManagedActivityResultLauncher<Intent, Instrumentation.ActivityResult>,
+    launcher: ManagedActivityResultLauncher<Intent, ActivityResult>,
     context: Context,
     googleClientId: String
 ) {

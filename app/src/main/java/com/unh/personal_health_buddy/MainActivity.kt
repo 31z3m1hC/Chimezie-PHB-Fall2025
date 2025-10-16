@@ -17,10 +17,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val navController = rememberNavController()
-
             Personal_health_buddyTheme {
                 SetupAuthentication(navController, this)
-                navController.navigate("emergency-contacts")
             }
         }
     }
