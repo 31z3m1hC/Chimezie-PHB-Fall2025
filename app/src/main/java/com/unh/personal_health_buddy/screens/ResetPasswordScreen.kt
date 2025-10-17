@@ -5,8 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.*
@@ -23,17 +21,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.auth.FirebaseAuth
 import com.unh.personal_health_buddy.R
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import com.unh.personal_health_buddy.firebase.performResetPassword
 
 @Composable
 fun ResetPasswordScreen(navController: NavHostController) {
     val email = remember { mutableStateOf("") }
+    val emailErrorState = remember { mutableStateOf(false) }
     val resetMessage = remember { mutableStateOf("") }
-    val coroutineScope = rememberCoroutineScope()
-    val auth = FirebaseAuth.getInstance()
     val focusManager = LocalFocusManager.current
 
     Column(
@@ -43,7 +38,7 @@ fun ResetPasswordScreen(navController: NavHostController) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Back button
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -62,19 +57,22 @@ fun ResetPasswordScreen(navController: NavHostController) {
             }
         }
 
-        // Title
         Text(
             text = "Reset Password",
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 30.dp, top = 16.dp)
         )
 
-        // Email field
+
         OutlinedTextField(
             value = email.value,
-            onValueChange = { email.value = it },
+            onValueChange = {
+                email.value = it
+                emailErrorState.value = false
+            },
             label = { Text("Enter your email") },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
+            isError = emailErrorState.value,
             singleLine = true,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
@@ -85,30 +83,24 @@ fun ResetPasswordScreen(navController: NavHostController) {
                 .fillMaxWidth(0.9f)
         )
 
-        // Message
-        if (resetMessage.value.isNotEmpty()) {
+        if (emailErrorState.value) {
             Text(
-                text = resetMessage.value,
-                color = if (resetMessage.value.contains("sent")) Color.Green else Color.Red,
-                modifier = Modifier
-                    .padding(start = 32.dp, top = 4.dp, bottom = 8.dp)
-                    .fillMaxWidth(0.9f),
-                textAlign = TextAlign.Start
+                text = "Invalid email format. Please enter a valid email.",
+                color = Color.Red,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
         }
 
-        // Reset button
         Button(
             onClick = {
-                coroutineScope.launch {
-                    try {
-                        auth.sendPasswordResetEmail(email.value).await()
-                        resetMessage.value = "Password reset email sent successfully."
-                        email.value = ""
-                        focusManager.clearFocus()
-                    } catch (e: Exception) {
-                        resetMessage.value = "Reset failed: ${e.localizedMessage}"
-                    }
+                performResetPassword(email.value, emailErrorState)
+                if (!emailErrorState.value) {
+                    resetMessage.value =
+                        "If this email is registered, a password reset link has been sent."
+                    email.value = ""
+                    focusManager.clearFocus()
+                } else {
+                    resetMessage.value = "Please enter a valid email address."
                 }
             },
             modifier = Modifier
@@ -123,11 +115,21 @@ fun ResetPasswordScreen(navController: NavHostController) {
             Text(text = "Send Reset Password")
         }
 
-        // Link back to Sign In
+        if (resetMessage.value.isNotEmpty()) {
+            Text(
+                text = resetMessage.value,
+                color = if (resetMessage.value.contains("sent", ignoreCase = true)) Color.Green else Color.Red,
+                modifier = Modifier
+                    .padding(top = 16.dp)
+                    .fillMaxWidth(0.9f),
+                textAlign = TextAlign.Center
+            )
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp),
+                .padding(top = 24.dp),
             horizontalArrangement = Arrangement.Center
         ) {
             Text(text = "Remember your password? ")
@@ -145,6 +147,5 @@ fun ResetPasswordScreen(navController: NavHostController) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ResetPasswordScreenPreview() {
-    val navController = rememberNavController()
-    ResetPasswordScreen(navController = navController)
+    ResetPasswordScreen(rememberNavController())
 }
