@@ -25,8 +25,7 @@ sealed class NavigationItem(val route: String, val icon: ImageVector, val title:
     object Home : NavigationItem("home", Icons.Filled.Home, "Home")
     object Map : NavigationItem("map", Icons.Filled.Map, "Map")
     object Notification : NavigationItem("notification", Icons.Filled.Notifications, "Notification")
-    object Profile : NavigationItem("profile", Icons.Filled.Person, "Profile")
-    object Emergency : NavigationItem("emergency-contacts", Icons.Filled.Call, "Emergency")
+
 }
 
 
@@ -36,8 +35,6 @@ fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
         NavigationItem.Home,
         NavigationItem.Map,
         NavigationItem.Notification,
-        NavigationItem.Profile,
-        NavigationItem.Emergency
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()

@@ -32,8 +32,8 @@ import com.unh.personal_health_buddy.R
 fun SignInScreen(
     navController: NavHostController,
     googleSignInClient: GoogleSignInClient?,
-    context: Context,
-    launcher: ManagedActivityResultLauncher<Intent, ActivityResult>?
+    launcher: ManagedActivityResultLauncher<Intent, ActivityResult>,
+    context: Context
 ) {
     val context = LocalContext.current
     val email = remember { mutableStateOf("") }

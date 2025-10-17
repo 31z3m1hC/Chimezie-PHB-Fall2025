@@ -1,8 +1,6 @@
 package com.unh.personal_health_buddy.screens
 
-import android.R.attr.text
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -29,9 +27,7 @@ fun EmergencyContactScreen(navController: NavHostController) {
                 title = {
                     Text(
                         text = "Emergency Contacts",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 16.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
                     )
                 }
@@ -40,10 +36,10 @@ fun EmergencyContactScreen(navController: NavHostController) {
         bottomBar = {
             BottomBar(navController = navController)
         }
-    ) { padding ->
+    ) { paddingValues ->
         EmergencyContactsDisplayScreen(
             modifier = Modifier
-                .padding(padding)
+                .padding(paddingValues)
                 .fillMaxSize()
         )
     }
@@ -63,12 +59,6 @@ fun EmergencyContactsDisplayScreen(modifier: Modifier = Modifier) {
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.Start
     ) {
-        Text(
-            text = "",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
         contacts.forEach { (name, number) ->
             Card(
                 modifier = Modifier
@@ -109,6 +99,5 @@ fun EmergencyContactsDisplayScreen(modifier: Modifier = Modifier) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PreviewEmergencyContactScreen() {
-    val navController = rememberNavController()
-    EmergencyContactScreen(navController = navController)
+    EmergencyContactScreen(rememberNavController())
 }

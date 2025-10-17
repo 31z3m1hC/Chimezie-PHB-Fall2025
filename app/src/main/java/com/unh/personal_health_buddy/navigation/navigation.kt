@@ -11,7 +11,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.FirebaseAuth
 import com.unh.personal_health_buddy.screens.*
 
-
 @Composable
 fun AppNavigation(
     navController: NavHostController,
@@ -19,29 +18,19 @@ fun AppNavigation(
     launcher: ManagedActivityResultLauncher<Intent, ActivityResult>
 ) {
     val auth = FirebaseAuth.getInstance()
-    val startDestination = if (auth.currentUser != null) "sign-in" else "emergency-contacts"
+    val startDestination = if (auth.currentUser != null) "main" else "emergency-contacts"
 
     NavHost(
-        navController = navController,
+        navController,
         startDestination = startDestination
     ) {
         composable("welcome") { WelcomeScreen(navController) }
-        composable ("home") { HomeScreen(navController) }
-        composable("sign-in") {
-            SignInScreen(
-                navController = navController,
-                googleSignInClient = googleSignInClient,
-                launcher = launcher,
-                context = navController.context
-            )
-        }
+        composable("sign-in") { SignInScreen(navController, googleSignInClient, launcher, navController.context) }
         composable("sign-up") { SignUpScreen(navController, googleSignInClient, launcher) }
         composable("reset-password") { ResetPasswordScreen(navController) }
         composable("main") { MainScreen(navController) }
-        composable("profile") { ProfileScreen(navController) }
-        composable("notification") { NotificationScreen(navController) }
-        composable("emergency-contacts") { EmergencyContactScreen(navController) }
-        composable("map") { MapScreen(navController) }
+        composable("home") { HomeScreen() }
+        composable("map") { MapScreen() }
+        composable("notification") { NotificationScreen() }
     }
 }
-
