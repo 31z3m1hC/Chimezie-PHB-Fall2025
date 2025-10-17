@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.result.ActivityResult
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -16,7 +17,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -127,7 +130,12 @@ fun SignInScreen(
                     navController
                 )
             },
-            modifier = Modifier.fillMaxWidth(0.9f)
+            modifier = Modifier.fillMaxWidth(0.9f),
+            //border = BorderStroke(2.dp, colorResource(id = R.color.purple_500)),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorResource(id = R.color.purple_500),
+                contentColor = Color.White
+            )
         ) {
             Text("Sign In")
         }
@@ -147,7 +155,11 @@ fun SignInScreen(
                     )
                 }
             },
-            modifier = Modifier.fillMaxWidth(0.9f)
+            modifier = Modifier.fillMaxWidth(0.9f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorResource(id = R.color.purple_500),
+                contentColor = Color.White
+            )
         ) {
             Text("Sign in with Google")
         }

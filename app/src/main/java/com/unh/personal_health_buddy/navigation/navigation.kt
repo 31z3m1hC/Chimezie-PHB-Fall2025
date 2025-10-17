@@ -29,8 +29,9 @@ fun AppNavigation(
         composable("sign-up") { SignUpScreen(navController, googleSignInClient, launcher) }
         composable("reset-password") { ResetPasswordScreen(navController) }
         composable("main") { MainScreen(navController) }
-        composable("home") { HomeScreen() }
+        composable("home") { HomeScreen(navController) }
         composable("map") { MapScreen() }
         composable("notification") { NotificationScreen() }
+        composable("emergency-contacts") { EmergencyContactScreen(navController) }
     }
 }

@@ -2,6 +2,9 @@ package com.unh.personal_health_buddy
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Home
@@ -13,12 +16,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.google.common.math.LinearTransformation.vertical
 
 
 sealed class NavigationItem(val route: String, val icon: ImageVector, val title: String) {
@@ -41,11 +48,23 @@ fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
     val currentRoute = navBackStackEntry?.destination?.route
 
     NavigationBar(
-        modifier = modifier,
-        containerColor = Color.LightGray
+        modifier = modifier
+            .padding(vertical = 0.dp)
+            .clip(
+            RoundedCornerShape(
+                15.dp, 15.dp,
+                15.dp, 15.dp
+            )
+        )
+        .height(75.dp),
+        Color.Transparent,
+
+
+
     ) {
         items.forEach { item ->
             NavigationBarItem(
+                modifier = Modifier,
                 icon = { Icon(item.icon, contentDescription = item.title) },
                 label = { Text(item.title) },
                 selected = currentRoute == item.route,
@@ -61,8 +80,8 @@ fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color.Black,
-                    unselectedIconColor = Color.Gray,
+                    selectedIconColor = Color.Gray,
+                    unselectedIconColor = Color.Green,
                     selectedTextColor = Color.Black,
                     unselectedTextColor = Color.Gray,
                     indicatorColor = Color.White

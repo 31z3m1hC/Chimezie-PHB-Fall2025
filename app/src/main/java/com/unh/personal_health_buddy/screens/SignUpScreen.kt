@@ -14,10 +14,13 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -117,7 +120,11 @@ fun SignUpScreen(
                     }
                 }
             },
-            modifier = Modifier.fillMaxWidth(0.9f)
+            modifier = Modifier.fillMaxWidth(0.9f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorResource(id = R.color.purple_500),
+            contentColor = Color.White
+        )
         ) {
             Text("Sign Up")
         }
@@ -138,7 +145,11 @@ fun SignUpScreen(
                     )
                 }
             },
-            modifier = Modifier.fillMaxWidth(0.9f)
+            modifier = Modifier.fillMaxWidth(0.9f),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorResource(id = R.color.purple_500),
+                contentColor = Color.White
+            )
         ) {
             Text("Sign Up with Google")
         }
