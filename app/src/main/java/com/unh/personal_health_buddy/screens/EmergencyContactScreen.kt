@@ -37,7 +37,7 @@ fun EmergencyContactScreen(navController: NavHostController) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, top = 32.dp),
+                    .padding(start = 16.dp, top = 16.dp, bottom = 32.dp),
                 contentAlignment = Alignment.TopStart
             ) {
                 IconButton(
@@ -54,13 +54,26 @@ fun EmergencyContactScreen(navController: NavHostController) {
                         contentDescription = "Back to Home"
                     )
                 }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 50.dp),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    Text(
+                        text = "Emergency Contacts",
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
             }
 
             // Emergency contacts content
             EmergencyContactsDisplayScreen(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 80.dp) // Push content below back button
+                    .padding(top = 100.dp) // Push content below back button
             )
         }
     }

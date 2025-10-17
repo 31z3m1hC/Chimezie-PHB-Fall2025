@@ -48,10 +48,11 @@ fun SignInScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 50.dp),
+            .padding(top = 16.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(12.dp))
         // Back button
         Box(
             modifier = Modifier
@@ -63,13 +64,15 @@ fun SignInScreen(
                 Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
             }
         }
+        Spacer(modifier = Modifier.height(50.dp))
 
         // Title
         Text(
             text = "Sign In",
             style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 30.dp, top = 16.dp)
+            modifier = Modifier.padding()
         )
+        Spacer(modifier = Modifier.height(12.dp))
 
         // Email field
         OutlinedTextField(
@@ -110,7 +113,7 @@ fun SignInScreen(
             textAlign = TextAlign.End,
             modifier = Modifier
                 .fillMaxWidth(0.9f)
-                .padding(top = 8.dp)
+                .padding()
                 .clickable {
                     navController.navigate("reset-password")
                 }
@@ -140,9 +143,9 @@ fun SignInScreen(
             Text("Sign In")
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         Text("OR")
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // Google sign-in button
         OutlinedButton(
@@ -164,7 +167,7 @@ fun SignInScreen(
             Text("Sign in with Google")
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // Sign up link
         Text(

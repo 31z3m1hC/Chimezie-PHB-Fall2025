@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
@@ -46,15 +47,28 @@ fun SignUpScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 50.dp),
+            .padding(top = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(12.dp))
+        // Back button
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp),
+            contentAlignment = Alignment.TopStart
+        ) {
+            IconButton(onClick = { navController.navigate("sign-in") }) {
+                Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
+            }
+        }
+        Spacer(modifier = Modifier.height(50.dp))
         Text(
             text = "Sign Up",
             style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 24.dp)
+            modifier = Modifier.padding()
         )
-
+        Spacer(modifier = Modifier.height(12.dp))
         OutlinedTextField(
             value = name.value,
             onValueChange = { name.value = it },
@@ -90,7 +104,7 @@ fun SignUpScreen(
             modifier = Modifier.fillMaxWidth(0.9f)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Row(
             modifier = Modifier
@@ -103,7 +117,7 @@ fun SignUpScreen(
             Text("I agree to the Terms and Conditions")
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Button(
             onClick = {
@@ -129,32 +143,7 @@ fun SignUpScreen(
             Text("Sign Up")
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text("OR")
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        OutlinedButton(
-            onClick = {
-                if (googleSignInClient != null && launcher != null) {
-                    performGoogleAuthentication(
-                        launcher,
-                        context,
-                        context.getString(R.string.default_web_client_id)
-                    )
-                }
-            },
-            modifier = Modifier.fillMaxWidth(0.9f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = colorResource(id = R.color.purple_500),
-                contentColor = Color.White
-            )
-        ) {
-            Text("Sign Up with Google")
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Text(
             text = "Already have an account? Sign In",
