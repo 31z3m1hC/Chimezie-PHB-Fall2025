@@ -30,8 +30,8 @@ fun AppNavigation(
         composable("reset-password") { ResetPasswordScreen(navController) }
         composable("main") { MainScreen(navController) }
         composable("home") { HomeScreen(navController) }
-        composable("map") { MapScreen() }
-        composable("notification") { NotificationScreen() }
+        composable("map") { MapScreen(navController) }
+        composable("notification") { NotificationScreen(navController) }
         composable("emergency-contacts") { EmergencyContactScreen(navController) }
     }
 }

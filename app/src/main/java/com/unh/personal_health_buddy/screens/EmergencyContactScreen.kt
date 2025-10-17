@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -22,26 +23,46 @@ import com.unh.personal_health_buddy.BottomBar
 @Composable
 fun EmergencyContactScreen(navController: NavHostController) {
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Emergency Contacts",
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-                }
-            )
-        },
         bottomBar = {
             BottomBar(navController = navController)
         }
     ) { paddingValues ->
-        EmergencyContactsDisplayScreen(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-        )
+
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+        ) {
+
+            // Back button at top-left
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, top = 32.dp),
+                contentAlignment = Alignment.TopStart
+            ) {
+                IconButton(
+                    onClick = {
+                        if (!navController.popBackStack()) {
+                            navController.navigate("home") {
+                                launchSingleTop = true
+                            }
+                        }
+                    }
+                ) {
+                    Icon(
+                        Icons.Filled.ArrowBackIosNew,
+                        contentDescription = "Back to Home"
+                    )
+                }
+            }
+
+            // Emergency contacts content
+            EmergencyContactsDisplayScreen(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 80.dp) // Push content below back button
+            )
+        }
     }
 }
 

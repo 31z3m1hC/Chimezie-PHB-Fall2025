@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,6 +33,7 @@ sealed class NavigationItem(val route: String, val icon: ImageVector, val title:
     object Home : NavigationItem("home", Icons.Filled.Home, "Home")
     object Map : NavigationItem("map", Icons.Filled.Map, "Map")
     object Notification : NavigationItem("notification", Icons.Filled.Notifications, "Notification")
+    object EmergencyContact : NavigationItem("emergency-contacts", Icons.Filled.Phone, "Emergency")
 
 }
 
@@ -42,6 +44,7 @@ fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
         NavigationItem.Home,
         NavigationItem.Map,
         NavigationItem.Notification,
+        NavigationItem.EmergencyContact,
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -80,7 +83,7 @@ fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color.Gray,
+                    selectedIconColor = Color.Green,
                     unselectedIconColor = Color.Green,
                     selectedTextColor = Color.Black,
                     unselectedTextColor = Color.Gray,
