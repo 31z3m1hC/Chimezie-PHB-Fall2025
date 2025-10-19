@@ -1,6 +1,7 @@
 package com.unh.personal_health_buddy
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -33,7 +34,7 @@ sealed class NavigationItem(val route: String, val icon: ImageVector, val title:
     object Home : NavigationItem("home", Icons.Filled.Home, "Home")
     object Map : NavigationItem("map", Icons.Filled.Map, "Map")
     object Notification : NavigationItem("notification", Icons.Filled.Notifications, "Notification")
-    object EmergencyContact : NavigationItem("emergency-contacts", Icons.Filled.Phone, "Emergency")
+    object Profile : NavigationItem("profile", Icons.Filled.Person, "Profile")
 
 }
 
@@ -44,12 +45,13 @@ fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
         NavigationItem.Home,
         NavigationItem.Map,
         NavigationItem.Notification,
-        NavigationItem.EmergencyContact,
+        NavigationItem.Profile,
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    Spacer(modifier = Modifier.height(12.dp))
     NavigationBar(
         modifier = modifier
             .padding(vertical = 0.dp)
@@ -83,8 +85,8 @@ fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color.Green,
-                    unselectedIconColor = Color.Green,
+                    selectedIconColor = Color.Blue,
+                    unselectedIconColor = Color.Blue,
                     selectedTextColor = Color.Black,
                     unselectedTextColor = Color.Gray,
                     indicatorColor = Color.White
@@ -92,6 +94,7 @@ fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
             )
         }
     }
+    Spacer(modifier = Modifier.height(12.dp))
 }
 
 

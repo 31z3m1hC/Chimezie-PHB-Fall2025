@@ -1,9 +1,9 @@
 package com.unh.personal_health_buddy.navigation
 
 //noinspection UsingMaterialAndMaterial3Libraries
-import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.runtime.Composable

@@ -1,9 +1,9 @@
 package com.unh.personal_health_buddy.screens
 
-import android.app.Activity
 import android.content.Intent
-import androidx.activity.compose.ManagedActivityResultLauncher
-import androidx.activity.result.ActivityResult
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,21 +23,25 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.firebase.performGoogleAuthentication
 import com.unh.personal_health_buddy.firebase.performSignUp
-import com.unh.personal_health_buddy.R
 
 @Composable
 fun SignUpScreen(
     navController: NavHostController,
     googleSignInClient: GoogleSignInClient?,
-    launcher: ManagedActivityResultLauncher<Intent, ActivityResult>?
+    launcher: ActivityResultLauncher<Intent>
 ) {
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
+    val emailErrorState = remember { mutableStateOf(false) }
+    val passwordErrorState = remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
     var isChecked by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -50,7 +53,6 @@ fun SignUpScreen(
             .padding(top = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(12.dp))
         // Back button
         Box(
             modifier = Modifier
@@ -62,13 +64,16 @@ fun SignUpScreen(
                 Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
             }
         }
+
         Spacer(modifier = Modifier.height(50.dp))
+
         Text(
             text = "Sign Up",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding()
+            style = MaterialTheme.typography.headlineMedium
         )
+
         Spacer(modifier = Modifier.height(12.dp))
+
         OutlinedTextField(
             value = name.value,
             onValueChange = { name.value = it },
@@ -77,24 +82,29 @@ fun SignUpScreen(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(0.9f)
         )
+
         Spacer(modifier = Modifier.height(12.dp))
+
         OutlinedTextField(
             value = email.value,
             onValueChange = { email.value = it },
+            isError = emailErrorState.value,
             label = { Text("Email") },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(0.9f)
         )
+
         Spacer(modifier = Modifier.height(12.dp))
+
         OutlinedTextField(
             value = password.value,
             onValueChange = { password.value = it },
+            isError = passwordErrorState.value,
             label = { Text("Password") },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
             trailingIcon = {
-                val icon =
-                    if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                val icon = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(imageVector = icon, contentDescription = "Toggle Password")
                 }
@@ -125,20 +135,17 @@ fun SignUpScreen(
                     performSignUp(
                         email.value,
                         password.value,
-                        mutableStateOf(false),
-                        mutableStateOf(false),
+                        emailErrorState,
+                        passwordErrorState,
                         navController
                     )
-                    navController.navigate("sign-in") {
-                        popUpTo("sign-up") { inclusive = true }
-                    }
                 }
             },
             modifier = Modifier.fillMaxWidth(0.9f),
             colors = ButtonDefaults.buttonColors(
                 containerColor = colorResource(id = R.color.purple_500),
-            contentColor = Color.White
-        )
+                contentColor = Color.White
+            )
         ) {
             Text("Sign Up")
         }
@@ -155,4 +162,19 @@ fun SignUpScreen(
             }
         )
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun PreviewSignUpScreen() {
+    val navController = rememberNavController()
+    val fakeLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { }
+
+    SignUpScreen(
+        navController = navController,
+        googleSignInClient = null,
+        launcher = fakeLauncher
+    )
 }

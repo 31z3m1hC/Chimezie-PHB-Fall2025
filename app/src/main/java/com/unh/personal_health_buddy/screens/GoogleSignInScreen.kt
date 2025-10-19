@@ -120,7 +120,6 @@ fun GoogleSignInScreen(
                     performGoogleAuthentication(
                         launcher,
                         context,
-                        context.getString(R.string.default_web_client_id)
                     )
                 } else {
                     signInMessage.value = "Google Sign-In unavailable"

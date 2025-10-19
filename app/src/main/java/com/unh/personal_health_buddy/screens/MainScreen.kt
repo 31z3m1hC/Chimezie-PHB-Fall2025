@@ -23,6 +23,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.NavigationItem
 import com.unh.personal_health_buddy.BottomBar
+import com.unh.personal_health_buddy.screens.profileItems
+
 
 @Composable
 fun MainScreen(navController: NavHostController) {
@@ -30,9 +32,8 @@ fun MainScreen(navController: NavHostController) {
     val currentRoute = navBackStackEntry?.destination?.route
 
     Scaffold(
-        // No floatingActionButton here
         bottomBar = {
-            if (currentRoute == "home") {
+            if (currentRoute == "profile") {
                 BottomBar(navController = navController)
             }
         }
@@ -42,6 +43,13 @@ fun MainScreen(navController: NavHostController) {
             .fillMaxSize()
         ) {
             when (currentRoute) {
+                "profile" -> ProfileScreen(navController, profileItems, currentRoute)
+                "contacts" -> ContactScreen(navController)
+                "notification" -> NotificationScreen(navController)
+                "appointment" -> AppointmentScreen(navController)
+                "faqs" -> FAQScreen(navController)
+                "account" -> AccountScreen(navController)
+                "logout" -> LogoutScreen(navController)
                 "home" -> HomeScreen(navController)
                 "map" -> MapScreen(navController)
                 "notification" -> NotificationScreen(navController)
@@ -51,6 +59,111 @@ fun MainScreen(navController: NavHostController) {
         }
     }
 }
+@Composable
+fun LogoutScreen(navController: NavController) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = "You have logged out successfully.", style = MaterialTheme.typography.headlineSmall)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, top = 32.dp),
+        contentAlignment = Alignment.TopStart
+    ) {
+        IconButton(onClick = { navController.navigate("profile") }) {
+            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back to Profile")
+        }
+    }
+}
+
+@Composable
+fun AccountScreen(navController: NavController) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = "Account Screen", style = MaterialTheme.typography.headlineSmall)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, top = 32.dp),
+        contentAlignment = Alignment.TopStart
+    ) {
+        IconButton(onClick = { navController.navigate("profile") }) {
+            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back to Profile")
+        }
+    }
+}
+
+@Composable
+fun AppointmentScreen(navController: NavController) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = "Appointment Screen", style = MaterialTheme.typography.headlineSmall)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, top = 32.dp),
+        contentAlignment = Alignment.TopStart
+    ) {
+        IconButton(onClick = { navController.navigate("profile") }) {
+            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back to Profile")
+        }
+    }
+}
+
+@Composable
+fun FAQScreen(navController: NavController) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = "FAQs Screen", style = MaterialTheme.typography.headlineSmall)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, top = 32.dp),
+        contentAlignment = Alignment.TopStart
+    ) {
+        IconButton(onClick = { navController.navigate("profile") }) {
+            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back to Profile")
+        }
+    }
+}
+
+@Composable
+fun ContactScreen(navController: NavController) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = "Contacts Screen", style = MaterialTheme.typography.headlineSmall)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, top = 32.dp),
+        contentAlignment = Alignment.TopStart
+    ) {
+        IconButton(onClick = { navController.navigate("profile") }) {
+            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back to Profile")
+        }
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

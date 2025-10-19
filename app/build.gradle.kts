@@ -65,6 +65,8 @@ dependencies {
     implementation(libs.androidx.foundation)
     implementation(libs.ui)
     implementation(libs.androidx.compiler)
+    implementation(libs.androidx.webkit)
+    implementation(libs.play.services.maps)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -75,7 +77,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     // Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.3.0"))
+    implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth-ktx:23.2.1")
 
@@ -88,6 +90,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
     implementation("com.google.android.gms:play-services-auth:21.0.0")
 
-    implementation("androidx.compose.material:material:1.5.4")
-    implementation("androidx.navigation:navigation-compose:2.7.6")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.maps.android:maps-compose:4.3.0")
+
+
+
 }

@@ -91,10 +91,11 @@ fun WelcomeScreen(navController: NavHostController) {
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .padding(),
-            border = BorderStroke(2.dp, colorResource(id = R.color.teal_700)),
+            //border = BorderStroke(2.dp, colorResource(id = R.color.teal_700)),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorResource(id = R.color.white),
-                contentColor = Color.Black
+                containerColor = colorResource(id = R.color.purple_500),
+                contentColor = Color.White
+
             )
         ) {
             Text(text = "Sign Up")

@@ -1,5 +1,6 @@
 package com.unh.personal_health_buddy.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -77,6 +78,7 @@ fun EmergencyContactScreen(navController: NavHostController) {
             )
         }
     }
+    Log.d("EmergencyContactScreen", "Emergency contact screen displayed")
 }
 
 @Composable
@@ -128,6 +130,7 @@ fun EmergencyContactsDisplayScreen(modifier: Modifier = Modifier) {
             }
         }
     }
+    Log.d("EmergencyContactsDisplayScreen", "Emergency contacts displayed")
 }
 
 @Preview(showBackground = true, showSystemUi = true)

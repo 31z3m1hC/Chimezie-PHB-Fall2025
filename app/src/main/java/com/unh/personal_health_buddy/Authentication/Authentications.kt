@@ -1,12 +1,12 @@
+
 package com.unh.personal_health_buddy.firebase
 
-import android.app.Instrumentation
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.util.Patterns
-import androidx.activity.compose.ManagedActivityResultLauncher
-import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -24,6 +24,7 @@ import com.unh.personal_health_buddy.navigation.AppNavigation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import com.unh.personal_health_buddy.R
+import androidx.activity.compose.rememberLauncherForActivityResult
 
 
 fun performSignUp(
@@ -51,6 +52,7 @@ fun performSignUp(
             }
             .addOnFailureListener { e -> Log.e("SignUp", "Exception: ", e) }
     }
+    Log.d("SignUp", "User signed up")
 }
 
 fun performSignIn(
@@ -70,7 +72,7 @@ fun performSignIn(
         return
     }
 
-    val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
+    val auth = FirebaseAuth.getInstance()
     auth.signInWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if (task.isSuccessful) {
@@ -87,6 +89,8 @@ fun performSignIn(
                 ).show()
             }
         }
+        .addOnFailureListener { e -> Log.e("SignIn", "Exception: ", e) }
+    Log.d("SignIn", "User signed in")
 }
 
 fun performResetPassword(email: String, emailErrorState: MutableState<Boolean>) {
@@ -108,34 +112,37 @@ fun performLogOut(navController: NavController) {
     navController.navigate("sign-in")
 }
 
-
 fun isValidEmail(email: String): Boolean = Patterns.EMAIL_ADDRESS.matcher(email).matches()
 fun isValidPassword(password: String): Boolean = password.length >= 6
 
 
-fun performGoogleAuthentication(
-    launcher: ManagedActivityResultLauncher<Intent, ActivityResult>,
-    context: Context,
-    googleClientId: String
-) {
-    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+fun createGoogleSignInOptions(googleClientId: String): GoogleSignInOptions {
+    return GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
         .requestIdToken(googleClientId)
         .requestEmail()
         .build()
+}
+
+fun performGoogleAuthentication(
+    launcher: ActivityResultLauncher<Intent>,
+    context: Context
+) {
+    val gso = createGoogleSignInOptions(context.getString(R.string.default_web_client_id))
     val googleSignInClient = GoogleSignIn.getClient(context, gso)
     launcher.launch(googleSignInClient.signInIntent)
+    Log.d("GoogleAuth", "Google authentication started")
 }
 
 @Composable
 fun rememberFirebaseAuthLauncher(
     onAuthComplete: (AuthResult) -> Unit,
     onAuthError: (Exception) -> Unit
-): ManagedActivityResultLauncher<Intent, ActivityResult> {
+): ActivityResultLauncher<Intent> {
     val scope = rememberCoroutineScope()
-    return androidx.activity.compose.rememberLauncherForActivityResult(
+    return rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode != android.app.Activity.RESULT_OK || result.data == null) {
+        if (result.resultCode != Activity.RESULT_OK || result.data == null) {
             onAuthError(IllegalStateException("Google Sign-In canceled"))
             return@rememberLauncherForActivityResult
         }
@@ -166,17 +173,12 @@ fun rememberFirebaseAuthLauncher(
     }
 }
 
-
 @Composable
 fun SetupAuthentication(
     navController: NavHostController,
-    activity: android.app.Activity
+    activity: Activity
 ) {
-    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-        .requestIdToken(activity.getString(R.string.default_web_client_id))
-        .requestEmail()
-        .build()
-
+    val gso = createGoogleSignInOptions(activity.getString(R.string.default_web_client_id))
     val googleSignInClient: GoogleSignInClient = GoogleSignIn.getClient(activity, gso)
 
     val launcher = rememberFirebaseAuthLauncher(
@@ -195,4 +197,5 @@ fun SetupAuthentication(
         googleSignInClient = googleSignInClient,
         launcher = launcher
     )
+    Log.d("SetupAuthentication", "Authentication setup")
 }
