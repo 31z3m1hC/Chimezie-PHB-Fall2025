@@ -143,10 +143,6 @@ fun GoogleMapScreen(navController: NavController) {
                 }
             }
 
-            //
-            // +Spacer(modifier = Modifier.height(8.dp))
-
-            // 🔹 Map section
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -191,6 +187,7 @@ fun GoogleMapScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(12.dp))
         }
     }
+    Log.d("GoogleMapScreen", "Google Map screen displayed")
 }
 
 @Composable
