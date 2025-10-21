@@ -132,7 +132,9 @@ fun SignInScreen(
                     navController
                 )
             },
-            modifier = Modifier.fillMaxWidth(0.9f),
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .height(50.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = colorResource(id = R.color.purple_500),
                 contentColor = Color.White
@@ -153,7 +155,9 @@ fun SignInScreen(
                     context = context
                 )
             },
-            modifier = Modifier.fillMaxWidth(0.9f),
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .width(50.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = colorResource(id = R.color.purple_500),
                 contentColor = Color.White

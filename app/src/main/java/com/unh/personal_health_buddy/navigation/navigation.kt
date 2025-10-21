@@ -16,6 +16,7 @@ import com.unh.personal_health_buddy.screens.EmergencyContactScreen
 import com.unh.personal_health_buddy.screens.FAQScreen
 import com.unh.personal_health_buddy.screens.GoogleMapScreen
 import com.unh.personal_health_buddy.screens.HomeScreen
+import com.unh.personal_health_buddy.screens.LogOutScreen
 import com.unh.personal_health_buddy.screens.LogoutScreen
 import com.unh.personal_health_buddy.screens.MainScreen
 import com.unh.personal_health_buddy.screens.MapScreen
@@ -44,9 +45,10 @@ fun AppNavigation(
         composable("appointment") { AppointmentScreen(navController) }
         composable("faqs") { FAQScreen(navController) }
         composable("contacts") { ContactScreen(navController) }
-        composable("logout") { LogoutScreen(navController) }
+        composable("logout") { LogOutScreen(navController) }
         composable("profile") { ProfileScreen(navController, profileItems, currentRoute = "profile") }
         composable("welcome") { WelcomeScreen(navController) }
+
 
         composable("sign-in") {
             SignInScreen(

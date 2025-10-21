@@ -52,7 +52,6 @@ fun MainScreen(navController: NavHostController) {
                 "logout" -> LogoutScreen(navController)
                 "home" -> HomeScreen(navController)
                 "map" -> MapScreen(navController)
-                "notification" -> NotificationScreen(navController)
                 "emergency-contacts" -> EmergencyContactScreen(navController)
                 else -> WelcomeScreen(navController)
             }

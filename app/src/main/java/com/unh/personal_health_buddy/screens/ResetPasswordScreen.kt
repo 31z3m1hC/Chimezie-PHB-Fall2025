@@ -105,7 +105,8 @@ fun ResetPasswordScreen(navController: NavHostController) {
             },
             modifier = Modifier
                 .fillMaxWidth(0.9f)
-                .padding(top = 8.dp),
+                .padding(top = 8.dp)
+                    .height(50.dp),
             border = BorderStroke(1.dp, colorResource(id = R.color.purple_500)),
             colors = ButtonDefaults.buttonColors(
                 containerColor = colorResource(id = R.color.purple_500),

@@ -1,9 +1,6 @@
 package com.unh.personal_health_buddy.screens
 
 import android.Manifest
-import android.R.attr.onClick
-import android.R.attr.singleLine
-import android.R.attr.textStyle
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
@@ -30,7 +27,6 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -76,13 +72,13 @@ fun GoogleMapScreen(navController: NavController) {
                 .padding(paddingValues)
                 .padding(8.dp)
         ) {
-            // 🔹 Back Arrow ABOVE the search bar
+
             Icon(
                 imageVector = Icons.Default.ArrowBackIosNew,
                 contentDescription = "Back to Profile",
                 tint = Color.Black,
                 modifier = Modifier
-                    .size(20.dp)
+                    .size(24.dp)
                     .clickable {
                         if (!navController.popBackStack()) {
                             navController.navigate("profile") {
@@ -107,7 +103,7 @@ fun GoogleMapScreen(navController: NavController) {
                     placeholder = { Text("Search location...") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 8.dp, end = 8.dp)
+                        .padding(horizontal = 8.dp)
                         .background(Color.White),
                     textStyle = LocalTextStyle.current.copy(
                         color = Color.Black,
@@ -117,11 +113,9 @@ fun GoogleMapScreen(navController: NavController) {
                 )
 
                 Button(
-
                     modifier = Modifier
-                    .fillMaxWidth(1f)
-                    .padding(8.dp)
-                    .align(Alignment.CenterHorizontally),
+                        .fillMaxWidth()
+                        .padding(8.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = colorResource(id = R.color.purple_500),
                         contentColor = Color.White
@@ -143,6 +137,9 @@ fun GoogleMapScreen(navController: NavController) {
                 }
             }
 
+            // 🔹 Map
+            val hasLocationPermission = RequestLocationPermission()
+
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -150,16 +147,11 @@ fun GoogleMapScreen(navController: NavController) {
                     .clip(RoundedCornerShape(8.dp))
                     .border(1.dp, Color.Transparent, RoundedCornerShape(8.dp))
             ) {
-                RequestLocationPermission()
-
                 GoogleMap(
                     modifier = Modifier.fillMaxSize(),
                     cameraPositionState = cameraPositionState,
                     properties = MapProperties(
-                        isMyLocationEnabled = ActivityCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.ACCESS_FINE_LOCATION
-                        ) == PackageManager.PERMISSION_GRANTED
+                        isMyLocationEnabled = hasLocationPermission
                     ),
                     uiSettings = MapUiSettings(
                         zoomControlsEnabled = true,
@@ -187,32 +179,56 @@ fun GoogleMapScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(12.dp))
         }
     }
+
     Log.d("GoogleMapScreen", "Google Map screen displayed")
 }
 
+/**
+ * ✅ Fixed Permission Request - handles both FINE and COARSE, prevents crash.
+ */
 @Composable
-fun RequestLocationPermission() {
+fun RequestLocationPermission(): Boolean {
     val context = LocalContext.current
     val activity = context as Activity
+    var permissionGranted by remember { mutableStateOf(false) }
+
     val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { granted ->
-            if (granted) Log.d("Permissions", "Location permission granted")
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = { permissions ->
+            permissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                    permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+            if (permissionGranted) Log.d("Permissions", "Location permission granted")
             else Log.e("Permissions", "Location permission denied")
         }
     )
 
     LaunchedEffect(Unit) {
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        val fineGranted = ActivityCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val coarseGranted = ActivityCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (fineGranted || coarseGranted) {
+            permissionGranted = true
+        } else {
+            permissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
         }
     }
+
+    return permissionGranted
 }
 
+/**
+ * 🔹 Geocode function for converting location name → LatLng
+ */
 suspend fun geocodeLocation(context: Context, locationName: String): LatLng? {
     return withContext(Dispatchers.IO) {
         try {

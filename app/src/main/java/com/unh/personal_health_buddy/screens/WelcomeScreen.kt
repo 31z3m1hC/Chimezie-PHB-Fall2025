@@ -75,7 +75,8 @@ fun WelcomeScreen(navController: NavHostController) {
             onClick = { navController.navigate("sign-in") },
             modifier = Modifier
                 .fillMaxWidth(0.9f)
-                .padding(),
+                .padding()
+                .height(50.dp),
             border = BorderStroke(2.dp, colorResource(id = R.color.purple_500)),
             colors = ButtonDefaults.buttonColors(
                 containerColor = colorResource(id = R.color.purple_500),
@@ -90,7 +91,8 @@ fun WelcomeScreen(navController: NavHostController) {
             onClick = { navController.navigate("sign-up") },
             modifier = Modifier
                 .fillMaxWidth(0.9f)
-                .padding(),
+                .padding()
+                .height(50.dp),
             //border = BorderStroke(2.dp, colorResource(id = R.color.teal_700)),
             colors = ButtonDefaults.buttonColors(
                 containerColor = colorResource(id = R.color.purple_500),
