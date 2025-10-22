@@ -58,7 +58,7 @@ fun ProfileScreen(navController: NavController, items: List<ProfileItem>, curren
             // 🔹 Gradient header region
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth() // background color adjusted
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
