@@ -183,7 +183,7 @@ fun AddAppointmentDialog(onDismiss: () -> Unit, onSave: (Appointment) -> Unit) {
         }
     )
 }
-// previed code
+// preview code
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

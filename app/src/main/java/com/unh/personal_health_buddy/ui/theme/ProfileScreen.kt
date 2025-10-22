@@ -72,7 +72,7 @@ fun ProfileScreen(navController: NavController, items: List<ProfileItem>, curren
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Image(
-                        painter = painterResource(id = R.drawable.profile_picture),
+                        painter = painterResource(id = R.drawable.profile_picture), // profile logo
                         contentDescription = "Profile Picture",
                         modifier = Modifier
                             .size(140.dp)
