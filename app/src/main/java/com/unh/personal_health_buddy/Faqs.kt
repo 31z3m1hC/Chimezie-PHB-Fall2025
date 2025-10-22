@@ -51,9 +51,14 @@ fun FAQScreen() {
             "Yes. You can delete your account and all stored data anytime through the Account Settings section."
         ),
         FAQItem(
+            "Does the app support biometric login?",
+            "Yes, Personal Health Buddy integrates biometric authentication such as fingerprint or face unlock for faster and more secure sign-in."
+        ),
+        FAQItem(
             "What type of notifications will I get?",
             "Notifications include medication reminders, appointment alerts, health tips, and suggestions to update your health data."
         ),
+
         FAQItem(
             "Can I use multiple devices with one account?",
             "Yes, once logged in with your Firebase account, your data will sync across all your devices automatically."
