@@ -13,11 +13,13 @@ import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 
+// Logout section code
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LogoutScreen(navController: NavController) {
     val auth = FirebaseAuth.getInstance()
 
+    //defining topbar
     Scaffold(
         topBar = {
             TopAppBar(
@@ -34,7 +36,7 @@ fun LogoutScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "You are logged in as:",
+                text = "Successfully logout",
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
