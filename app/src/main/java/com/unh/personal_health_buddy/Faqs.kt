@@ -47,6 +47,18 @@ fun FAQScreen() {
             "Yes, you can upload profile pictures or securely store images of medical documents."
         ),
         FAQItem(
+            "Can I delete my account?",
+            "Yes. You can delete your account and all stored data anytime through the Account Settings section."
+        ),
+        FAQItem(
+            "What type of notifications will I get?",
+            "Notifications include medication reminders, appointment alerts, health tips, and suggestions to update your health data."
+        ),
+        FAQItem(
+            "Can I use multiple devices with one account?",
+            "Yes, once logged in with your Firebase account, your data will sync across all your devices automatically."
+        ),
+        FAQItem(
             "Will there be AI health chat support?",
             "This feature is planned for future updates, where a chatbot will provide symptom-based feedback."
         )
