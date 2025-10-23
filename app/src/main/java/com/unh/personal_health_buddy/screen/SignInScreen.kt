@@ -1,7 +1,9 @@
 package com.unh.personal_health_buddy.screens
 
+import android.app.Instrumentation
 import android.content.Intent
 import android.util.Log
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,6 +32,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.unh.personal_health_buddy.R
+import com.unh.personal_health_buddy.performGoogleAuthentication
+import com.unh.personal_health_buddy.performSignIn
+
 //import com.unh.personal_health_buddy.firebase.performGoogleAuthentication
 //import com.unh.personal_health_buddy.firebase.performSignIn
 
@@ -37,7 +42,7 @@ import com.unh.personal_health_buddy.R
 fun SignInScreen(
     navController: NavHostController,
     googleSignInClient: GoogleSignInClient?,
-    launcher: ActivityResultLauncher<Intent>
+    launcher: ActivityResultLauncher<Intent>?
 ) {
     val context = LocalContext.current
     val email = remember { mutableStateOf("") }
@@ -149,7 +154,7 @@ fun SignInScreen(
         OutlinedButton(
             onClick = {
                 performGoogleAuthentication(
-                    launcher = launcher,
+                    launcher = launcher as ManagedActivityResultLauncher<Intent, Instrumentation.ActivityResult>,
                     context = context
                 )
             },

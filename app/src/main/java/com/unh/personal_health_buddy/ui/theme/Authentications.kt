@@ -55,6 +55,7 @@ fun performSignIn(
     password: String,
     emailErrorState: MutableState<Boolean>,
     passwordErrorState: MutableState<Boolean>,
+    context: Context,
     navController: NavController
 ) {
     val isEmailValid = isValidEmail(email)

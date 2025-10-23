@@ -6,7 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.unh.personal_health_buddy.screens.ResetPasswordScreen
-import com.unh.personal_health_buddy.screen.SignInScreen
+import com.unh.personal_health_buddy.screens.SignInScreen
 import com.unh.personal_health_buddy.screens.SignUpScreen
 import com.unh.personal_health_buddy.screens.WelcomeScreen
 import androidx.activity.result.ActivityResult

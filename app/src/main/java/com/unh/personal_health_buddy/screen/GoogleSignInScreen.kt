@@ -35,7 +35,6 @@ import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.FirebaseAuth
 import com.unh.personal_health_buddy.R
-import com.unh.personal_health_buddy.screen.SignInScreen
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
