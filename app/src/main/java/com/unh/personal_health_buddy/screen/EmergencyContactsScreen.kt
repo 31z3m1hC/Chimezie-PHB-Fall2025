@@ -1,8 +1,6 @@
 package com.unh.personal_health_buddy.screens
 
-import android.R.attr.text
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
