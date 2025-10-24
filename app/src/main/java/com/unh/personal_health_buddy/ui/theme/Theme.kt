@@ -1,4 +1,4 @@
-package com.unh.personalhealthbuddyf25.ui.theme
+package com.unh.personal_health_buddy.ui.theme
 
 import android.app.Activity
 import android.os.Build
@@ -34,7 +34,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun PersonalHealthBuddyF25Theme(
+fun Personal_health_buddyTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
@@ -46,8 +46,8 @@ fun PersonalHealthBuddyF25Theme(
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme                                                      -> DarkColorScheme
+        else                                                           -> LightColorScheme
     }
 
     MaterialTheme(

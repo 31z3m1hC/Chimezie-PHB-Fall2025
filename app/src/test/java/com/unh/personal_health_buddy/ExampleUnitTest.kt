@@ -1,4 +1,4 @@
-package com.unh.personalhealthbuddyf25
+package com.unh.personal_health_buddy
 
 import org.junit.Test
 
