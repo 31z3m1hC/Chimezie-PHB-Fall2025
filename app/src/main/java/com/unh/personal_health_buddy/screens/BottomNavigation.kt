@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddLocation
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Map
@@ -32,7 +33,7 @@ import com.google.common.math.LinearTransformation.vertical
 
 sealed class NavigationItem(val route: String, val icon: ImageVector, val title: String) {
     object Home : NavigationItem("home", Icons.Filled.Home, "Home")
-    object Map : NavigationItem("map", Icons.Filled.Map, "Map")
+    object Map : NavigationItem("map", Icons.Filled.AddLocation, "Map")
     object Notification : NavigationItem("notification", Icons.Filled.Notifications, "Notification")
     object Profile : NavigationItem("profile", Icons.Filled.Person, "Profile")
 
@@ -57,12 +58,12 @@ fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
             .padding(vertical = 0.dp)
             .clip(
             RoundedCornerShape(
-                15.dp, 15.dp,
-                15.dp, 15.dp
+                5.dp, 5.dp,
+                5.dp, 5.dp
             )
         )
-        .height(75.dp),
-        Color.Transparent,
+        .height(90.dp),
+        Color.LightGray,
 
 
 
@@ -86,8 +87,8 @@ fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
                 },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Color.Blue,
-                    unselectedIconColor = Color.Blue,
-                    selectedTextColor = Color.Black,
+                    unselectedIconColor = Color.Gray,
+                    selectedTextColor = Color.Blue,
                     unselectedTextColor = Color.Gray,
                     indicatorColor = Color.White
                 )

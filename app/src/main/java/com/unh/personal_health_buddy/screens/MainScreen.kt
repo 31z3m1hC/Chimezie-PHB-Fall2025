@@ -1,5 +1,6 @@
 package com.unh.personal_health_buddy.screens
 
+import addUserToFirestore
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,7 +24,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.NavigationItem
 import com.unh.personal_health_buddy.BottomBar
-import com.unh.personal_health_buddy.screens.profileItems
+import com.unh.personal_health_buddy.FAQScreen
 
 
 @Composable
@@ -33,7 +34,7 @@ fun MainScreen(navController: NavHostController) {
 
     Scaffold(
         bottomBar = {
-            if (currentRoute == "profile") {
+            if (currentRoute == "home") {
                 BottomBar(navController = navController)
             }
         }
@@ -43,14 +44,19 @@ fun MainScreen(navController: NavHostController) {
             .fillMaxSize()
         ) {
             when (currentRoute) {
-                "profile" -> ProfileScreen(navController, profileItems, currentRoute)
                 "contacts" -> ContactScreen(navController)
                 "notification" -> NotificationScreen(navController)
                 "appointment" -> AppointmentScreen(navController)
-                "faqs" -> FAQScreen(navController)
-                "account" -> AccountScreen(navController)
-                "logout" -> LogoutScreen(navController)
+                "faqs" -> FAQScreen(
+                    navController = navController,
+                )
+                "user" -> UserScreen(
+                    navController = navController,
+                    modifier = Modifier,
+                    onSubmitClicked = {}
+                )
                 "home" -> HomeScreen(navController)
+                "logout" -> LogoutScreen(navController)
                 "map" -> MapScreen(navController)
                 "emergency-contacts" -> EmergencyContactScreen(navController)
                 else -> WelcomeScreen(navController)
@@ -79,26 +85,7 @@ fun LogoutScreen(navController: NavController) {
     }
 }
 
-@Composable
-fun AccountScreen(navController: NavController) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = "Account Screen", style = MaterialTheme.typography.headlineSmall)
-    }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, top = 32.dp),
-        contentAlignment = Alignment.TopStart
-    ) {
-        IconButton(onClick = { navController.navigate("profile") }) {
-            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back to Profile")
-        }
-    }
-}
 
 @Composable
 fun AppointmentScreen(navController: NavController) {
@@ -121,26 +108,7 @@ fun AppointmentScreen(navController: NavController) {
     }
 }
 
-@Composable
-fun FAQScreen(navController: NavController) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = "FAQs Screen", style = MaterialTheme.typography.headlineSmall)
-    }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, top = 32.dp),
-        contentAlignment = Alignment.TopStart
-    ) {
-        IconButton(onClick = { navController.navigate("profile") }) {
-            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back to Profile")
-        }
-    }
-}
 
 @Composable
 fun ContactScreen(navController: NavController) {

@@ -51,6 +51,7 @@ android {
 }
 
 dependencies {
+    // AndroidX + Compose
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -67,32 +68,41 @@ dependencies {
     implementation(libs.androidx.compiler)
     implementation(libs.androidx.webkit)
     implementation(libs.play.services.maps)
+    implementation(libs.androidx.ui.unit)
 
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+    // Firebase (libs + explicit)
+    implementation(libs.firebase.firestore.ktx)
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-firestore")
 
     // Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth-ktx:23.2.1")
 
-    implementation("androidx.compose.material:material-icons-extended:1.6.0")
-
-    val nav_version = "2.9.5"
-    implementation("androidx.navigation:navigation-compose:$nav_version")
-    implementation("com.google.firebase:firebase-auth")
+    // Google Play Services
     implementation("com.google.android.gms:play-services-auth")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
     implementation("com.google.android.gms:play-services-auth:21.0.0")
-
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.maps.android:maps-compose:4.3.0")
 
+    // Navigation
+    val nav_version = "2.9.5"
+    implementation("androidx.navigation:navigation-compose:$nav_version")
+
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
+
+    // Material Icons
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
+    implementation("com.google.firebase:firebase-firestore-ktx")
 
 
+// JUnit for @Test
+    testImplementation("junit:junit:4.13.2")
+
+    // AndroidX Test for InstrumentationRegistry and AndroidJUnit4
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }

@@ -183,9 +183,7 @@ fun GoogleMapScreen(navController: NavController) {
     Log.d("GoogleMapScreen", "Google Map screen displayed")
 }
 
-/**
- * ✅ Fixed Permission Request - handles both FINE and COARSE, prevents crash.
- */
+
 @Composable
 fun RequestLocationPermission(): Boolean {
     val context = LocalContext.current
@@ -226,9 +224,7 @@ fun RequestLocationPermission(): Boolean {
     return permissionGranted
 }
 
-/**
- * 🔹 Geocode function for converting location name → LatLng
- */
+
 suspend fun geocodeLocation(context: Context, locationName: String): LatLng? {
     return withContext(Dispatchers.IO) {
         try {

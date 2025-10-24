@@ -55,7 +55,6 @@ fun SignInScreen(
     ) {
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Back button
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -88,7 +87,6 @@ fun SignInScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Password field
         OutlinedTextField(
             value = password.value,
             onValueChange = { password.value = it },
@@ -168,7 +166,6 @@ fun SignInScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Sign up link
         Text(
             text = "Don't have an account? Sign Up",
             fontSize = 14.sp,
