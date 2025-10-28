@@ -2,7 +2,7 @@
 # Copy this text to your .gitignore file to your android project prior to your initial commit. 
 
 # Google Services (e.g. APIs or Firebase)
-#GoogleService-Info.plist
+GoogleService-Info.plist
 
 # Built application files
 *.apk
@@ -58,15 +58,15 @@ captures/
 
 # Keystore files
 # Uncomment the following lines if you do not want to check your keystore files in.
-#*.jks
-#*.keystore
+*.jks
+*.keystore
 
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild
 .cxx/
 
 # Google Services (e.g. APIs or Firebase)
-# google-services.json
+google-services.json
 
 # Freeline
 freeline.py
@@ -88,4 +88,4 @@ lint/intermediates/
 lint/generated/
 lint/outputs/
 lint/tmp/
-# lint/reports/
+lint/reports/

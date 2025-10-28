@@ -6,4 +6,6 @@
     <string name="button_sign_up">Sign Up</string>
     <string name="google_maps_key">"AIzaSyBpKobKUmTCedPH8XHPzveVj3Gvn04cN2A"</string>
     <string name="profile_name">profile_picture</string>
+    <string name="cd_button_send">Send Message</string>
+    <string name="googleClientId">72921513891–2b7p7i069s89nm2o5rd4aj049aokt0sf.apps.googleusercontent.com</string>
 </resources>

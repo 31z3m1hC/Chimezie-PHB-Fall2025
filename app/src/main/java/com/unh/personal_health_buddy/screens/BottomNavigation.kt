@@ -9,10 +9,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,7 +33,7 @@ import com.google.common.math.LinearTransformation.vertical
 
 sealed class NavigationItem(val route: String, val icon: ImageVector, val title: String) {
     object Home : NavigationItem("home", Icons.Filled.Home, "Home")
-    object Map : NavigationItem("map", Icons.Filled.Map, "Map")
+    object Map : NavigationItem("map", Icons.Filled.Place, "Map")
     object Notification : NavigationItem("notification", Icons.Filled.Notifications, "Notification")
     object Profile : NavigationItem("profile", Icons.Filled.Person, "Profile")
 

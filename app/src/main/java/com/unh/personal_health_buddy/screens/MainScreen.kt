@@ -21,9 +21,9 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.unh.personal_health_buddy.NavigationItem
 import com.unh.personal_health_buddy.BottomBar
-import com.unh.personal_health_buddy.screens.profileItems
+import com.unh.personal_health_buddy.chats.MessageListScreen
+import com.unh.personal_health_buddy.database.UserAccountForm
 
 
 @Composable
@@ -43,12 +43,19 @@ fun MainScreen(navController: NavHostController) {
             .fillMaxSize()
         ) {
             when (currentRoute) {
+                "user-details" -> UserAccountForm (
+                    navController = navController,
+                    onUserSaved = {}
+                )
+                "chats" -> MessageListScreen(
+                    navController = navController,
+                    cid = "preview_cid",
+                )
                 "profile" -> ProfileScreen(navController, profileItems, currentRoute)
                 "contacts" -> ContactScreen(navController)
                 "notification" -> NotificationScreen(navController)
                 "appointment" -> AppointmentScreen(navController)
                 "faqs" -> FAQScreen(navController)
-                "account" -> AccountScreen(navController)
                 "logout" -> LogoutScreen(navController)
                 "home" -> HomeScreen(navController)
                 "map" -> MapScreen(navController)
@@ -79,26 +86,7 @@ fun LogoutScreen(navController: NavController) {
     }
 }
 
-@Composable
-fun AccountScreen(navController: NavController) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = "Account Screen", style = MaterialTheme.typography.headlineSmall)
-    }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, top = 32.dp),
-        contentAlignment = Alignment.TopStart
-    ) {
-        IconButton(onClick = { navController.navigate("profile") }) {
-            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back to Profile")
-        }
-    }
-}
 
 @Composable
 fun AppointmentScreen(navController: NavController) {

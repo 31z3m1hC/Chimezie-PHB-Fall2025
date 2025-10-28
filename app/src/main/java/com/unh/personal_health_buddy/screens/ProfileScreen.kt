@@ -27,7 +27,6 @@ import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.BottomBar
 import com.unh.personal_health_buddy.R
 
-// --- Sealed class for Profile Items ---
 sealed class ProfileItem(val title: String, val icon: ImageVector, val route: String) {
     object Account : ProfileItem("Account", Icons.Filled.Favorite, "account")
     object Appointment : ProfileItem("Appointment", Icons.Filled.Event, "appointment")
@@ -77,7 +76,6 @@ fun ProfileScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // Profile Image
                     Box(
                         modifier = Modifier
                             .background(
@@ -147,7 +145,6 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.width(16.dp))
 
-                        // Text
                         Text(
                             text = item.title,
                             style = MaterialTheme.typography.bodyLarge,
@@ -155,19 +152,27 @@ fun ProfileScreen(
                             modifier = Modifier.weight(1f)
                         )
 
-                        // Arrow navigation
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowRight,
                             contentDescription = "Go",
                             tint = Color.Gray,
                             modifier = Modifier.clickable {
-                                if (currentRoute != item.route) {
-                                    navController.navigate(item.route) {
-                                        popUpTo(navController.graph.startDestinationId) {
-                                            saveState = true
+                                when (item) {
+                                    is ProfileItem.Account -> {
+                                        navController.navigate("userAccountForm") {
+                                            launchSingleTop = true
                                         }
-                                        launchSingleTop = true
-                                        restoreState = true
+                                    }
+                                    else -> {
+                                        if (currentRoute != item.route) {
+                                            navController.navigate(item.route) {
+                                                popUpTo(navController.graph.startDestinationId) {
+                                                    saveState = true
+                                                }
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
+                                        }
                                     }
                                 }
                             }

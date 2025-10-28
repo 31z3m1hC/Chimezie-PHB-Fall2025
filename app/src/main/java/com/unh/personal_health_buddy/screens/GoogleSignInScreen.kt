@@ -22,6 +22,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+
+
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+
+//import androidx.lint.kotlin.metadata.Visibility
 import androidx.navigation.NavHostController
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.unh.personal_health_buddy.R
@@ -117,10 +123,24 @@ fun GoogleSignInScreen(
         OutlinedButton(
             onClick = {
                 if (googleSignInClient != null && launcher != null) {
-                    performGoogleAuthentication(
-                        launcher,
-                        context,
-                    )
+                    val lastAccount = com.google.android.gms.auth.api.signin.GoogleSignIn.getLastSignedInAccount(context)
+                    if (lastAccount != null && lastAccount.idToken != null) {
+                        val credential = com.google.firebase.auth.GoogleAuthProvider.getCredential(lastAccount.idToken, null)
+                        com.google.firebase.auth.FirebaseAuth.getInstance()
+                            .signInWithCredential(credential)
+                            .addOnSuccessListener {
+                                navController.navigate("home") {
+                                    popUpTo("sign-in") { inclusive = true }
+                                }
+                                signInMessage.value = "Google Sign-In successful"
+                            }
+                            .addOnFailureListener { e ->
+                                signInMessage.value = "Silent sign-in failed, launching Google Sign-In"
+                                performGoogleAuthentication(launcher, context)
+                            }
+                    } else {
+                        performGoogleAuthentication(launcher, context)
+                    }
                 } else {
                     signInMessage.value = "Google Sign-In unavailable"
                 }
@@ -140,6 +160,7 @@ fun GoogleSignInScreen(
                 Text(text = "Sign in with Google")
             }
         }
+
 
         if (signInMessage.value.isNotEmpty()) {
             Text(

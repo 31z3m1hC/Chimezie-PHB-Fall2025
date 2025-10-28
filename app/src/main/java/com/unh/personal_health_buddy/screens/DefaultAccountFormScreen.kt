@@ -8,12 +8,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AccountFormScreen() {
+fun AccountForm() {
     var fullName by remember { mutableStateOf("") }
     var age by remember { mutableStateOf("") }
     var bloodGroup by remember { mutableStateOf("") }
@@ -195,5 +194,5 @@ fun AccountFormScreen() {
 
 @Composable
 fun PreviewAccountFormScreen() {
-    AccountFormScreen()
+    AccountForm()
 }

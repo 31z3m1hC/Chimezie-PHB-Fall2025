@@ -1,6 +1,8 @@
 package com.unh.personal_health_buddy.screens
 
+import android.R.attr.onClick
 import android.content.Intent
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -8,12 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,7 +26,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.unh.personal_health_buddy.R
-import com.unh.personal_health_buddy.firebase.performGoogleAuthentication
 import com.unh.personal_health_buddy.firebase.performSignUp
 
 @Composable
@@ -53,25 +49,29 @@ fun SignUpScreen(
             .padding(top = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Back button
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp),
             contentAlignment = Alignment.TopStart
         ) {
-            IconButton(onClick = { navController.navigate("sign-in") }) {
+            IconButton(
+                modifier = Modifier.padding(top = 16.dp),
+                onClick = {
+                Log.d("SignUpScreen", "Back button clicked")
+                if (!navController.popBackStack()) {
+                    navController.navigate("sign-in")
+                }
+            }) {
+
                 Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
             }
         }
 
         Spacer(modifier = Modifier.height(50.dp))
 
-        Text(
-            text = "Sign Up",
-            style = MaterialTheme.typography.headlineMedium
-        )
-
+        Text(text = "Sign Up", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
@@ -104,7 +104,8 @@ fun SignUpScreen(
             label = { Text("Password") },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
             trailingIcon = {
-                val icon = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                val icon =
+                    if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(imageVector = icon, contentDescription = "Toggle Password")
                 }
@@ -137,7 +138,8 @@ fun SignUpScreen(
                         password.value,
                         emailErrorState,
                         passwordErrorState,
-                        navController
+                        navController,
+                        context
                     )
                 }
             },
@@ -164,6 +166,7 @@ fun SignUpScreen(
             }
         )
     }
+    Log.d("SignUpScreen", "Sign up screen displayed")
 }
 
 @Preview(showBackground = true, showSystemUi = true)
