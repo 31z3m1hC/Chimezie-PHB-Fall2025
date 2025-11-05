@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.unh.personal_health_buddy"
-        minSdk = 26
+        minSdk = 36
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -79,6 +79,10 @@ dependencies {
     implementation(libs.play.services.nearby)
     implementation(libs.androidx.foundation)
     implementation(libs.identity.jvm)
+    implementation(libs.car.ui.lib)
+    implementation(libs.androidx.benchmark.traceprocessor)
+    implementation(libs.androidx.camera.camera2.pipe)
+
 
     // Optional: debugging / tooling
     debugImplementation("androidx.compose.ui:ui-tooling")
@@ -123,4 +127,11 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
     implementation("io.getstream:stream-chat-android-ui-components:6.26.0")
+    implementation("com.google.firebase:firebase-storage-ktx:21.0.1")
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
+
+
+
+
 }

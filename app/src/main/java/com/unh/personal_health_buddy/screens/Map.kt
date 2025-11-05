@@ -69,7 +69,7 @@ fun GoogleMapScreen(navController: NavController) {
                 .padding(paddingValues)
                 .padding(8.dp)
         ) {
-            // Back Icon
+
             Icon(
                 imageVector = Icons.Default.ArrowBackIosNew,
                 contentDescription = "Back to Profile",
@@ -89,7 +89,6 @@ fun GoogleMapScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Search Bar & Button
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -141,7 +140,6 @@ fun GoogleMapScreen(navController: NavController) {
                 }
             }
 
-            // Map Box
             Box(
                 modifier = Modifier
                     .weight(1f)

@@ -1,13 +1,16 @@
 package com.unh.personal_health_buddy.screens
 
+import android.app.Activity
 import android.content.Intent
-import androidx.activity.compose.ManagedActivityResultLauncher
-import androidx.activity.result.ActivityResult
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
@@ -18,43 +21,43 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-
-
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-
-//import androidx.lint.kotlin.metadata.Visibility
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.firebase.performGoogleAuthentication
 import com.unh.personal_health_buddy.firebase.performSignIn
 
 @Composable
-fun GoogleSignInScreen(
+fun SignInScreen(
     navController: NavHostController,
     googleSignInClient: GoogleSignInClient?,
-    launcher: ManagedActivityResultLauncher<Intent, ActivityResult>?
+    launcher: ActivityResultLauncher<Intent>,
+    activity: Activity
 ) {
-    val context = LocalContext.current
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
     val emailErrorState = remember { mutableStateOf(false) }
     val passwordErrorState = remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
-    val signInMessage = remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 50.dp),
+            .padding(top = 16.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(12.dp))
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -62,15 +65,18 @@ fun GoogleSignInScreen(
             contentAlignment = Alignment.TopStart
         ) {
             IconButton(onClick = { navController.navigate("welcome") }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
             }
         }
 
+        Spacer(modifier = Modifier.height(50.dp))
+
         Text(
             text = "Sign In",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 30.dp, top = 16.dp)
+            style = MaterialTheme.typography.headlineMedium
         )
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = email.value,
@@ -81,6 +87,8 @@ fun GoogleSignInScreen(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(0.9f)
         )
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = password.value,
@@ -100,7 +108,20 @@ fun GoogleSignInScreen(
             modifier = Modifier.fillMaxWidth(0.9f)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "Forgot Password?",
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.End,
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .padding(top = 8.dp)
+                .clickable { navController.navigate("reset-password") }
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         Button(
             onClick = {
@@ -109,79 +130,78 @@ fun GoogleSignInScreen(
                     password.value,
                     emailErrorState,
                     passwordErrorState,
-                    context,
+                    activity,
                     navController
                 )
             },
-            modifier = Modifier.fillMaxWidth(0.9f)
-        ) { Text("Sign In") }
-
-        Spacer(modifier = Modifier.height(24.dp))
-        Text("OR")
-        Spacer(modifier = Modifier.height(24.dp))
-
-        OutlinedButton(
-            onClick = {
-                if (googleSignInClient != null && launcher != null) {
-                    val lastAccount = com.google.android.gms.auth.api.signin.GoogleSignIn.getLastSignedInAccount(context)
-                    if (lastAccount != null && lastAccount.idToken != null) {
-                        val credential = com.google.firebase.auth.GoogleAuthProvider.getCredential(lastAccount.idToken, null)
-                        com.google.firebase.auth.FirebaseAuth.getInstance()
-                            .signInWithCredential(credential)
-                            .addOnSuccessListener {
-                                navController.navigate("home") {
-                                    popUpTo("sign-in") { inclusive = true }
-                                }
-                                signInMessage.value = "Google Sign-In successful"
-                            }
-                            .addOnFailureListener { e ->
-                                signInMessage.value = "Silent sign-in failed, launching Google Sign-In"
-                                performGoogleAuthentication(launcher, context)
-                            }
-                    } else {
-                        performGoogleAuthentication(launcher, context)
-                    }
-                } else {
-                    signInMessage.value = "Google Sign-In unavailable"
-                }
-            },
-            modifier = Modifier.fillMaxWidth(0.9f)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.google),
-                    contentDescription = "Google Logo",
-                    modifier = Modifier.size(40.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Sign in with Google")
-            }
-        }
-
-
-        if (signInMessage.value.isNotEmpty()) {
-            Text(
-                text = signInMessage.value,
-                color = if (signInMessage.value.contains("successful")) Color.Green else Color.Red,
-                modifier = Modifier.padding(top = 8.dp)
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .height(50.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorResource(id = R.color.purple_500),
+                contentColor = Color.White
             )
+        ) {
+            Text("Sign In")
         }
+
+        Spacer(modifier = Modifier.height(32.dp))
+        Text("OR")
+        Spacer(modifier = Modifier.height(12.dp))
 
         Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            horizontalArrangement = Arrangement.Center
+                .padding(top = 16.dp)
+                .clickable {
+                    performGoogleAuthentication(
+                        launcher = launcher,
+                        activity = activity
+                    )
+                }
         ) {
-            Text(text = "Don't have an account? ")
+            Image(
+                painter = painterResource(id = R.drawable.google),
+                contentDescription = "Google Icon",
+                modifier = Modifier
+                    .size(60.dp)
+                    .padding(end = 8.dp)
+            )
             Text(
-                text = "Sign up",
+                text = "Sign in with Google",
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clickable { navController.navigate("sign-up") }
+                style = MaterialTheme.typography.bodyLarge
             )
         }
+
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "Don't have an account? Sign Up",
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.clickable { navController.navigate("sign-up") }
+        )
     }
+    Log.d("SignInScreen", "Sign in screen displayed")
 }
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun PreviewSignInScreen() {
+    val navController = rememberNavController()
+    val fakeLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { }
+
+    val fakeActivity = object : Activity() {}
+
+    SignInScreen(
+        navController = navController,
+        googleSignInClient = null,
+        launcher = fakeLauncher,
+        activity = fakeActivity
+    )
+}
+

@@ -34,7 +34,6 @@ fun EmergencyContactScreen(navController: NavHostController) {
             .padding(paddingValues)
         ) {
 
-            // Back button at top-left
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -69,8 +68,6 @@ fun EmergencyContactScreen(navController: NavHostController) {
                 }
 
             }
-
-            // Emergency contacts content
             EmergencyContactsDisplayScreen(
                 modifier = Modifier
                     .fillMaxSize()

@@ -22,8 +22,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.BottomBar
-import com.unh.personal_health_buddy.chats.MessageListScreen
-import com.unh.personal_health_buddy.database.UserAccountForm
+import com.unh.personal_health_buddy.database.AccountForm
+
 
 
 @Composable
@@ -43,9 +43,9 @@ fun MainScreen(navController: NavHostController) {
             .fillMaxSize()
         ) {
             when (currentRoute) {
-                "user-details" -> UserAccountForm (
+                "account-form" -> AccountForm (
                     navController = navController,
-                    onUserSaved = {}
+                    onSave = {},
                 )
                 "chats" -> MessageListScreen(
                     navController = navController,

@@ -159,7 +159,7 @@ fun ProfileScreen(
                             modifier = Modifier.clickable {
                                 when (item) {
                                     is ProfileItem.Account -> {
-                                        navController.navigate("userAccountForm") {
+                                        navController.navigate("account-form") {
                                             launchSingleTop = true
                                         }
                                     }

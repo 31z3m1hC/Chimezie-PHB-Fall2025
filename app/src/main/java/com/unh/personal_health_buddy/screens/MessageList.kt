@@ -1,4 +1,4 @@
-package com.unh.personal_health_buddy.chats
+package com.unh.personal_health_buddy.screens
 
 import android.util.Log
 import androidx.compose.foundation.layout.*
@@ -9,7 +9,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -18,7 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.unh.personal_health_buddy.database.Chats
-import com.unh.personal_health_buddy.database.FirestoreHelper
+import com.unh.personal_health_buddy.Authentication.FirestoreHelper
 import kotlinx.coroutines.launch
 import java.util.*
 

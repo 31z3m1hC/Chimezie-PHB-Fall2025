@@ -1,18 +1,15 @@
-package com.unh.personal_health_buddy.screens
-
+import android.app.Activity
 import android.content.Intent
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,62 +19,83 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.unh.personal_health_buddy.R
-import com.unh.personal_health_buddy.firebase.performGoogleAuthentication
-import com.unh.personal_health_buddy.firebase.performSignIn
+import com.unh.personal_health_buddy.firebase.performSignUp
 
 @Composable
-fun SignInScreen(
+fun SignUpScreen(
     navController: NavHostController,
     googleSignInClient: GoogleSignInClient?,
-    launcher: ActivityResultLauncher<Intent>
+    launcher: ActivityResultLauncher<Intent>,
+    activity: Activity
 ) {
-    val context = LocalContext.current
+    val name = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
+
+    val nameErrorState = remember { mutableStateOf(false) }
     val emailErrorState = remember { mutableStateOf(false) }
     val passwordErrorState = remember { mutableStateOf(false) }
+
     var passwordVisible by remember { mutableStateOf(false) }
+    var isChecked by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(top = 16.dp),
-        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(12.dp))
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp),
             contentAlignment = Alignment.TopStart
         ) {
-            IconButton(onClick = { navController.navigate("welcome") }) {
+            IconButton(
+                modifier = Modifier.padding(top = 16.dp),
+                onClick = {
+                    Log.d("SignUpScreen", "Back button clicked")
+                    if (!navController.popBackStack()) {
+                        navController.navigate("sign-in")
+                    }
+                }
+            ) {
                 Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
             }
         }
 
         Spacer(modifier = Modifier.height(50.dp))
 
-        Text(
-            text = "Sign In",
-            style = MaterialTheme.typography.headlineMedium
+        Text(text = "Sign Up", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = name.value,
+            onValueChange = {
+                name.value = it
+                nameErrorState.value = false
+            },
+            isError = nameErrorState.value,
+            label = { Text("Name") },
+            leadingIcon = { Icon(Icons.Default.Person, contentDescription = "Person Icon") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(0.9f)
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = email.value,
-            onValueChange = { email.value = it },
+            onValueChange = {
+                email.value = it
+                emailErrorState.value = false
+            },
             isError = emailErrorState.value,
             label = { Text("Email") },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
@@ -89,7 +107,10 @@ fun SignInScreen(
 
         OutlinedTextField(
             value = password.value,
-            onValueChange = { password.value = it },
+            onValueChange = {
+                password.value = it
+                passwordErrorState.value = false
+            },
             isError = passwordErrorState.value,
             label = { Text("Password") },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
@@ -106,29 +127,38 @@ fun SignInScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Text(
-            text = "Forgot Password?",
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.End,
+        Row(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
-                .padding(top = 8.dp)
-                .clickable { navController.navigate("reset-password") }
-        )
+                .toggleable(
+                    value = isChecked,
+                    onValueChange = { isChecked = it },
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(checked = isChecked, onCheckedChange = { isChecked = it })
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("I agree to the Terms and Conditions")
+        }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Button(
             onClick = {
-                performSignIn(
-                    email.value,
-                    password.value,
-                    emailErrorState,
-                    passwordErrorState,
-                    context,
-                    navController
-                )
+                if (isChecked) {
+                    performSignUp(
+                        name.value,
+                        email.value,
+                        password.value,
+                        nameErrorState,
+                        emailErrorState,
+                        passwordErrorState,
+                        navController,
+                        activity
+                    )
+                }
             },
             modifier = Modifier
                 .fillMaxWidth(0.9f)
@@ -138,55 +168,40 @@ fun SignInScreen(
                 contentColor = Color.White
             )
         ) {
-            Text("Sign In")
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-        Text("OR")
-        Spacer(modifier = Modifier.height(12.dp))
-
-
-        OutlinedButton(
-            onClick = {
-                performGoogleAuthentication(
-                    launcher = launcher,
-                    context = context
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .height(50.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = colorResource(id = R.color.purple_500),
-                contentColor = Color.White
-            )
-        ) {
-            Text("Sign in with Google")
+            Text("Sign Up")
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Don't have an account? Sign Up",
-            fontSize = 14.sp,
+            text = "Already have an account? Sign In",
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.clickable { navController.navigate("sign-up") }
+            modifier = Modifier.clickable {
+                navController.navigate("sign-in") {
+                    popUpTo("sign-up") { inclusive = true }
+                }
+            }
         )
     }
-    Log.d("SignInScreen", "Sign in screen displayed")
+
+    Log.d("SignUpScreen", "Sign up screen displayed")
 }
+
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun PreviewSignInScreen() {
+fun PreviewSignUpScreen() {
     val navController = rememberNavController()
     val fakeLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { }
 
-    SignInScreen(
+    val fakeActivity = object : Activity() {}
+
+    SignUpScreen(
         navController = navController,
         googleSignInClient = null,
-        launcher = fakeLauncher
+        launcher = fakeLauncher,
+        activity = fakeActivity
     )
 }

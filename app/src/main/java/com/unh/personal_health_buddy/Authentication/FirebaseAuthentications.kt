@@ -1,7 +1,6 @@
 package com.unh.personal_health_buddy.firebase
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.util.Patterns
@@ -28,13 +27,21 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 fun performSignUp(
+    name: String,
     email: String,
     password: String,
+    nameErrorState: MutableState<Boolean>,
     emailErrorState: MutableState<Boolean>,
     passwordErrorState: MutableState<Boolean>,
     navController: NavController,
-    context: Context
+    context: Activity
 ) {
+    if (name.isBlank()) {
+        nameErrorState.value = true
+        Toast.makeText(context, "Name cannot be empty", Toast.LENGTH_SHORT).show()
+        return
+    }
+
     if (email.isBlank()) {
         emailErrorState.value = true
         Toast.makeText(context, "Email cannot be empty", Toast.LENGTH_SHORT).show()
@@ -58,6 +65,7 @@ fun performSignUp(
                 Toast.makeText(context, "Sign-up failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
             }
         }
+        .addOnFailureListener { e -> Log.e("SignUp", "Exception: ", e) }
 }
 
 fun performSignIn(
@@ -65,7 +73,7 @@ fun performSignIn(
     password: String,
     emailErrorState: MutableState<Boolean>,
     passwordErrorState: MutableState<Boolean>,
-    context: Context,
+    context: Activity,
     navController: NavHostController
 ) {
     if (email.isBlank()) {
@@ -76,6 +84,7 @@ fun performSignIn(
         passwordErrorState.value = true
         return
     }
+
 
     FirebaseAuth.getInstance()
         .signInWithEmailAndPassword(email, password)
@@ -128,10 +137,10 @@ fun createGoogleSignInOptions(googleClientId: String): GoogleSignInOptions {
 
 fun performGoogleAuthentication(
     launcher: ActivityResultLauncher<Intent>,
-    context: Context
+    activity: Activity
 ) {
-    val gso = createGoogleSignInOptions(context.getString(R.string.default_web_client_id))
-    val googleSignInClient = GoogleSignIn.getClient(context, gso)
+    val gso = createGoogleSignInOptions(activity.getString(R.string.default_web_client_id))
+    val googleSignInClient = GoogleSignIn.getClient(activity, gso)
     launcher.launch(googleSignInClient.signInIntent)
     Log.d("GoogleAuth", "Google authentication started")
 }
@@ -176,6 +185,43 @@ fun rememberFirebaseAuthLauncher(
     }
 }
 
+
+fun handleGoogleSignIn(
+    activity: Activity,
+    launcher: ActivityResultLauncher<Intent>,
+    navController: NavHostController,
+    signInMessage: MutableState<String>
+) {
+    val lastAccount = GoogleSignIn.getLastSignedInAccount(activity)
+    if (lastAccount?.idToken != null) {
+        val credential = GoogleAuthProvider.getCredential(lastAccount.idToken, null)
+        FirebaseAuth.getInstance()
+            .signInWithCredential(credential)
+            .addOnSuccessListener {
+                navController.navigate("home") {
+                    popUpTo("sign-in") { inclusive = true }
+                }
+                signInMessage.value = "Google Sign-In successful"
+            }
+            .addOnFailureListener {
+                signInMessage.value = "Silent sign-in failed, launching Google Sign-In"
+                val gso = createGoogleSignInOptions(
+                    activity.getString(R.string.default_web_client_id)
+                )
+                val client = GoogleSignIn.getClient(activity, gso)
+                launcher.launch(client.signInIntent)
+            }
+    } else {
+        val gso = createGoogleSignInOptions(
+            activity.getString(R.string.default_web_client_id)
+        )
+        val client = GoogleSignIn.getClient(activity, gso)
+        launcher.launch(client.signInIntent)
+    }
+    Log.d("GoogleSignIn", "Google Sign-In started")
+}
+
+
 @Composable
 fun SetupAuthentication(
     navController: NavHostController,
@@ -194,30 +240,17 @@ fun SetupAuthentication(
             Log.e("Auth", "Google Sign-In failed", e)
         }
     )
-    Log.d("SetupAuthentication", "Authentication setup")
 
     LaunchedEffect(Unit) {
-        val account = GoogleSignIn.getLastSignedInAccount(activity)
-        if (account != null && FirebaseAuth.getInstance().currentUser == null) {
-            val credential = GoogleAuthProvider.getCredential(account.idToken, null)
-            try {
-                val authResult = FirebaseAuth.getInstance()
-                    .signInWithCredential(credential)
-                    .await()
-                navController.navigate("home") {
-                    popUpTo("sign-in") { inclusive = true }
-                }
-                Log.d("SilentSignIn", "Signed in silently")
-            } catch (e: Exception) {
-                Log.e("SilentSignIn", "Failed", e)
-            }
-        }
+        Log.d("SetupAuth", "Waiting for user login — no auto sign-in")
     }
 
     AppNavigation(
         navController = navController,
         googleSignInClient = googleSignInClient,
-        launcher = launcher
+        launcher = launcher,
+        activity = activity
     )
-    Log.d("SetupAuthentication", "Authentication setup")
+
+    Log.d("SetupAuthentication", "Authentication setup complete")
 }

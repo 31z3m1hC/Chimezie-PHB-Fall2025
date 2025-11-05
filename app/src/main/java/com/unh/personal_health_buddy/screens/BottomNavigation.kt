@@ -62,8 +62,8 @@ fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
                 15.dp, 15.dp
             )
         )
-        .height(75.dp),
-        Color.Transparent,
+        .height(90.dp),
+        Color.LightGray,
 
 
 
@@ -87,15 +87,15 @@ fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
                 },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Color.Blue,
-                    unselectedIconColor = Color.Blue,
-                    selectedTextColor = Color.Black,
+                    unselectedIconColor = Color.Gray,
+                    selectedTextColor = Color.Blue,
                     unselectedTextColor = Color.Gray,
                     indicatorColor = Color.White
                 )
             )
         }
     }
-    Spacer(modifier = Modifier.height(12.dp))
+    //Spacer(modifier = Modifier.height(12.dp))
 }
 
 

@@ -1,15 +1,15 @@
-package com.unh.personal_health_buddy.database
+package com.unh.personal_health_buddy.Authentication
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
 import android.util.Log
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.unh.personal_health_buddy.features.Emergency
+import com.unh.personal_health_buddy.database.*
 import kotlinx.coroutines.tasks.await
-import java.util.UUID
-
+import java.io.ByteArrayOutputStream
 
 object FirestoreHelper {
     @SuppressLint("StaticFieldLeak")
@@ -22,15 +22,33 @@ object FirestoreHelper {
         return user.uid to user.email!!
     }
 
-    suspend fun writeUser(user: User) {
+    // -------------------- Users --------------------
+    suspend fun writeUser(user: User, profileImage: Bitmap? = null) {
         val (uid, email) = getVerifiedUser()
         require(user.email == email) { "Email mismatch: form email does not match authenticated email." }
-        require(user.id == uid) { "UID mismatch: form UID does not match authenticated UID." }
+
+        val userMap = hashMapOf(
+            "firstname" to user.firstname,
+            "lastname" to user.lastname,
+            "dateOfBirth" to user.dateOfBirth,
+            "homeAddress" to user.homeAddress,
+            "gender" to user.gender.name,
+            "email" to user.email,
+            "medication" to user.medication
+        )
+
+        profileImage?.let {
+            val baos = ByteArrayOutputStream()
+            it.compress(Bitmap.CompressFormat.JPEG, 80, baos)
+            val imageBase64 = Base64.encodeToString(baos.toByteArray(), Base64.DEFAULT)
+            userMap["profileImage"] = imageBase64
+        }
 
         db.collection("users")
             .document(uid)
-            .set(user)
+            .set(userMap)
             .await()
+
         Log.d("FirestoreHelper", "User written to Firestore with UID: $uid")
     }
 
@@ -53,29 +71,7 @@ object FirestoreHelper {
         Log.d("FirestoreHelper", "User deleted from Firestore with UID: $uid")
     }
 
-    suspend fun writeHealthInfo(healthInfo: HealthInfo) {
-        val (uid, _) = getVerifiedUser()
-        db.collection("users")
-            .document(uid)
-            .collection("HealthInfo")
-            .document("details")
-            .set(healthInfo)
-            .await()
-        Log.d("FirestoreHelper", "Health info written for UID: $uid")
-    }
-
-    suspend fun readHealthInfo(): HealthInfo? {
-        val (uid, _) = getVerifiedUser()
-        val snapshot = db.collection("users")
-            .document(uid)
-            .collection("HealthInfo")
-            .document("details")
-            .get()
-            .await()
-        Log.d("FirestoreHelper", "Health info read for UID: $uid")
-        return snapshot.toObject(HealthInfo::class.java)
-    }
-
+    // -------------------- Health Info --------------------
     suspend fun deleteHealthInfo() {
         val (uid, _) = getVerifiedUser()
         db.collection("users")
@@ -87,6 +83,7 @@ object FirestoreHelper {
         Log.d("FirestoreHelper", "Health info deleted for UID: $uid")
     }
 
+    // -------------------- Emergency Contact --------------------
     suspend fun writeEmergencyContact(contact: EmergencyContact) {
         val (uid, _) = getVerifiedUser()
         db.collection("users")
@@ -120,7 +117,7 @@ object FirestoreHelper {
         Log.d("FirestoreHelper", "🗑️ Emergency contact deleted for UID: $uid")
     }
 
-
+    // -------------------- Chats --------------------
     suspend fun writeChat(chat: Chats) {
         val (uid, _) = getVerifiedUser()
         db.collection("users")
@@ -154,7 +151,7 @@ object FirestoreHelper {
         Log.d("FirestoreHelper", "Chat deleted for UID: $uid")
     }
 
-
+    // -------------------- Articles --------------------
     suspend fun writeArticle(article: Articles) {
         db.collection("articles")
             .add(article)
@@ -178,6 +175,7 @@ object FirestoreHelper {
         Log.d("FirestoreHelper", "Article deleted")
     }
 
+    // -------------------- FAQs --------------------
     suspend fun writeFAQ(faq: FAQs) {
         db.collection("faqs")
             .add(faq)
@@ -199,5 +197,11 @@ object FirestoreHelper {
             .delete()
             .await()
         Log.d("FirestoreHelper", "FAQ deleted")
+    }
+
+    // -------------------- Helpers --------------------
+    fun decodeBase64ToBitmap(base64Str: String): Bitmap {
+        val bytes = Base64.decode(base64Str, Base64.DEFAULT)
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
     }
 }

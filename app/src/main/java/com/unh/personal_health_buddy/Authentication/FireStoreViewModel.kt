@@ -1,4 +1,7 @@
+import android.annotation.SuppressLint
 import android.util.Log
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -18,15 +21,18 @@ class AuthToFirestore : ViewModel() {
             val firebaseUser = auth.currentUser
             if (firebaseUser != null) {
                 val user = User(
-                    id = firebaseUser.uid,
-                    name = "Default Name",
+                    uid = firebaseUser.uid,
+                    firstname = "Default Name",
+                    lastname = "Default Name",
                     gender = Gender.MALE,
                     email = firebaseUser.email ?: "",
-                    avatar = ""
+                    medication = "",
+                    dateOfBirth = "",
+                    homeAddress = ""
                 )
                 try {
                     db.collection("users")
-                        .document(user.id)
+                        .document(user.uid)
                         .set(user)
                         .await()
                     Log.d("AuthToFirestore", "User synced successfully")
@@ -62,4 +68,12 @@ class AuthToFirestore : ViewModel() {
             }
         }
     }
+}
+@SuppressLint("ViewModelConstructorInComposable")
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+
+fun AuthToFirestorePreview() {
+    val viewModel = AuthToFirestore()
+    viewModel.syncAuthUserToFirestore()
 }
