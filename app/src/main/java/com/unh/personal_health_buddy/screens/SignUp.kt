@@ -1,15 +1,22 @@
-import android.app.Activity
+package com.unh.personal_health_buddy.screens
+
 import android.content.Intent
-import android.util.Log
+import android.util.Patterns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,31 +24,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.unh.personal_health_buddy.R
+import com.unh.personal_health_buddy.firebase.isValidEmail
+import com.unh.personal_health_buddy.firebase.isValidPassword
+import com.unh.personal_health_buddy.firebase.isValidUsername
+import com.unh.personal_health_buddy.firebase.performGoogleAuthentication
 import com.unh.personal_health_buddy.firebase.performSignUp
 
 @Composable
 fun SignUpScreen(
     navController: NavHostController,
     googleSignInClient: GoogleSignInClient?,
-    launcher: ActivityResultLauncher<Intent>,
-    activity: Activity
+    launcher: ActivityResultLauncher<Intent>
 ) {
+    val context = LocalContext.current
     val name = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
-
-    val nameErrorState = remember { mutableStateOf(false) }
     val emailErrorState = remember { mutableStateOf(false) }
     val passwordErrorState = remember { mutableStateOf(false) }
-
+    val nameErrorState = remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
     var isChecked by remember { mutableStateOf(false) }
 
@@ -57,60 +68,61 @@ fun SignUpScreen(
                 .padding(start = 16.dp),
             contentAlignment = Alignment.TopStart
         ) {
-            IconButton(
-                modifier = Modifier.padding(top = 16.dp),
-                onClick = {
-                    Log.d("SignUpScreen", "Back button clicked")
-                    if (!navController.popBackStack()) {
-                        navController.navigate("sign-in")
-                    }
-                }
-            ) {
+            IconButton(onClick = { navController.navigate("sign-in") }) {
                 Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
             }
         }
 
         Spacer(modifier = Modifier.height(50.dp))
 
-        Text(text = "Sign Up", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = name.value,
-            onValueChange = {
-                name.value = it
-                nameErrorState.value = false
-            },
-            isError = nameErrorState.value,
-            label = { Text("Name") },
-            leadingIcon = { Icon(Icons.Default.Person, contentDescription = "Person Icon") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(0.9f)
+        Text(
+            text = "Sign Up",
+            style = MaterialTheme.typography.headlineMedium
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
+            value = name.value,
+            onValueChange = { name.value = it },
+            label = { Text("Name") },
+            leadingIcon = { Icon(Icons.Default.Person, contentDescription = "Person Icon") },
+            isError = nameErrorState.value,
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(0.9f)
+        )
+        if (nameErrorState.value) {
+            Text(
+                text = "Name must include letters and be alphanumeric",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
             value = email.value,
-            onValueChange = {
-                email.value = it
-                emailErrorState.value = false
-            },
+            onValueChange = { email.value = it },
             isError = emailErrorState.value,
             label = { Text("Email") },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(0.9f)
         )
+        if (emailErrorState.value) {
+            Text(
+                text = "Please enter a valid email",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = password.value,
-            onValueChange = {
-                password.value = it
-                passwordErrorState.value = false
-            },
+            onValueChange = { password.value = it },
             isError = passwordErrorState.value,
             label = { Text("Password") },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
@@ -124,6 +136,13 @@ fun SignUpScreen(
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(0.9f)
         )
+        if (passwordErrorState.value) {
+            Text(
+                text = "Password must be alphanumeric with at least one special character",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -147,16 +166,21 @@ fun SignUpScreen(
 
         Button(
             onClick = {
-                if (isChecked) {
+                val isNameValid = isValidUsername(name.value)
+                val isEmailValid = isValidEmail(email.value)
+                val isPasswordValid = isValidPassword(password.value)
+
+                nameErrorState.value = !isNameValid
+                emailErrorState.value = !isEmailValid
+                passwordErrorState.value = !isPasswordValid
+
+                if (isChecked && isNameValid && isEmailValid && isPasswordValid) {
                     performSignUp(
-                        name.value,
                         email.value,
                         password.value,
-                        nameErrorState,
                         emailErrorState,
                         passwordErrorState,
-                        navController,
-                        activity
+                        navController
                     )
                 }
             },
@@ -175,6 +199,7 @@ fun SignUpScreen(
 
         Text(
             text = "Already have an account? Sign In",
+            fontSize = 14.sp,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.clickable {
                 navController.navigate("sign-in") {
@@ -183,8 +208,6 @@ fun SignUpScreen(
             }
         )
     }
-
-    Log.d("SignUpScreen", "Sign up screen displayed")
 }
 
 
@@ -196,12 +219,9 @@ fun PreviewSignUpScreen() {
         contract = ActivityResultContracts.StartActivityForResult()
     ) { }
 
-    val fakeActivity = object : Activity() {}
-
     SignUpScreen(
         navController = navController,
         googleSignInClient = null,
-        launcher = fakeLauncher,
-        activity = fakeActivity
+        launcher = fakeLauncher
     )
 }

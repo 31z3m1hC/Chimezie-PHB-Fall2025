@@ -1,91 +1,79 @@
-package com.unh.personal_health_buddy.navigation
-
-import SignUpScreen
-import android.app.Activity
+import android.accounts.Account
 import android.content.Intent
-import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.firebase.auth.FirebaseAuth
 import com.unh.personal_health_buddy.database.AccountForm
-import com.unh.personal_health_buddy.screens.*
+import com.unh.personal_health_buddy.screens.AppointmentScreen
+import com.unh.personal_health_buddy.screens.EmergencyContactScreen
+import com.unh.personal_health_buddy.screens.GoogleMapScreen
+import com.unh.personal_health_buddy.screens.HomeScreen
+import com.unh.personal_health_buddy.screens.LogoutScreen
+import com.unh.personal_health_buddy.screens.MainScreen
+import com.unh.personal_health_buddy.screens.NotificationScreen
+import com.unh.personal_health_buddy.screens.ProfileScreen
+import com.unh.personal_health_buddy.screens.ResetPasswordDialog
+import com.unh.personal_health_buddy.screens.SignInScreen
+import com.unh.personal_health_buddy.screens.SignUpScreen
+import com.unh.personal_health_buddy.screens.UserAccount
+import com.unh.personal_health_buddy.screens.WelcomeScreen
+import com.unh.personal_health_buddy.screens.profileItems
 
 @Composable
 fun AppNavigation(
     navController: NavHostController,
     googleSignInClient: GoogleSignInClient,
-    launcher: ActivityResultLauncher<Intent>,
-    activity: Activity
+    launcher: ActivityResultLauncher<Intent>
 ) {
-    val auth = FirebaseAuth.getInstance()
-    val startDestination = if (auth.currentUser != null) "welcome" else "sign-in"
-    Log.d("AppNavigation", "Start destination: $startDestination")
-
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = "user-account"
     ) {
+
         composable("welcome") { WelcomeScreen(navController) }
+        composable("user-account") { UserAccount(navController) }
+        composable("sign-in") { SignInScreen(navController, googleSignInClient, launcher) }
+        composable("sign-up") { SignUpScreen(navController, googleSignInClient, launcher) }
 
-        composable("faqs") { FAQScreen(navController) }
+        composable("home") { HomeScreen(navController) }
+        composable("main") { MainScreen(navController) }
+        composable("appointment") { AppointmentScreen(navController) }
+        composable("contact") { EmergencyContactScreen(navController) }
+        composable("map") { GoogleMapScreen(navController) }
+        composable("notifications") { NotificationScreen(navController) }
+        composable("logout") { LogoutScreen(navController) }
+        composable("reset-password") { ResetPasswordDialog(navController, onDismiss = {}) }
 
-        composable("messages/{cid}") { backStackEntry ->
-            val cid = backStackEntry.arguments?.getString("cid") ?: return@composable
-            MessageListScreen(navController, cid)
-        }
-
-        composable("chats") {
-            MessageListScreen(
+        // ---------------- Profile & Account ----------------
+        composable("profile") {
+            ProfileScreen(
                 navController = navController,
-                cid = "preview_cid",
-                currentUserName = "You"
+                items = profileItems,
+                currentRoute = "profile"
             )
         }
+
 
         composable("account-form") {
             AccountForm(
-                navController,
-                onSave = {},
-                )
-        }
-
-        composable("home") { HomeScreen(navController) }
-        composable("profile") { ProfileScreen(navController, profileItems, "profile") }
-
-
-        composable("appointment") { AppointmentScreen(navController) }
-        composable("contacts") { ContactScreen(navController) }
-
-
-
-        composable("sign-in") {
-            SignInScreen(
                 navController = navController,
-                googleSignInClient = googleSignInClient,
-                launcher = launcher,
-                activity = activity
+                onCancel = {
+                    navController.navigate("profile") {
+                        popUpTo("account-form") { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onSave = {
+                    navController.navigate("profile") {
+                        popUpTo("account-form") { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 
-        composable("sign-up") {
-            SignUpScreen(
-                navController = navController,
-                googleSignInClient = googleSignInClient,
-                launcher = launcher,
-                activity = activity
-            )
-        }
-
-        composable("map") { GoogleMapScreen(navController) }
-        composable("reset-password") { ResetPasswordScreen(navController) }
-        composable("main") { MainScreen(navController) }
-        composable("notification") { NotificationScreen(navController) }
-        composable("emergency-contacts") { EmergencyContactScreen(navController) }
     }
-
-    Log.d("AppNavigation", "Navigation setup complete")
 }

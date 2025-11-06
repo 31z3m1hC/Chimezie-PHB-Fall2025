@@ -1,20 +1,24 @@
 package com.unh.personal_health_buddy.database
 
 import com.google.firebase.Timestamp
-
+import com.google.firebase.auth.FirebaseUser
 
 
 data class User(
     val uid: String = "",
-    val firstname: String,
-    val lastname: String,
-    val dateOfBirth: String,
-    val homeAddress: String,
-    val gender: Gender,
-    val email: String,
-    val medication: String,
-    val phoneNumber: String = "" // default empty string
+    val firstname: String = "",
+    val lastname: String = "",
+    val city: String = "",
+    val dateOfBirth: String = "",
+    val homeAddress: String = "",
+    val gender: Gender = Gender.MALE,  // or default
+    val email: String = "",
+    val medication: String = "",
+    val allergies: String? = null,
+    val phoneNumber: String = "",
+    val profileImageUrl: String? = null // <-- Add this
 )
+
 
 
 enum class Gender {

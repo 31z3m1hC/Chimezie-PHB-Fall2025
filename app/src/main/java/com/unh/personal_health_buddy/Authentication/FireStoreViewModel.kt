@@ -17,63 +17,68 @@ class AuthToFirestore : ViewModel() {
 
     fun syncAuthUserToFirestore() {
         viewModelScope.launch {
-            val auth = FirebaseAuth.getInstance()
-            val firebaseUser = auth.currentUser
-            if (firebaseUser != null) {
-                val user = User(
+            val firebaseUser = FirebaseAuth.getInstance().currentUser ?: return@launch
+
+            val userDoc = db.collection("users").document(firebaseUser.uid).get().await()
+
+            // Only create document if first time — do NOT overwrite filled data
+            if (!userDoc.exists()) {
+                val newUser = User(
                     uid = firebaseUser.uid,
-                    firstname = "Default Name",
-                    lastname = "Default Name",
+                    firstname = "Default",
+                    phoneNumber = "",
+                    allergies = "",
+                    lastname = "Name",
                     gender = Gender.MALE,
                     email = firebaseUser.email ?: "",
                     medication = "",
                     dateOfBirth = "",
-                    homeAddress = ""
+                    homeAddress = "",
+                    profileImageUrl = null // keep space for JPEG URL
                 )
+
                 try {
                     db.collection("users")
-                        .document(user.uid)
-                        .set(user)
+                        .document(firebaseUser.uid)
+                        .set(newUser)
                         .await()
-                    Log.d("AuthToFirestore", "User synced successfully")
+
+                    Log.d("AuthToFirestore", "User profile created in Firestore")
                 } catch (e: Exception) {
-                    Log.e("AuthToFirestore", "Error syncing user", e)
+                    Log.e("AuthToFirestore", "Error creating user", e)
                 }
+            } else {
+                Log.d("AuthToFirestore", "User exists — not overriding")
             }
         }
     }
 
     fun saveEmergencyContact(contact: EmergencyContact) {
         viewModelScope.launch {
-            val auth = FirebaseAuth.getInstance()
-            val firebaseUser = auth.currentUser
-            if (firebaseUser != null) {
-                try {
-                    val userId = firebaseUser.uid
-                    val contactId = contact.contactId.ifEmpty { userId }
+            val firebaseUser = FirebaseAuth.getInstance().currentUser ?: return@launch
 
-                    db.collection("users")
-                        .document(userId)
-                        .collection("emergencyContacts")
-                        .document(contactId)
-                        .set(contact)
-                        .await()
+            try {
+                val userId = firebaseUser.uid
+                val contactId = if (contact.contactId.isNotEmpty()) contact.contactId
+                else db.collection("users").document(userId)
+                    .collection("emergencyContacts").document().id  // generate unique id
 
-                    Log.d("AuthToFirestore", "Emergency contact saved successfully.")
-                } catch (e: Exception) {
-                    Log.e("AuthToFirestore", "Error saving emergency contact", e)
-                }
-            } else {
-                Log.e("AuthToFirestore", "No authenticated user found.")
+                db.collection("users")
+                    .document(userId)
+                    .collection("emergencyContacts")
+                    .document(contactId)
+                    .set(contact.copy(contactId = contactId)) // save ID in model
+                    .await()
+
+                Log.d("AuthToFirestore", "Emergency contact saved")
+            } catch (e: Exception) {
+                Log.e("AuthToFirestore", "Error saving emergency contact", e)
             }
         }
     }
 }
+
 @SuppressLint("ViewModelConstructorInComposable")
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-
-fun AuthToFirestorePreview() {
-    val viewModel = AuthToFirestore()
-    viewModel.syncAuthUserToFirestore()
-}
+fun AuthToFirestorePreview() {}

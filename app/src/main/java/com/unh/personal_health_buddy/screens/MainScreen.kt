@@ -1,10 +1,6 @@
 package com.unh.personal_health_buddy.screens
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -23,7 +19,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.BottomBar
 import com.unh.personal_health_buddy.database.AccountForm
+import com.unh.personal_health_buddy.screens.ProfileScreen
 
+import com.unh.personal_health_buddy.screens.profileItems
 
 
 @Composable
@@ -33,25 +31,31 @@ fun MainScreen(navController: NavHostController) {
 
     Scaffold(
         bottomBar = {
-            if (currentRoute == "profile") {
+            // Show BottomBar only on home or profile
+            if (currentRoute == "profile" || currentRoute == "home") {
                 BottomBar(navController = navController)
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier
-            .padding(innerPadding)
-            .fillMaxSize()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
         ) {
             when (currentRoute) {
-                "account-form" -> AccountForm (
+                "profile" -> ProfileScreen(
                     navController = navController,
-                    onSave = {},
+                    items = profileItems,
+                    currentRoute = currentRoute
                 )
-                "chats" -> MessageListScreen(
+
+                "account-form" -> AccountForm(
                     navController = navController,
-                    cid = "preview_cid",
+                    onCancel = { navController.navigate("account-form") },
+                    onSave = { navController.navigate("user-account") }
                 )
-                "profile" -> ProfileScreen(navController, profileItems, currentRoute)
+
+                "chats" -> MessageListScreen(navController = navController, cid = "preview_cid")
                 "contacts" -> ContactScreen(navController)
                 "notification" -> NotificationScreen(navController)
                 "appointment" -> AppointmentScreen(navController)
@@ -59,98 +63,70 @@ fun MainScreen(navController: NavHostController) {
                 "logout" -> LogoutScreen(navController)
                 "home" -> HomeScreen(navController)
                 "map" -> MapScreen(navController)
+                "user-account" -> UserAccount(navController = navController)
                 "emergency-contacts" -> EmergencyContactScreen(navController)
                 else -> WelcomeScreen(navController)
             }
         }
     }
 }
+
 @Composable
 fun LogoutScreen(navController: NavController) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(text = "You have logged out successfully.", style = MaterialTheme.typography.headlineSmall)
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, top = 32.dp),
-        contentAlignment = Alignment.TopStart
-    ) {
-        IconButton(onClick = { navController.navigate("profile") }) {
-            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back to Profile")
-        }
-    }
+    BackButton(navController = navController, returnRoute = "profile")
 }
-
-
 
 @Composable
 fun AppointmentScreen(navController: NavController) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(text = "Appointment Screen", style = MaterialTheme.typography.headlineSmall)
     }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, top = 32.dp),
-        contentAlignment = Alignment.TopStart
-    ) {
-        IconButton(onClick = { navController.navigate("profile") }) {
-            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back to Profile")
-        }
-    }
+    BackButton(navController = navController, returnRoute = "profile")
 }
 
 @Composable
 fun FAQScreen(navController: NavController) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(text = "FAQs Screen", style = MaterialTheme.typography.headlineSmall)
     }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, top = 32.dp),
-        contentAlignment = Alignment.TopStart
-    ) {
-        IconButton(onClick = { navController.navigate("profile") }) {
-            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back to Profile")
-        }
-    }
+    BackButton(navController = navController, returnRoute = "profile")
 }
 
 @Composable
 fun ContactScreen(navController: NavController) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(text = "Contacts Screen", style = MaterialTheme.typography.headlineSmall)
     }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, top = 32.dp),
-        contentAlignment = Alignment.TopStart
-    ) {
-        IconButton(onClick = { navController.navigate("profile") }) {
-            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back to Profile")
-        }
-    }
+    BackButton(navController = navController, returnRoute = "profile")
 }
 
+@Composable
+fun EmergencyContactScreen(navController: NavController) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(text = "Emergency Contact Screen", style = MaterialTheme.typography.headlineSmall)
+    }
+    BackButton(navController = navController, returnRoute = "profile")
+}
+
+@Composable
+fun NotificationScreen(navController: NavController) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(text = "Notification Screen", style = MaterialTheme.typography.headlineSmall)
+    }
+    BackButton(navController = navController, returnRoute = "home")
+}
+
+@Composable
+fun MapScreen(navController: NavController) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(text = "Map Screen", style = MaterialTheme.typography.headlineSmall)
+    }
+    BackButton(navController = navController, returnRoute = "home")
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -167,9 +143,7 @@ fun HomeScreen(navController: NavController) {
                 Icon(Icons.Filled.Add, contentDescription = "Add")
             }
         },
-        bottomBar = {
-            BottomBar(navController = navController)
-        }
+        bottomBar = { BottomBar(navController = navController) }
     ) { padding ->
         Box(
             modifier = Modifier
@@ -183,68 +157,21 @@ fun HomeScreen(navController: NavController) {
 }
 
 @Composable
-fun MapScreen(navController: NavController) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = "Map Screen", style = MaterialTheme.typography.headlineSmall)
-    }
-
+fun BackButton(navController: NavController, returnRoute: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 16.dp, top = 32.dp),
         contentAlignment = Alignment.TopStart
     ) {
-        IconButton(
-            onClick = {
-                if (!navController.popBackStack()) {
-                    navController.navigate("home") {
-                        launchSingleTop = true
-                    }
-                }
-            }
-        ) {
-            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back to Home")
+        IconButton(onClick = { navController.navigate(returnRoute) }) {
+            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
         }
     }
 }
 
 @Composable
-fun NotificationScreen(navController: NavController) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = "Notification Screen", style = MaterialTheme.typography.headlineSmall)
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, top = 32.dp),
-        contentAlignment = Alignment.TopStart
-    ) {
-        IconButton(
-            onClick = {
-                if (!navController.popBackStack()) {
-                    navController.navigate("home") {
-                        launchSingleTop = true
-                    }
-                }
-            }
-        ) {
-            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back to Home")
-        }
-    }
-}
-
-
-
-
 @Preview(showBackground = true, showSystemUi = true)
-@Composable
 fun PreviewMainScreen() {
     val navController = rememberNavController()
     MainScreen(navController = navController)

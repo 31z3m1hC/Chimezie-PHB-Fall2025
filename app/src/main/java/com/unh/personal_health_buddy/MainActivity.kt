@@ -11,8 +11,8 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.unh.personal_health_buddy.firebase.SetupAuthentication
-import com.unh.personal_health_buddy.firebase.performGoogleAuthentication
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,8 +30,8 @@ class MainActivity : ComponentActivity() {
                 }
 
                 SetupAuthentication(
+                    activity = this@MainActivity,
                     navController = navController,
-                    activity = this@MainActivity
                 )
             }
         }

@@ -1,8 +1,8 @@
 package com.unh.personal_health_buddy.screens
 
-import android.app.Activity
 import android.content.Intent
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,9 +40,9 @@ import com.unh.personal_health_buddy.firebase.performSignIn
 fun SignInScreen(
     navController: NavHostController,
     googleSignInClient: GoogleSignInClient?,
-    launcher: ActivityResultLauncher<Intent>,
-    activity: Activity
+    launcher: ActivityResultLauncher<Intent>
 ) {
+    val context = LocalContext.current
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
     val emailErrorState = remember { mutableStateOf(false) }
@@ -97,8 +97,7 @@ fun SignInScreen(
             label = { Text("Password") },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
             trailingIcon = {
-                val icon =
-                    if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                val icon = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(imageVector = icon, contentDescription = "Toggle Password")
                 }
@@ -130,7 +129,7 @@ fun SignInScreen(
                     password.value,
                     emailErrorState,
                     passwordErrorState,
-                    activity,
+                    context,
                     navController
                 )
             },
@@ -145,35 +144,38 @@ fun SignInScreen(
             Text("Sign In")
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         Text("OR")
         Spacer(modifier = Modifier.height(12.dp))
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        OutlinedButton(
+            onClick = {
+                performGoogleAuthentication(
+                    context = context,
+                    launcher = launcher,
+                    googleSignInClient = googleSignInClient!!,
+                    onSuccessNav = { navController.navigate("home") },
+                    onFailureToast = { errorMessage ->
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                    }
+                )
+            },
             modifier = Modifier
-                .padding(top = 16.dp)
-                .clickable {
-                    performGoogleAuthentication(
-                        launcher = launcher,
-                        activity = activity
-                    )
-                }
+                .fillMaxWidth(0.9f)
+                .height(50.dp),
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.google),
-                contentDescription = "Google Icon",
-                modifier = Modifier
-                    .size(60.dp)
-                    .padding(end = 8.dp)
-            )
-            Text(
-                text = "Sign in with Google",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodyLarge
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.google),
+                    contentDescription = "Google Icon",
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Sign in with Google")
+            }
         }
-
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -195,13 +197,9 @@ fun PreviewSignInScreen() {
         contract = ActivityResultContracts.StartActivityForResult()
     ) { }
 
-    val fakeActivity = object : Activity() {}
-
     SignInScreen(
         navController = navController,
         googleSignInClient = null,
-        launcher = fakeLauncher,
-        activity = fakeActivity
+        launcher = fakeLauncher
     )
 }
-

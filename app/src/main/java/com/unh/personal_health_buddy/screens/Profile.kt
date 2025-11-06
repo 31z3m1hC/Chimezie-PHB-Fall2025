@@ -1,5 +1,6 @@
 package com.unh.personal_health_buddy.screens
 
+import LogoutConfirmationDialog
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -9,39 +10,45 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.BottomBar
 import com.unh.personal_health_buddy.R
 
+// ------------------- Profile Items -------------------
+
 sealed class ProfileItem(val title: String, val icon: ImageVector, val route: String) {
-    object Account : ProfileItem("Account", Icons.Filled.Favorite, "account")
+    object Account : ProfileItem("Account", Icons.Filled.Favorite, "user-account")
     object Appointment : ProfileItem("Appointment", Icons.Filled.Event, "appointment")
-    object Contacts : ProfileItem("Contacts", Icons.Filled.Contacts, "contacts")
+    object EmergencyContacts : ProfileItem("Contacts", Icons.Filled.Contacts, "contacts")
     object FAQS : ProfileItem("FAQs", Icons.Filled.Chat, "faqs")
-    object Logout : ProfileItem("Logout", Icons.Filled.ExitToApp, "logout")
+    object Logout : ProfileItem("Logout", Icons.AutoMirrored.Filled.ExitToApp, "logout")
 }
 
 val profileItems = listOf(
     ProfileItem.Account,
     ProfileItem.Appointment,
-    ProfileItem.Contacts,
+    ProfileItem.EmergencyContacts,
     ProfileItem.FAQS,
     ProfileItem.Logout
 )
+
+// ------------------- Profile Screen -------------------
 
 @Composable
 fun ProfileScreen(
@@ -49,10 +56,11 @@ fun ProfileScreen(
     items: List<ProfileItem>,
     currentRoute: String
 ) {
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         bottomBar = { BottomBar(navController = navController) }
     ) { innerPadding ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -61,16 +69,14 @@ fun ProfileScreen(
                 .padding(top = 0.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Top Box
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(250.dp)
                     .background(
                         brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFF5AA9E6),
-                                Color(0xFFD6EFFF)
-                            )
+                            colors = listOf(Color(0xFF5AA9E6), Color(0xFFD6EFFF))
                         )
                     ),
                 contentAlignment = Alignment.Center
@@ -80,10 +86,7 @@ fun ProfileScreen(
                         modifier = Modifier
                             .background(
                                 brush = Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color(0xFF5AA9E6),
-                                        Color(0xFFD6EFFF)
-                                    )
+                                    colors = listOf(Color(0xFF5AA9E6), Color(0xFFD6EFFF))
                                 ),
                                 shape = CircleShape
                             )
@@ -94,10 +97,10 @@ fun ProfileScreen(
                             painter = painterResource(id = R.drawable.profile_picture),
                             contentDescription = "Profile Image",
                             modifier = Modifier
-                                .border( 1.dp, Color.Transparent, CircleShape)
+                                .border(1.dp, Color.Transparent, CircleShape)
                                 .clip(CircleShape)
                                 .size(110.dp)
-                                .background(color = Color.Transparent)
+                                .background(Color.Transparent)
                         )
                     }
 
@@ -113,11 +116,8 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            ) {
+            // Profile Items
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                 items.forEach { item ->
                     Row(
                         modifier = Modifier
@@ -128,7 +128,6 @@ fun ProfileScreen(
                             .padding(horizontal = 1.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Icon circle
                         Box(
                             modifier = Modifier
                                 .size(50.dp)
@@ -136,11 +135,7 @@ fun ProfileScreen(
                                 .background(Color(0xFFE0EBFF)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                item.icon,
-                                contentDescription = item.title,
-                                tint = Color(0xFF5AA9E6)
-                            )
+                            Icon(item.icon, contentDescription = item.title, tint = Color(0xFF5AA9E6))
                         }
 
                         Spacer(modifier = Modifier.width(16.dp))
@@ -159,9 +154,12 @@ fun ProfileScreen(
                             modifier = Modifier.clickable {
                                 when (item) {
                                     is ProfileItem.Account -> {
-                                        navController.navigate("account-form") {
+                                        navController.navigate("user-account") {
                                             launchSingleTop = true
                                         }
+                                    }
+                                    is ProfileItem.Logout -> {
+                                        showLogoutDialog = true
                                     }
                                     else -> {
                                         if (currentRoute != item.route) {
@@ -183,8 +181,26 @@ fun ProfileScreen(
         }
     }
 
+    if (showLogoutDialog) {
+        LogoutConfirmationDialog(
+            onConfirm = {
+                showLogoutDialog = false
+                navController.navigate("welcome") {
+                    popUpTo(0)
+                }
+            },
+            onCancel = {
+                showLogoutDialog = false
+            }
+        )
+    }
+
     Log.d("ProfileScreen", "Profile screen displayed")
 }
+
+
+// ------------------- Preview -------------------
+
 @Preview(showBackground = true)
 @Composable
 fun PreviewProfileScreen() {

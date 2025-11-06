@@ -24,33 +24,55 @@ object FirestoreHelper {
 
     // -------------------- Users --------------------
     suspend fun writeUser(user: User, profileImage: Bitmap? = null) {
-        val (uid, email) = getVerifiedUser()
-        require(user.email == email) { "Email mismatch: form email does not match authenticated email." }
+        try {
+            val (uid, email) = getVerifiedUser()
+            require(user.email == email) { "Email mismatch: form email does not match authenticated email." }
 
-        val userMap = hashMapOf(
-            "firstname" to user.firstname,
-            "lastname" to user.lastname,
-            "dateOfBirth" to user.dateOfBirth,
-            "homeAddress" to user.homeAddress,
-            "gender" to user.gender.name,
-            "email" to user.email,
-            "medication" to user.medication
-        )
+            val userMap = hashMapOf(
+                "firstname" to user.firstname,
+                "lastname" to user.lastname,
+                "dateOfBirth" to user.dateOfBirth,
+                "homeAddress" to user.homeAddress,
+                "gender" to user.gender.name,
+                "email" to user.email,
+                "medication" to user.medication,
+                "phoneNumber" to user.phoneNumber,
+                "allergies" to user.allergies,
+                "city" to user.city,
+                "profileImageUrl" to user.profileImageUrl
+            )
 
-        profileImage?.let {
-            val baos = ByteArrayOutputStream()
-            it.compress(Bitmap.CompressFormat.JPEG, 80, baos)
-            val imageBase64 = Base64.encodeToString(baos.toByteArray(), Base64.DEFAULT)
-            userMap["profileImage"] = imageBase64
+            profileImage?.let { bitmap ->
+                try {
+                    val storageRef = com.google.firebase.storage.FirebaseStorage.getInstance()
+                        .reference.child("profilePics/$uid.jpg")
+
+                    val baos = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos)
+                    val imageData = baos.toByteArray()
+
+                    storageRef.putBytes(imageData).await()
+                    val downloadUrl = storageRef.downloadUrl.await().toString()
+
+                    userMap["profileImageUrl"] = downloadUrl
+                    Log.d("FirestoreHelper", "Profile image uploaded successfully")
+                } catch (e: Exception) {
+                    Log.e("FirestoreHelper", "Failed to upload profile image", e)
+                }
+            }
+
+            db.collection("users")
+                .document(uid)
+                .set(userMap)
+                .await()
+
+            Log.d("FirestoreHelper", "User written to Firestore with UID: $uid")
+        } catch (e: Exception) {
+            Log.e("FirestoreHelper", "Failed to write user to Firestore", e)
         }
-
-        db.collection("users")
-            .document(uid)
-            .set(userMap)
-            .await()
-
-        Log.d("FirestoreHelper", "User written to Firestore with UID: $uid")
     }
+
+
 
     suspend fun readUser(): User? {
         val (uid, _) = getVerifiedUser()
