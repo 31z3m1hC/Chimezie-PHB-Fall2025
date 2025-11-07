@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -40,19 +41,29 @@ fun EmergencyContactScreen(navController: NavHostController) {
                     .padding(start = 16.dp, top = 16.dp, bottom = 32.dp),
                 contentAlignment = Alignment.TopStart
             ) {
-                IconButton(
-                    onClick = {
-                        if (!navController.popBackStack()) {
-                            navController.navigate("home") {
-                                launchSingleTop = true
-                            }
-                        }
-                    }
+//                IconButton(
+//                    onClick = {
+//                        if (!navController.popBackStack()) {
+//                            navController.navigate("home") {
+//                                launchSingleTop = true
+//                            }
+//                        }
+//                    }
+//                ) {
+//                    Icon(
+//                        Icons.Filled.ArrowBack,
+//                        contentDescription = "Back to Home"
+//                    )
+//                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp),
+                    contentAlignment = Alignment.TopStart
                 ) {
-                    Icon(
-                        Icons.Filled.ArrowBack,
-                        contentDescription = "Back to Home"
-                    )
+                    IconButton(onClick = { navController.navigate("Profile") }) {
+                        Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
+                    }
                 }
                 Box(
                     modifier = Modifier

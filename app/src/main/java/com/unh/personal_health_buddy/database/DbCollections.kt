@@ -15,6 +15,7 @@ data class User(
     val email: String = "",
     val medication: String = "",
     val allergies: String? = null,
+    val bloodGroup: String? = null,
     val phoneNumber: String = "",
     val profileImageUrl: String? = null // <-- Add this
 )

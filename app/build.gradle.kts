@@ -83,6 +83,7 @@ dependencies {
     implementation(libs.car.ui.lib)
     implementation(libs.androidx.benchmark.traceprocessor)
     implementation(libs.androidx.camera.camera2.pipe)
+    implementation(libs.androidx.foundation.layout)
 
 
     // Optional: debugging / tooling

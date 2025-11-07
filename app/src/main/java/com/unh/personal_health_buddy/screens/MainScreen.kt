@@ -56,8 +56,9 @@ fun MainScreen(navController: NavHostController) {
                 )
 
                 "chats" -> MessageListScreen(navController = navController, cid = "preview_cid")
-                "contacts" -> ContactScreen(navController)
                 "notification" -> NotificationScreen(navController)
+                "faqs" -> FAQScreen(navController)
+                "logout" -> LogoutScreen(navController)
                 "appointment" -> AppointmentScreen(navController)
                 "faqs" -> FAQScreen(navController)
                 "logout" -> LogoutScreen(navController)
@@ -96,21 +97,8 @@ fun FAQScreen(navController: NavController) {
     BackButton(navController = navController, returnRoute = "profile")
 }
 
-@Composable
-fun ContactScreen(navController: NavController) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "Contacts Screen", style = MaterialTheme.typography.headlineSmall)
-    }
-    BackButton(navController = navController, returnRoute = "profile")
-}
 
-@Composable
-fun EmergencyContactScreen(navController: NavController) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "Emergency Contact Screen", style = MaterialTheme.typography.headlineSmall)
-    }
-    BackButton(navController = navController, returnRoute = "profile")
-}
+
 
 @Composable
 fun NotificationScreen(navController: NavController) {

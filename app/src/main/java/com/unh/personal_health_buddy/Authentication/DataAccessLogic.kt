@@ -7,6 +7,7 @@ import android.util.Base64
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import com.unh.personal_health_buddy.database.*
 import kotlinx.coroutines.tasks.await
 import java.io.ByteArrayOutputStream
@@ -14,6 +15,7 @@ import java.io.ByteArrayOutputStream
 object FirestoreHelper {
     @SuppressLint("StaticFieldLeak")
     private val db = FirebaseFirestore.getInstance()
+    private val storage = FirebaseStorage.getInstance()
 
     private fun getVerifiedUser(): Pair<String, String> {
         val user = FirebaseAuth.getInstance().currentUser
@@ -23,66 +25,166 @@ object FirestoreHelper {
     }
 
     // -------------------- Users --------------------
-    suspend fun writeUser(user: User, profileImage: Bitmap? = null) {
-        try {
-            val (uid, email) = getVerifiedUser()
-            require(user.email == email) { "Email mismatch: form email does not match authenticated email." }
+//    suspend fun writeUser(user: User, profileImage: Bitmap? = null) {
+//        try {
+//            val (uid, email) = getVerifiedUser()
+//            require(user.email == email) { "Email mismatch: form email does not match authenticated email." }
+//
+//            val userMap = hashMapOf(
+//                "firstname" to user.firstname,
+//                "lastname" to user.lastname,
+//                "dateOfBirth" to user.dateOfBirth,
+//                "homeAddress" to user.homeAddress,
+//                "gender" to user.gender.name,
+//                "email" to user.email,
+//                "medication" to user.medication,
+//                "phoneNumber" to user.phoneNumber,
+//                "allergies" to user.allergies,
+//                "city" to user.city,
+//                "profileImageUrl" to user.profileImageUrl
+//            )
+//
+//            profileImage?.let { bitmap ->
+//                try {
+//                    val storageRef = com.google.firebase.storage.FirebaseStorage.getInstance()
+//                        .reference.child("profilePics/$uid.jpg")
+//
+//                    val baos = ByteArrayOutputStream()
+//                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos)
+//                    val imageData = baos.toByteArray()
+//
+//                    storageRef.putBytes(imageData).await()
+//                    val downloadUrl = storageRef.downloadUrl.await().toString()
+//
+//                    userMap["profileImageUrl"] = downloadUrl
+//                    Log.d("FirestoreHelper", "Profile image uploaded successfully")
+//                } catch (e: Exception) {
+//                    Log.e("FirestoreHelper", "Failed to upload profile image", e)
+//                }
+//            }
+//
+//            db.collection("users")
+//                .document(uid)
+//                .set(userMap)
+//                .await()
+//
+//            Log.d("FirestoreHelper", "User written to Firestore with UID: $uid")
+//        } catch (e: Exception) {
+//            Log.e("FirestoreHelper", "Failed to write user to Firestore", e)
+//        }
+//    }
 
-            val userMap = hashMapOf(
-                "firstname" to user.firstname,
-                "lastname" to user.lastname,
-                "dateOfBirth" to user.dateOfBirth,
-                "homeAddress" to user.homeAddress,
-                "gender" to user.gender.name,
-                "email" to user.email,
-                "medication" to user.medication,
-                "phoneNumber" to user.phoneNumber,
-                "allergies" to user.allergies,
-                "city" to user.city,
-                "profileImageUrl" to user.profileImageUrl
-            )
+//    suspend fun writeUser(user: User, profileImage: Bitmap?) {
+//        try {
+//            val (uid, email) = getVerifiedUser()
+//            require(user.email == email) { "Email mismatch" }
+//
+//            var imageUrl: String? = null
+//
+//            //Upload image first if exists
+//            if (profileImage != null) {
+//                try {
+//                    val baos = ByteArrayOutputStream()
+//                    profileImage.compress(Bitmap.CompressFormat.JPEG, 90, baos)
+//                    val data = baos.toByteArray()
+//
+//                    val storageRef = FirebaseStorage.getInstance()
+//                        .reference.child("profilePics/$uid.jpg")
+//
+//                    storageRef.putBytes(data).await()
+//                    imageUrl = storageRef.downloadUrl.await().toString()
+//
+//                    Log.d("FirestoreHelper", "Image uploaded: $imageUrl")
+//
+//                } catch (e: Exception) {
+//                    Log.e("FirestoreHelper", "Image upload failed", e)
+//                }
+//            }
+//
+//            // Now write Firestore with correct URL
+//            val userMap = hashMapOf(
+//                "firstname" to user.firstname,
+//                "lastname" to user.lastname,
+//                "dateOfBirth" to user.dateOfBirth,
+//                "homeAddress" to user.homeAddress,
+//                "gender" to user.gender.name,
+//                "email" to user.email,
+//                "medication" to user.medication,
+//                "phoneNumber" to user.phoneNumber,
+//                "allergies" to user.allergies,
+//                "city" to user.city,
+//                "profileImageUrl" to (imageUrl ?: user.profileImageUrl)
+//            )
+//
+//            db.collection("users").document(uid).set(userMap).await()
+//            Log.d("FirestoreHelper", "User saved to Firestore")
+//
+//        } catch (e: Exception) {
+//            Log.e("FirestoreHelper", "Failed to save user", e)
+//        }
+//    }
+//
+//
+//
+//
+//    suspend fun readUser(): User? {
+//        val (uid, _) = getVerifiedUser()
+//        val snapshot = db.collection("users")
+//            .document(uid)
+//            .get()
+//            .await()
+//        Log.d("FirestoreHelper", "User read from Firestore with UID: $uid")
+//        return snapshot.toObject(User::class.java)
+//    }
 
-            profileImage?.let { bitmap ->
-                try {
-                    val storageRef = com.google.firebase.storage.FirebaseStorage.getInstance()
-                        .reference.child("profilePics/$uid.jpg")
 
-                    val baos = ByteArrayOutputStream()
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos)
-                    val imageData = baos.toByteArray()
 
-                    storageRef.putBytes(imageData).await()
-                    val downloadUrl = storageRef.downloadUrl.await().toString()
 
-                    userMap["profileImageUrl"] = downloadUrl
-                    Log.d("FirestoreHelper", "Profile image uploaded successfully")
-                } catch (e: Exception) {
-                    Log.e("FirestoreHelper", "Failed to upload profile image", e)
-                }
-            }
+    suspend fun writeUser(user: User, profileBitmap: Bitmap?) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+            ?: throw Exception("User not logged in")
 
-            db.collection("users")
+        var profileUrl: String? = null
+
+        profileBitmap?.let { bitmap ->
+            // Upload to Storage with correct extension
+            val imageRef = storage.reference.child("profileImages/$uid.jpg")
+            val baos = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos)
+            val data = baos.toByteArray()
+
+            imageRef.putBytes(data).await()      // Wait for upload
+            profileUrl = imageRef.downloadUrl.await().toString()  // Get URL
+        }
+
+        // Save user in Firestore
+        val userWithUrl = user.copy(profileImageUrl = profileUrl)
+        db.collection("users")
+            .document(uid)
+            .set(userWithUrl)
+            .await()
+    }
+
+    // ------------------ Read user ------------------
+    suspend fun readUser(): User? {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+            ?: return null
+
+        return try {
+            val snapshot = db.collection("users")
                 .document(uid)
-                .set(userMap)
+                .get()
                 .await()
 
-            Log.d("FirestoreHelper", "User written to Firestore with UID: $uid")
+            Log.d("FirestoreHelper", "User read from Firestore with UID: $uid")
+            snapshot.toObject(User::class.java)
         } catch (e: Exception) {
-            Log.e("FirestoreHelper", "Failed to write user to Firestore", e)
+            Log.e("FirestoreHelper", "Failed to read user", e)
+            null
         }
     }
 
 
-
-    suspend fun readUser(): User? {
-        val (uid, _) = getVerifiedUser()
-        val snapshot = db.collection("users")
-            .document(uid)
-            .get()
-            .await()
-        Log.d("FirestoreHelper", "User read from Firestore with UID: $uid")
-        return snapshot.toObject(User::class.java)
-    }
 
     suspend fun deleteUser() {
         val (uid, _) = getVerifiedUser()

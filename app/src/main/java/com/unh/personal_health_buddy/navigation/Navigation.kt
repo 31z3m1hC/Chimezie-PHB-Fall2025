@@ -9,6 +9,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.unh.personal_health_buddy.database.AccountForm
 import com.unh.personal_health_buddy.screens.AppointmentScreen
 import com.unh.personal_health_buddy.screens.EmergencyContactScreen
+import com.unh.personal_health_buddy.screens.FAQScreen
 import com.unh.personal_health_buddy.screens.GoogleMapScreen
 import com.unh.personal_health_buddy.screens.HomeScreen
 import com.unh.personal_health_buddy.screens.LogoutScreen
@@ -35,13 +36,15 @@ fun AppNavigation(
 
         composable("welcome") { WelcomeScreen(navController) }
         composable("user-account") { UserAccount(navController) }
+        composable("faqs") { FAQScreen(navController) }
+        composable("chats") { MessageScreen(navController) }
         composable("sign-in") { SignInScreen(navController, googleSignInClient, launcher) }
         composable("sign-up") { SignUpScreen(navController, googleSignInClient, launcher) }
 
         composable("home") { HomeScreen(navController) }
         composable("main") { MainScreen(navController) }
         composable("appointment") { AppointmentScreen(navController) }
-        composable("contact") { EmergencyContactScreen(navController) }
+        composable("emergency-contacts") { EmergencyContactScreen(navController) }
         composable("map") { GoogleMapScreen(navController) }
         composable("notifications") { NotificationScreen(navController) }
         composable("logout") { LogoutScreen(navController) }
@@ -76,4 +79,9 @@ fun AppNavigation(
         }
 
     }
+}
+
+@Composable
+fun MessageScreen(x0: NavHostController) {
+    TODO("Not yet implemented")
 }
