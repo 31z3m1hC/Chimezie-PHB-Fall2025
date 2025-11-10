@@ -578,18 +578,32 @@ object FirestoreHelper {
         }
 
         // -------------------- Health Info --------------------
-        suspend fun writeHealthInformation(healthInfo: HealthInformation) {
-            val (uid, _) = getVerifiedUser()
-            db.collection("users")
-                .document(uid)
-                .collection("HealthInformation")
-                .document("primary")
-                .set(healthInfo)
-                .await()
-            Log.d("FirestoreHelper", "HealthInformation saved for UID: $uid")
-        }
+//        suspend fun writeHealthInformation(healthInfo: HealthInformation) {
+//            val (uid, _) = getVerifiedUser()
+//            db.collection("users")
+//                .document(uid)
+//                .collection("HealthInformation")
+//                .document("primary")
+//                .set(healthInfo)
+//                .await()
+//            Log.d("FirestoreHelper", "HealthInformation saved for UID: $uid")
+//        }
 
-        suspend fun readHealthInformation(): HealthInformation? {
+    suspend fun writeHealthInformation(healthInfo: HealthInformation) {
+        val (uid, _) = getVerifiedUser()
+
+        // Ensure this uses actual UI values
+        db.collection("users")
+            .document(uid)
+            .collection("HealthInformation")
+            .document("primary")
+            .set(healthInfo)
+            .await()
+        Log.d("FirestoreHelper", "HealthInformation saved for UID: $uid")
+    }
+
+
+    suspend fun readHealthInformation(): HealthInformation? {
             val (uid, _) = getVerifiedUser()
             val snapshot = db.collection("users")
                 .document(uid)
@@ -613,16 +627,31 @@ object FirestoreHelper {
         }
 
         // -------------------- Emergency Contacts --------------------
-        suspend fun writeEmergencyContact(contact: EmergencyContact) {
-            val (uid, _) = getVerifiedUser()
-            val docRef = db.collection("users")
-                .document(uid)
-                .collection("EmergencyContacts")
-                .document() // Firebase generates ID
-            val contactWithId = contact.copy(contactId = docRef.id)
-            docRef.set(contactWithId).await()
-            Log.d("FirestoreHelper", "EmergencyContact written with ID: ${docRef.id}")
-        }
+//        suspend fun writeEmergencyContact(contact: EmergencyContact) {
+//            val (uid, _) = getVerifiedUser()
+//            val docRef = db.collection("users")
+//                .document(uid)
+//                .collection("EmergencyContacts")
+//                .document() // Firebase generates ID
+//            val contactWithId = contact.copy(contactId = docRef.id)
+//            docRef.set(contactWithId).await()
+//            Log.d("FirestoreHelper", "EmergencyContact written with ID: ${docRef.id}")
+//        }
+
+
+    suspend fun writeEmergencyContact(contact: EmergencyContact) {
+        val (uid, _) = getVerifiedUser()
+
+        // Use a fixed document ID if only 1 emergency contact per user
+        val docRef = db.collection("users")
+            .document(uid)
+            .collection("EmergencyContacts")
+            .document("primary")
+
+        val contactWithId = contact.copy(contactId = docRef.id)
+        docRef.set(contactWithId).await()
+        Log.d("FirestoreHelper", "EmergencyContact written with ID: ${docRef.id}")
+    }
 
     suspend fun readEmergencyContact(): EmergencyContact? {
         val (uid, _) = getVerifiedUser()
