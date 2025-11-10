@@ -1133,14 +1133,12 @@ fun EmergencyContactSection(
 //    }
 //}
 
-
-
 @Composable
 fun AccountFormTop(
     navController: NavHostController,
-    emergencyContact: EmergencyContact,
-    healthInfo: HealthInformation,
     profileBitmap: Bitmap?,
+
+    // User info
     firstname: MutableState<String>,
     lastname: MutableState<String>,
     dateOfBirth: MutableState<String>,
@@ -1148,36 +1146,26 @@ fun AccountFormTop(
     gender: MutableState<Gender>,
     email: MutableState<String>,
     phoneNumber: MutableState<String>,
-    city: MutableState<String>
-) {
+    city: MutableState<String>,
 
+    // Emergency contact
+    emergencyName: MutableState<String>,
+    emergencyPhone: MutableState<String>,
+    emergencyRelation: MutableState<String>,
+
+    // Health info
+    bloodGroup: MutableState<String>,
+    allergies: MutableState<String>,
+    medications: MutableState<String>
+) {
     val context = LocalContext.current
 
-    // UI state
     var capturedBitmap by remember { mutableStateOf(profileBitmap) }
     var previewImage by remember { mutableStateOf(profileBitmap?.asImageBitmap()) }
     var showMenu by remember { mutableStateOf(false) }
     var isValid by remember { mutableStateOf(false) }
     var isSaving by remember { mutableStateOf(false) }
 
-
-
-    // Stateful copies of emergency & health data
-    var emergencyContactState by remember { mutableStateOf(emergencyContact) }
-    var healthInfoState by remember { mutableStateOf(healthInfo) }
-
-    // Emergency contact UI state
-    var emergencyName by remember { mutableStateOf(emergencyContact.name) }
-    var emergencyPhone by remember { mutableStateOf(emergencyContact.phoneNumber) }
-    var emergencyRelation by remember { mutableStateOf(emergencyContact.relation) }
-
-// Health info UI state
-    var bloodGroup by remember { mutableStateOf(healthInfo.bloodGroup) }
-    var allergies by remember { mutableStateOf(healthInfo.allergies) }
-    var medications by remember { mutableStateOf(healthInfo.medication) }
-
-
-    // Construct user from current field values
     val user by remember {
         derivedStateOf {
             User(
@@ -1193,7 +1181,6 @@ fun AccountFormTop(
         }
     }
 
-    // Validate
     LaunchedEffect(user) {
         try {
             val (_, firebaseEmail) = FirestoreHelper.getVerifiedUser()
@@ -1203,7 +1190,6 @@ fun AccountFormTop(
         }
     }
 
-    // Launchers
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
         bitmap?.let {
             capturedBitmap = it
@@ -1227,7 +1213,6 @@ fun AccountFormTop(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             TopBarWithSave(
                 title = "Account",
                 onBack = { navController.navigate("account") },
@@ -1238,24 +1223,23 @@ fun AccountFormTop(
 
                     CoroutineScope(Dispatchers.Main).launch {
                         try {
-                            // Sync emergency info from text fields (fields already inside your form UI)
-                            emergencyContactState = emergencyContactState.copy(
-                                name = emergencyContactState.name,
-                                phoneNumber = emergencyContactState.phoneNumber,
-                                relation = emergencyContactState.relation
+                            val emergencyContact = EmergencyContact(
+                                contactId = "",
+                                name = emergencyName.value,
+                                phoneNumber = emergencyPhone.value,
+                                relation = emergencyRelation.value
                             )
 
-                            // Sync health info
-                            healthInfoState = healthInfoState.copy(
-                                bloodGroup = healthInfoState.bloodGroup,
-                                allergies = healthInfoState.allergies,
-                                medication = healthInfoState.medication
+                            val healthInfo = HealthInformation(
+                                bloodGroup = bloodGroup.value,
+                                allergies = allergies.value,
+                                medication = medications.value
                             )
 
                             withContext(Dispatchers.IO) {
                                 FirestoreHelper.writeUser(user, capturedBitmap)
-                                FirestoreHelper.writeEmergencyContact(emergencyContactState)
-                                FirestoreHelper.writeHealthInformation(healthInfoState)
+                                FirestoreHelper.writeEmergencyContact(emergencyContact)
+                                FirestoreHelper.writeHealthInformation(healthInfo)
                             }
 
                             Log.d("SaveAction", "Saved successfully")
@@ -1300,8 +1284,7 @@ fun AccountFormTop(
 
 @Composable
 fun AccountFormScreen(navController: NavHostController) {
-
-    //User info state
+    // User info state
     val firstname = remember { mutableStateOf("") }
     val lastname = remember { mutableStateOf("") }
     val dateOfBirth = remember { mutableStateOf("") }
@@ -1311,7 +1294,7 @@ fun AccountFormScreen(navController: NavHostController) {
     val phoneNumber = remember { mutableStateOf("") }
     val city = remember { mutableStateOf("") }
 
-    // Emergency contact state (shared by top + bottom section)
+    // Emergency contact state
     val emergencyName = remember { mutableStateOf("") }
     val emergencyPhone = remember { mutableStateOf("") }
     val emergencyRelation = remember { mutableStateOf("") }
@@ -1330,24 +1313,8 @@ fun AccountFormScreen(navController: NavHostController) {
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Pass the states to the top bar (where SAVE is)
         AccountFormTop(
             navController = navController,
-
-            // emergency state inputs
-            emergencyContact = EmergencyContact(
-                name = emergencyName.value,
-                phoneNumber = emergencyPhone.value,
-                relation = emergencyRelation.value
-            ),
-
-            // health state inputs
-            healthInfo = HealthInformation(
-                bloodGroup = bloodGroup.value,
-                allergies = allergies.value,
-                medication = medications.value
-            ),
-
             profileBitmap = null,
 
             firstname = firstname,
@@ -1357,10 +1324,17 @@ fun AccountFormScreen(navController: NavHostController) {
             gender = gender,
             email = email,
             phoneNumber = phoneNumber,
-            city = city
+            city = city,
+
+            emergencyName = emergencyName,
+            emergencyPhone = emergencyPhone,
+            emergencyRelation = emergencyRelation,
+
+            bloodGroup = bloodGroup,
+            allergies = allergies,
+            medications = medications
         )
 
-        //Rest of your UI uses the same shared text states
         AccountFormBottom(
             firstname = firstname,
             lastname = lastname,
@@ -1385,6 +1359,7 @@ fun AccountFormScreen(navController: NavHostController) {
         )
     }
 }
+
 
 
 
