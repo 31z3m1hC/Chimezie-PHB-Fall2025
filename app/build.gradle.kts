@@ -84,6 +84,7 @@ dependencies {
     implementation(libs.androidx.benchmark.traceprocessor)
     implementation(libs.androidx.camera.camera2.pipe)
     implementation(libs.androidx.foundation.layout)
+    implementation(libs.androidx.ui.graphics)
 
 
     // Optional: debugging / tooling

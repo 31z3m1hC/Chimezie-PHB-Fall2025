@@ -1,5 +1,5 @@
 package com.unh.personal_health_buddy.screens
-
+import AccountFormScreen
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,7 +18,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.BottomBar
-import com.unh.personal_health_buddy.database.AccountForm
 import com.unh.personal_health_buddy.screens.ProfileScreen
 
 import com.unh.personal_health_buddy.screens.profileItems
@@ -49,11 +48,7 @@ fun MainScreen(navController: NavHostController) {
                     currentRoute = currentRoute
                 )
 
-                "account-form" -> AccountForm(
-                    navController = navController,
-                    onCancel = { navController.navigate("account-form") },
-                    onSave = { navController.navigate("user-account") }
-                )
+                "account-form" -> AccountFormScreen(navController)
 
                 "chats" -> MessageListScreen(navController = navController, cid = "preview_cid")
                 "notification" -> NotificationScreen(navController)
@@ -64,7 +59,7 @@ fun MainScreen(navController: NavHostController) {
                 "logout" -> LogoutScreen(navController)
                 "home" -> HomeScreen(navController)
                 "map" -> MapScreen(navController)
-                "user-account" -> UserAccount(navController = navController)
+               // "user-account" -> UserAccount(navController = navController)
                 "emergency-contacts" -> EmergencyContactScreen(navController)
                 else -> WelcomeScreen(navController)
             }

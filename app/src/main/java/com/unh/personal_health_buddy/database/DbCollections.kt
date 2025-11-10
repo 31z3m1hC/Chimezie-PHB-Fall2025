@@ -5,21 +5,23 @@ import com.google.firebase.auth.FirebaseUser
 
 
 data class User(
-    val uid: String = "",
     val firstname: String = "",
     val lastname: String = "",
-    val city: String = "",
     val dateOfBirth: String = "",
     val homeAddress: String = "",
-    val gender: Gender = Gender.MALE,  // or default
+    val gender: Gender = Gender.OTHER,
     val email: String = "",
-    val medication: String = "",
-    val allergies: String? = null,
-    val bloodGroup: String? = null,
     val phoneNumber: String = "",
-    val profileImageUrl: String? = null // <-- Add this
+    val profileImageUrl: String? = null,
+    val city: String = ""
 )
 
+
+data class HealthInformation(
+    val medication: String = "",
+    val allergies: String = "",
+    val bloodGroup: String = ""
+)
 
 
 enum class Gender {
@@ -82,7 +84,10 @@ data class FAQs(
 
 data class EmergencyContact(
     val contactId: String = "",
-    val Contactname: String = "",
-    val phone: List<String> = emptyList(),
-    val relationship: String = ""
+    val name: String = "",
+    val phoneNumber: String = "",
+    val relation: String = ""
 )
+
+
+

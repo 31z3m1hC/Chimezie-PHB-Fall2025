@@ -13,6 +13,7 @@
     <!-- Camera permission -->
     <uses-permission android:name="android.permission.CAMERA" />
 
+
     <!-- Storage permissions (needed for gallery access on older Android versions) -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
@@ -52,5 +53,7 @@
 
 
     </application>
+
+
 
 </manifest>

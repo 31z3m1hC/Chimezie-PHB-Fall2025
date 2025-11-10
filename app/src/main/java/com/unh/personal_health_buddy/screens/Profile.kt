@@ -506,7 +506,7 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // ✅ Display first name
+                    // Display first name
                     Text(
                         text = firstName,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),

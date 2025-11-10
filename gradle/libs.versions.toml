@@ -27,6 +27,7 @@ cameraCamera2Pipe = "1.6.0-alpha01"
 firebaseStorageKtx = "22.0.1"
 navigationCompose = "2.9.5"
 foundationLayout = "1.9.4"
+uiGraphics = "1.9.4"
 
 
 [libraries]
@@ -65,6 +66,7 @@ androidx-camera-camera2-pipe = { group = "androidx.camera", name = "camera-camer
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 androidx-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
+androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics", version.ref = "uiGraphics" }
 
 
 [plugins]

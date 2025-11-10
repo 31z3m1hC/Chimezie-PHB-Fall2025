@@ -6,7 +6,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.unh.personal_health_buddy.database.AccountForm
 import com.unh.personal_health_buddy.screens.AppointmentScreen
 import com.unh.personal_health_buddy.screens.EmergencyContactScreen
 import com.unh.personal_health_buddy.screens.FAQScreen
@@ -19,7 +18,6 @@ import com.unh.personal_health_buddy.screens.ProfileScreen
 import com.unh.personal_health_buddy.screens.ResetPasswordDialog
 import com.unh.personal_health_buddy.screens.SignInScreen
 import com.unh.personal_health_buddy.screens.SignUpScreen
-import com.unh.personal_health_buddy.screens.UserAccount
 import com.unh.personal_health_buddy.screens.WelcomeScreen
 import com.unh.personal_health_buddy.screens.profileItems
 
@@ -31,11 +29,11 @@ fun AppNavigation(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "user-account"
+        startDestination = "account-form"
     ) {
 
         composable("welcome") { WelcomeScreen(navController) }
-        composable("user-account") { UserAccount(navController) }
+        //composable("user-account") { UserAccount(navController) }
         composable("faqs") { FAQScreen(navController) }
         composable("chats") { MessageScreen(navController) }
         composable("sign-in") { SignInScreen(navController, googleSignInClient, launcher) }
@@ -58,25 +56,10 @@ fun AppNavigation(
                 currentRoute = "profile"
             )
         }
+        composable("account-form") { AccountFormScreen( navController) }
 
 
-        composable("account-form") {
-            AccountForm(
-                navController = navController,
-                onCancel = {
-                    navController.navigate("profile") {
-                        popUpTo("account-form") { inclusive = true }
-                        launchSingleTop = true
-                    }
-                },
-                onSave = {
-                    navController.navigate("profile") {
-                        popUpTo("account-form") { inclusive = true }
-                        launchSingleTop = true
-                    }
-                }
-            )
-        }
+
 
     }
 }
