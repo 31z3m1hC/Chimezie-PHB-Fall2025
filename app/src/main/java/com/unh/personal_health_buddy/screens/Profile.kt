@@ -484,6 +484,8 @@ fun ProfileScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
+                    Spacer(modifier = Modifier.height(100.dp))
+
                     Box(
                         modifier = Modifier
                             .background(
@@ -498,7 +500,7 @@ fun ProfileScreen(
                             painter = painterResource(id = R.drawable.profile_picture),
                             contentDescription = "Profile Image",
                             modifier = Modifier
-                                .border(1.dp, Color.Transparent, CircleShape)
+                                .border(0.dp, Color.White, CircleShape)
                                 .clip(CircleShape)
                                 .size(110.dp)
                         )
@@ -506,7 +508,6 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Display first name
                     Text(
                         text = firstName,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -514,6 +515,7 @@ fun ProfileScreen(
                     )
                 }
             }
+
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -527,13 +529,30 @@ fun ProfileScreen(
                             .background(Color(0xFFF6F8FF))
                             .clickable {
                                 when (item) {
-                                    is ProfileItem.Account -> navController.navigate("user-account")
-                                    is ProfileItem.Logout -> showLogoutDialog = true
-                                    else -> if (currentRoute != item.route) {
-                                        navController.navigate(item.route)
+                                    is ProfileItem.Account -> {
+                                        if (currentRoute != "account") {
+                                            navController.navigate("account") {
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
+                                        }
+                                    }
+
+                                    is ProfileItem.Logout -> {
+                                        showLogoutDialog = true
+                                    }
+
+                                    else -> {
+                                        if (currentRoute != item.route) {
+                                            navController.navigate(item.route) {
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
+                                        }
                                     }
                                 }
                             }
+
                             .padding(horizontal = 1.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {

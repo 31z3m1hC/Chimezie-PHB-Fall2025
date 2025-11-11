@@ -110,6 +110,7 @@ fun saveBitmapToCache(context: Context, bitmap: Bitmap): Uri {
     file.outputStream().use {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
     }
+    Log.d("saveBitmapToCache", "File path: ${file.absolutePath}")
     return FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
 }
 
@@ -120,6 +121,7 @@ fun validateUserInput(user: User, firebaseEmail: String): Boolean {
     val emailValid = user.email == firebaseEmail
     val phoneValid = user.phoneNumber.matches(Regex("^\\+?[0-9]{10,15}$"))
     val nameValid = user.firstname.isNotBlank()
+    Log.d("Validation", "EmailValid: $emailValid, PhoneValid: $phoneValid, NameValid: $nameValid")
 
     return emailValid && phoneValid && nameValid
 }
@@ -145,6 +147,7 @@ fun SaveButton(
             Text("Save")
         }
     }
+    Log.d("SaveButton", "Enabled: $enabled")
 }
 
 
@@ -192,6 +195,7 @@ fun TopBarWithSave(
             }
         }
     }
+    Log.d("TopBarWithSave", "Title: $title")
 }
 
 
@@ -247,7 +251,10 @@ fun BackHeader(title: String, onBack: () -> Unit) {
             Text(title, style = MaterialTheme.typography.bodyMedium)
         }
     }
+    Log.d("BackHeader", "Title: $title")
 }
+
+
 
 @Composable
 fun ProfileImage(capturedBitmap: ImageBitmap?) {
@@ -271,6 +278,7 @@ fun ProfileImage(capturedBitmap: ImageBitmap?) {
             contentScale = ContentScale.Crop
         )
     }
+    Log.d("ProfileImage", "CapturedBitmap: $capturedBitmap")
 }
 
 
@@ -311,6 +319,7 @@ fun PhotoOptionsMenu(
             DropdownMenuItem(text = { Text("Delete Photo") }, onClick = onDelete)
         }
     }
+    Log.d("PhotoOptionsMenu", "ShowMenu: $showMenu")
 }
 //
 //@Composable
@@ -652,7 +661,7 @@ fun AccountFormBottom(
             },
             modifier = Modifier.fillMaxWidth()
         )
-
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = lastname.value,
             onValueChange = { lastname.value = it },
@@ -662,7 +671,7 @@ fun AccountFormBottom(
             },
             modifier = Modifier.fillMaxWidth()
         )
-
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = dateOfBirth.value,
             onValueChange = { dateOfBirth.value = it },
@@ -672,7 +681,7 @@ fun AccountFormBottom(
             },
             modifier = Modifier.fillMaxWidth()
         )
-
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = homeAddress.value,
             onValueChange = { homeAddress.value = it },
@@ -682,7 +691,7 @@ fun AccountFormBottom(
             },
             modifier = Modifier.fillMaxWidth()
         )
-
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = city.value,
             onValueChange = { city.value = it },
@@ -692,7 +701,7 @@ fun AccountFormBottom(
             },
             modifier = Modifier.fillMaxWidth()
         )
-
+        Spacer(modifier = Modifier.height(8.dp))
         Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
                 value = gender.value.name,
@@ -725,7 +734,7 @@ fun AccountFormBottom(
                 }
             }
         }
-
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = email.value,
             onValueChange = { email.value = it },
@@ -735,7 +744,7 @@ fun AccountFormBottom(
             },
             modifier = Modifier.fillMaxWidth()
         )
-
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = phoneNumber.value,
             onValueChange = { phoneNumber.value = it },
@@ -772,7 +781,7 @@ fun HealthInformationSection(
             },
             modifier = Modifier.fillMaxWidth()
         )
-
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = allergies.value,
             onValueChange = { allergies.value = it },
@@ -782,7 +791,7 @@ fun HealthInformationSection(
             },
             modifier = Modifier.fillMaxWidth()
         )
-
+        Spacer(modifier = Modifier.height(8.dp))
         Box(modifier = Modifier.fillMaxWidth().zIndex(1f)) {
             OutlinedTextField(
                 value = bloodGroup.value,
@@ -821,6 +830,7 @@ fun HealthInformationSection(
             }
         }
     }
+    Log.d("HealthInformationSection", "Blood Group: ${bloodGroup.value}")
 }
 
 //
@@ -1032,7 +1042,7 @@ fun EmergencyContactSection(
             },
             modifier = Modifier.fillMaxWidth()
         )
-
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = emergencyPhone.value,
             onValueChange = { emergencyPhone.value = it },
@@ -1042,7 +1052,7 @@ fun EmergencyContactSection(
             },
             modifier = Modifier.fillMaxWidth()
         )
-
+        Spacer(modifier = Modifier.height(8.dp))
         Box(modifier = Modifier.fillMaxWidth().zIndex(1f)) {
             OutlinedTextField(
                 value = emergencyRelation.value,
@@ -1081,6 +1091,7 @@ fun EmergencyContactSection(
             }
         }
     }
+    Log.d("EmergencyContactSection", "Recomposing EmergencyContactSection")
 }
 
 
@@ -1277,6 +1288,7 @@ fun AccountFormTop(
             )
         }
     }
+    Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
 }
 
 
@@ -1358,6 +1370,7 @@ fun AccountFormScreen(navController: NavHostController) {
             emergencyRelation = emergencyRelation
         )
     }
+    Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
 }
 
 

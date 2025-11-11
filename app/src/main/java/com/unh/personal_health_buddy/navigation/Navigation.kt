@@ -47,6 +47,8 @@ fun AppNavigation(
         composable("notifications") { NotificationScreen(navController) }
         composable("logout") { LogoutScreen(navController) }
         composable("reset-password") { ResetPasswordDialog(navController, onDismiss = {}) }
+        composable("account") { AccountScreen(navController) }
+
 
         // ---------------- Profile & Account ----------------
         composable("profile") {
