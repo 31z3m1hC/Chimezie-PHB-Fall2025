@@ -1,145 +1,103 @@
-package com.unh.personal_health_buddy.screens
-
 import android.util.Log
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.unh.personal_health_buddy.BottomBar
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import androidx.navigation.compose.rememberNavController
+import com.unh.personal_health_buddy.Authentication.FirestoreHelper
+import com.unh.personal_health_buddy.database.EmergencyContact
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EmergencyContactScreen(navController: NavHostController) {
-    Scaffold(
-        bottomBar = {
-            BottomBar(navController = navController)
-        }
-    ) { paddingValues ->
+fun EmergencyContactScreen(navController: NavController) {
+    var emergencyContact by remember { mutableStateOf<EmergencyContact?>(null) }
+    var loading by remember { mutableStateOf(true) }
 
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
+    LaunchedEffect(Unit) {
+        try {
+            emergencyContact = FirestoreHelper.readEmergencyContact()
+        } catch (e: Exception) {
+            Log.e("EmergencyContactScreen", "Failed to load emergency contact: ${e.message}")
+        } finally {
+            loading = false
+        }
+    }
+
+    if (loading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp)
         ) {
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, top = 16.dp, bottom = 32.dp),
-                contentAlignment = Alignment.TopStart
-            ) {
-//                IconButton(
-//                    onClick = {
-//                        if (!navController.popBackStack()) {
-//                            navController.navigate("home") {
-//                                launchSingleTop = true
-//                            }
-//                        }
-//                    }
-//                ) {
-//                    Icon(
-//                        Icons.Filled.ArrowBack,
-//                        contentDescription = "Back to Home"
-//                    )
-//                }
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 8.dp),
-                    contentAlignment = Alignment.TopStart
-                ) {
-                    IconButton(onClick = { navController.navigate("Profile") }) {
-                        Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
+            // Back button (added here, top-left)
+            Spacer(Modifier.height(20.dp))
+            BackHeader(
+                title = "Profile",
+                onBack = {
+                    navController.navigate("profile") {
+                        launchSingleTop = true
+                        popUpTo("profile") { inclusive = false }
                     }
                 }
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 50.dp),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    Text(
-                        text = "Emergency Contacts",
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-            }
-            EmergencyContactsDisplayScreen(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 100.dp) // Push content below back button
             )
+
+            Spacer(Modifier.height(60.dp))
+
+            Text(
+                text = "Emergency Contact",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(20.dp))
+
+            Text("Name:", style = MaterialTheme.typography.labelMedium)
+            Text(emergencyContact?.name ?: "Not set", style = MaterialTheme.typography.bodyLarge)
+
+            Spacer(Modifier.height(12.dp))
+
+            Text("Phone:", style = MaterialTheme.typography.labelMedium)
+            Text(emergencyContact?.phoneNumber ?: "Not set", style = MaterialTheme.typography.bodyLarge)
+
+            Spacer(Modifier.height(12.dp))
+
+            Text("Relationship:", style = MaterialTheme.typography.labelMedium)
+            Text(emergencyContact?.relation ?: "Not set", style = MaterialTheme.typography.bodyLarge)
         }
     }
-    Log.d("EmergencyContactScreen", "Emergency contact screen displayed")
 }
 
-@Composable
-fun EmergencyContactsDisplayScreen(modifier: Modifier = Modifier) {
-    val contacts = listOf(
-        "Nabin Bamma" to "(555) 123-4567",
-        "Raj Lama" to "(555) 987-6543",
-        "Chimezie Onwuegbuchulem" to "(555) 246-8101"
-    )
 
-    Column(
-        modifier = modifier
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.Start
-    ) {
-        contacts.forEach { (name, number) ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F8))
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Contact Icon",
-                        tint = Color(0xFF1976D2),
-                        modifier = Modifier.size(32.dp)
-                    )
 
-                    Column(modifier = Modifier.padding(start = 12.dp)) {
-                        Text(
-                            text = name,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Text(
-                            text = number,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.DarkGray
-                        )
-                    }
-                }
-            }
-        }
-    }
-    Log.d("EmergencyContactsDisplayScreen", "Emergency contacts displayed")
-}
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

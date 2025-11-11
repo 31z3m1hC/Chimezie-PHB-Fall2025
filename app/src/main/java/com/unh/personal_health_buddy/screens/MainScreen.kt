@@ -1,5 +1,6 @@
 package com.unh.personal_health_buddy.screens
 import AccountFormScreen
+import EmergencyContactScreen
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -111,33 +112,33 @@ fun MapScreen(navController: NavController) {
     BackButton(navController = navController, returnRoute = "home")
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun HomeScreen(navController: NavController) {
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { /* your FAB action */ },
-                containerColor = MaterialTheme.colorScheme.tertiary,
-                contentColor = Color.White,
-                modifier = Modifier.offset(y = (-10).dp),
-                shape = RoundedCornerShape(50)
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add")
-            }
-        },
-        bottomBar = { BottomBar(navController = navController) }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("Home Screen", style = MaterialTheme.typography.headlineSmall)
-        }
-    }
-}
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun HomeScreen(navController: NavController) {
+//    Scaffold(
+//        floatingActionButton = {
+//            FloatingActionButton(
+//                onClick = { /* your FAB action */ },
+//                containerColor = MaterialTheme.colorScheme.tertiary,
+//                contentColor = Color.White,
+//                modifier = Modifier.offset(y = (-10).dp),
+//                shape = RoundedCornerShape(50)
+//            ) {
+//                Icon(Icons.Filled.Add, contentDescription = "Add")
+//            }
+//        },
+//        bottomBar = { BottomBar(navController = navController) }
+//    ) { padding ->
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(padding),
+//            contentAlignment = Alignment.Center
+//        ) {
+//            Text("Home Screen", style = MaterialTheme.typography.headlineSmall)
+//        }
+//    }
+//}
 
 @Composable
 fun BackButton(navController: NavController, returnRoute: String) {

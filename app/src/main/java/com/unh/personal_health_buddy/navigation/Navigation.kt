@@ -7,7 +7,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.unh.personal_health_buddy.screens.AppointmentScreen
-import com.unh.personal_health_buddy.screens.EmergencyContactScreen
 import com.unh.personal_health_buddy.screens.FAQScreen
 import com.unh.personal_health_buddy.screens.GoogleMapScreen
 import com.unh.personal_health_buddy.screens.HomeScreen
@@ -31,6 +30,7 @@ fun AppNavigation(
         navController = navController,
         startDestination = "account-form"
     ) {
+
 
         composable("welcome") { WelcomeScreen(navController) }
         //composable("user-account") { UserAccount(navController) }

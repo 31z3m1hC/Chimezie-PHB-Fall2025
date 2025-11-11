@@ -90,7 +90,7 @@ fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
                     unselectedIconColor = Color.Gray,
                     selectedTextColor = Color.Blue,
                     unselectedTextColor = Color.Gray,
-                    indicatorColor = Color.White
+                    indicatorColor = Color.Transparent
                 )
             )
         }
