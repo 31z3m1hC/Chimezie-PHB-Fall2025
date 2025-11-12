@@ -177,7 +177,7 @@ fun HomeScreen(navController: NavController) {
                     ) {
                         StandardFeatureCard(
                             feature = feature4,
-                            onClick = { navController.navigate("emergency_screen") },
+                            onClick = { navController.navigate("emergency-contacts") },
                             backgroundColor = EmergencyRed,
                             modifier = Modifier.weight(1f).aspectRatio(1f)
                         )
