@@ -1,13 +1,14 @@
 import android.accounts.Account
 import android.content.Intent
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.unh.personal_health_buddy.FAQScreen
 import com.unh.personal_health_buddy.screens.AppointmentScreen
-import com.unh.personal_health_buddy.screens.FAQScreen
 import com.unh.personal_health_buddy.screens.GoogleMapScreen
 import com.unh.personal_health_buddy.screens.HomeScreen
 import com.unh.personal_health_buddy.screens.LogoutScreen
@@ -24,7 +25,8 @@ import com.unh.personal_health_buddy.screens.profileItems
 fun AppNavigation(
     navController: NavHostController,
     googleSignInClient: GoogleSignInClient,
-    launcher: ActivityResultLauncher<Intent>
+    launcher: ActivityResultLauncher<Intent>,
+
 ) {
     NavHost(
         navController = navController,
@@ -33,7 +35,6 @@ fun AppNavigation(
 
 
         composable("welcome") { WelcomeScreen(navController) }
-        //composable("user-account") { UserAccount(navController) }
         composable("faqs") { FAQScreen(navController) }
         composable("chats") { MessageScreen(navController) }
         composable("sign-in") { SignInScreen(navController, googleSignInClient, launcher) }

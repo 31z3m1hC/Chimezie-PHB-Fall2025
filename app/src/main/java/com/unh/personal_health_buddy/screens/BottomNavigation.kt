@@ -52,14 +52,14 @@ fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    Spacer(modifier = Modifier.height(12.dp))
+    Spacer(modifier = Modifier.height(1.dp))
     NavigationBar(
         modifier = modifier
             .padding(vertical = 0.dp)
             .clip(
             RoundedCornerShape(
-                15.dp, 15.dp,
-                15.dp, 15.dp
+                15.dp, 20.dp,
+                0.dp, 0.dp
             )
         )
         .height(90.dp),
@@ -86,9 +86,9 @@ fun BottomBar(navController: NavController, modifier: Modifier = Modifier) {
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color.Blue,
+                    selectedIconColor = Color(0xFF5AA9E6),
                     unselectedIconColor = Color.Gray,
-                    selectedTextColor = Color.Blue,
+                    selectedTextColor = Color(0xFF5AA9E6),
                     unselectedTextColor = Color.Gray,
                     indicatorColor = Color.Transparent
                 )

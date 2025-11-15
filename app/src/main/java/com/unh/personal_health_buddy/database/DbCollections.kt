@@ -1,7 +1,6 @@
 package com.unh.personal_health_buddy.database
 
 import com.google.firebase.Timestamp
-import com.google.firebase.auth.FirebaseUser
 
 
 data class User(
@@ -82,12 +81,13 @@ data class FAQs(
 )
 
 
+// Data class for EmergencyContact
 data class EmergencyContact(
     val contactId: String = "",
-    val name: String = "",
+    val firstname: String = "",
+    val lastname: String = "",
     val phoneNumber: String = "",
-    val relation: String = ""
+    val relationship: String = ""
 )
-
 
 

@@ -128,6 +128,7 @@ fun HomeScreen(navController: NavController) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .offset(y = (10).dp)
                     .weight(0.65f)
                     .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
                     .background(Color.White)

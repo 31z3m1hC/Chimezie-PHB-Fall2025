@@ -137,6 +137,7 @@ fun createGoogleSignInOptions(googleClientId: String): GoogleSignInOptions =
         .requestEmail()
         .build()
 
+
 @Composable
 fun rememberFirebaseAuthLauncher(
     onSignInSuccess: () -> Unit,
@@ -175,21 +176,97 @@ fun rememberFirebaseAuthLauncher(
     }
 }
 
+
+
+//@Composable
+//fun rememberFirebaseAuthLauncher(
+//    onSignInSuccess: () -> Unit,
+//    onSignInFailure: (Exception) -> Unit
+//): ActivityResultLauncher<Intent> {
+//    val scope = rememberCoroutineScope()
+//    return rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.StartActivityForResult()
+//    ) { result ->
+//        if (result.resultCode != Activity.RESULT_OK || result.data == null) {
+//            onSignInFailure(IllegalStateException("Google Sign-In canceled"))
+//            return@rememberLauncherForActivityResult
+//        }
+//
+//        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+//        try {
+//            val account = task.getResult(ApiException::class.java)
+//            val idToken = account.idToken
+//            if (idToken.isNullOrBlank()) {
+//                onSignInFailure(IllegalStateException("Missing ID token"))
+//                return@rememberLauncherForActivityResult
+//            }
+//
+//            val credential = GoogleAuthProvider.getCredential(idToken, null)
+//            scope.launch {
+//                try {
+//                    FirebaseAuth.getInstance().signInWithCredential(credential).await()
+//                    onSignInSuccess()
+//                } catch (e: Exception) {
+//                    onSignInFailure(e)
+//                }
+//            }
+//        } catch (e: ApiException) {
+//            onSignInFailure(e)
+//        }
+//    }
+//}
+
+//fun performGoogleAuthentication(
+//    launcher: ActivityResultLauncher<Intent>,
+//    googleSignInClient: GoogleSignInClient,
+//    context: Context,
+//    onSuccessNav: () -> Unit,
+//    onFailureToast: (String) -> Unit
+//) {
+//    try {
+//        launcher.launch(googleSignInClient.signInIntent)
+//    } catch (e: Exception) {
+//        Log.e("GoogleAuth", "Failed to launch Google Sign-In", e)
+//        onFailureToast(e.message ?: "Google Sign-In failed")
+//        Toast.makeText(context, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG).show()
+//    }
+//}
+
 fun performGoogleAuthentication(
     launcher: ActivityResultLauncher<Intent>,
-    googleSignInClient: GoogleSignInClient,
     context: Context,
     onSuccessNav: () -> Unit,
     onFailureToast: (String) -> Unit
 ) {
+    val auth = FirebaseAuth.getInstance()
+    val existingUser = auth.currentUser
+
+    // If already signed in, just navigate
+    if (existingUser != null && existingUser.email != null) {
+        val emails = arrayOf(existingUser.email!!)
+        androidx.appcompat.app.AlertDialog.Builder(context)
+            .setTitle("Choose verified account")
+            .setItems(emails) { _, _ ->
+                onSuccessNav()
+            }
+            .setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
+            .show()
+        return
+    }
+
+    // Launch Google Sign-In
     try {
-        launcher.launch(googleSignInClient.signInIntent)
+        launcher.launch((GoogleSignIn.getClient(context,
+            GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(context.getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build()
+        ).signInIntent))
     } catch (e: Exception) {
-        Log.e("GoogleAuth", "Failed to launch Google Sign-In", e)
         onFailureToast(e.message ?: "Google Sign-In failed")
-        Toast.makeText(context, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG).show()
     }
 }
+
 
 // ---------------- SETUP AUTH --------------------
 

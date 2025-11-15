@@ -85,6 +85,7 @@ dependencies {
     implementation(libs.androidx.camera.camera2.pipe)
     implementation(libs.androidx.foundation.layout)
     implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.text)
 
 
     // Optional: debugging / tooling
@@ -111,6 +112,7 @@ dependencies {
 
   //Optional but useful
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    implementation("com.google.android.gms:play-services-auth:21.4.0")
 
 
     // Play Services / Maps

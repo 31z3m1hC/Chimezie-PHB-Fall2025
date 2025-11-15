@@ -1,112 +1,346 @@
 import android.util.Log
-import androidx.compose.foundation.background
+import com.unh.personal_health_buddy.R
+import com.unh.personal_health_buddy.screens.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
 import com.unh.personal_health_buddy.database.EmergencyContact
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
-fun EmergencyContactScreen(navController: NavController) {
-    var emergencyContact by remember { mutableStateOf<EmergencyContact?>(null) }
-    var loading by remember { mutableStateOf(true) }
+fun EmergencyContactScreen(navController: NavHostController) {
+    val scrollState = rememberScrollState()
+    var showDialog by remember { mutableStateOf(false) }
+    var emergencyContacts by remember { mutableStateOf<List<EmergencyContact>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(false) }
 
+    // Load contacts on launch
     LaunchedEffect(Unit) {
-        try {
-            emergencyContact = FirestoreHelper.readEmergencyContact()
-        } catch (e: Exception) {
-            Log.e("EmergencyContactScreen", "Failed to load emergency contact: ${e.message}")
-        } finally {
-            loading = false
+        val authUserId = FirebaseAuth.getInstance().currentUser?.uid
+        if (authUserId != null) {
+            isLoading = true
+            try {
+                emergencyContacts = FirestoreHelper.readAllEmergencyContacts()
+            } catch (e: Exception) {
+                Log.e("EmergencyContactScreen", "Error loading contacts: ${e.message}")
+            } finally {
+                isLoading = false
+            }
         }
     }
 
-    if (loading) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(color = Color(0xFF3F51B5))
-        }
-    } else {
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(Color(0xFFE3F2FD), Color(0xFFFFFFFF))
-                    )
-                )
-                .padding(20.dp)
+                .verticalScroll(scrollState)
+                .padding(16.dp)
         ) {
-            Spacer(Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             BackHeader(
-                title = "Profile",
-                onBack = {
-                    navController.navigate("profile") {
-                        launchSingleTop = true
-                        popUpTo("profile") { inclusive = false }
-                    }
+                title = "home",
+                onBack = { navController.navigate("home") }
+            )
+
+            Text(
+                text = "Emergency Contacts",
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            } else if (emergencyContacts.isEmpty()) {
+                Text(
+                    text = "No emergency contacts added yet.",
+                    modifier = Modifier.padding(16.dp)
+                )
+            } else {
+                emergencyContacts.forEach { contact ->
+                    EmergencyContactCard(contact)
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(80.dp)) // Space for FAB
+        }
+
+        FloatingActionButton(
+            onClick = { showDialog = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "Add Emergency Contact")
+        }
+
+        if (showDialog) {
+            AddEmergencyContactDialog(
+                onDismiss = { showDialog = false },
+                onSave = { newContact ->
+                    emergencyContacts = emergencyContacts + newContact
+                    showDialog = false
                 }
             )
-
-            Spacer(Modifier.height(40.dp))
-
-            Text(
-                text = "Emergency Contact",
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                color = Color(0xFF0D47A1)
-            )
-
-            Spacer(Modifier.height(30.dp))
-
-            EmergencyContactCard(label = "Name", value = emergencyContact?.name)
-            EmergencyContactCard(label = "Phone", value = emergencyContact?.phoneNumber)
-            EmergencyContactCard(label = "Relationship", value = emergencyContact?.relation)
         }
     }
 }
+
+
+
 
 @Composable
-fun EmergencyContactCard(label: String, value: String?) {
+fun EmergencyContactCard(contact: EmergencyContact) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .shadow(4.dp, RoundedCornerShape(12.dp)),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFBBDEFB))
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
-                color = Color(0xFF0D47A1)
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value ?: "Not set",
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = Color(0xFF1A237E)
-            )
+            Text(text = "First Name: ${contact.firstname}")
+            Text(text = "Last Name: ${contact.lastname}")
+            Text(text = "Phone: ${contact.phoneNumber}")
+            Text(text = "Relationship: ${contact.relationship}")
         }
     }
 }
+
+
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddEmergencyContactDialog(
+    onDismiss: () -> Unit,
+    onSave: (EmergencyContact) -> Unit
+) {
+    var firstname by remember { mutableStateOf("") }
+    var lastname by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
+    var relationship by remember { mutableStateOf("") }
+    var expandedDropdown by remember { mutableStateOf(false) }
+    var isSaving by remember { mutableStateOf(false) }
+
+    val relationships = listOf("Parent", "Sibling", "Friend", "Others")
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = "Emergency Contact",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // FIRST NAME
+                OutlinedTextField(
+                    value = firstname,
+                    onValueChange = { firstname = it },
+                    label = { Text("First Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    //leadingIcon = {
+                        //Icon(Icons.Default.Person, contentDescription = null)
+                   // }
+                    leadingIcon = {
+                        RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
+                    },
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // LAST NAME
+                OutlinedTextField(
+                    value = lastname,
+                    onValueChange = { lastname = it },
+                    label = { Text("Last Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    //leadingIcon = {
+                        //Icon(Icons.Default.Person, contentDescription = null)
+                   //}
+                    leadingIcon = {
+                        RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
+                    },
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // PHONE NUMBER
+                OutlinedTextField(
+                    value = phoneNumber,
+                    onValueChange = { phoneNumber = it },
+                    label = { Text("Phone Number") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    //leadingIcon = {
+                        //Icon(Icons.Default.Phone, contentDescription = null)
+                    //},
+                    leadingIcon = {
+                        RoundedIcon(Icons.Default.Phone, Color(0xFF87CEEB), Color(0xFFEF6C00))
+                    },
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // RELATIONSHIP DROPDOWN
+                ExposedDropdownMenuBox(
+                    expanded = expandedDropdown,
+                    onExpandedChange = { expandedDropdown = it }
+                ) {
+                    OutlinedTextField(
+                        value = relationship,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Relationship") },
+                        leadingIcon = {
+                            RoundedIcon(Icons.Default.People, Color(0xFF87CEEB), Color(0xFFEF6C00))
+                        },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDropdown)
+                        },
+                        //leadingIcon = {
+                            //Icon(Icons.Default.People, contentDescription = null)
+                        //},
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expandedDropdown,
+                        onDismissRequest = { expandedDropdown = false }
+                    ) {
+                        relationships.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    relationship = option
+                                    expandedDropdown = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+
+                    // CANCEL BUTTON
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        enabled = !isSaving,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorResource(id = R.color.purple_500),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Cancel")
+                    }
+
+                    // SAVE BUTTON
+                    Button(
+                        onClick = {
+                            if (firstname.isNotBlank() && lastname.isNotBlank() &&
+                                phoneNumber.isNotBlank() && relationship.isNotBlank()) {
+
+                                isSaving = true
+                                val newContact = EmergencyContact(
+                                    contactId = "",
+                                    firstname = firstname,
+                                    lastname = lastname,
+                                    phoneNumber = phoneNumber,
+                                    relationship = relationship
+                                )
+
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    try {
+                                        FirestoreHelper.writeEmergencyContact(newContact)
+                                        withContext(Dispatchers.Main) {
+                                            onSave(newContact)
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e("AddEmergencyContact", "Error saving: ${e.message}")
+                                        withContext(Dispatchers.Main) {
+                                            isSaving = false
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isSaving &&
+                                firstname.isNotBlank() &&
+                                lastname.isNotBlank() &&
+                                phoneNumber.isNotBlank() &&
+                                relationship.isNotBlank(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorResource(id = R.color.purple_500),
+                            contentColor = Color.White,
+                            disabledContainerColor = Color.LightGray,
+                            disabledContentColor = Color.White
+                        )
+                    ) {
+                        if (isSaving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = Color.White
+                            )
+                        } else {
+                            Text("Save")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

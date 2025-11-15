@@ -1,6 +1,7 @@
 package com.unh.personal_health_buddy.screens
 import AccountFormScreen
-import EmergencyContactScreen
+import AccountFormScreen
+import AccountScreen
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,6 +20,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.BottomBar
+import com.unh.personal_health_buddy.FAQScreen
 import com.unh.personal_health_buddy.screens.ProfileScreen
 
 import com.unh.personal_health_buddy.screens.profileItems
@@ -51,17 +53,15 @@ fun MainScreen(navController: NavHostController) {
 
                 "account-form" -> AccountFormScreen(navController)
 
-                "chats" -> MessageListScreen(navController = navController, cid = "preview_cid")
+                //"chats" -> MessageListScreen(navController = navController, cid = "preview_cid")
                 "notification" -> NotificationScreen(navController)
-                "faqs" -> FAQScreen(navController)
                 "logout" -> LogoutScreen(navController)
                 "appointment" -> AppointmentScreen(navController)
                 "faqs" -> FAQScreen(navController)
-                "logout" -> LogoutScreen(navController)
                 "home" -> HomeScreen(navController)
                 "map" -> MapScreen(navController)
-               // "user-account" -> UserAccount(navController = navController)
-                "emergency-contacts" -> EmergencyContactScreen(navController)
+                "account" -> AccountScreen(navController = navController)
+               // "emergency-contacts" -> EmergencyContactScreen(navController)
                 else -> WelcomeScreen(navController)
             }
         }
@@ -85,13 +85,7 @@ fun AppointmentScreen(navController: NavController) {
     BackButton(navController = navController, returnRoute = "profile")
 }
 
-@Composable
-fun FAQScreen(navController: NavController) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "FAQs Screen", style = MaterialTheme.typography.headlineSmall)
-    }
-    BackButton(navController = navController, returnRoute = "profile")
-}
+
 
 
 
