@@ -1,5 +1,6 @@
 package com.unh.personal_health_buddy.screens
 
+import BottomBar
 import android.Manifest
 import android.app.Activity
 import android.content.Context
@@ -32,7 +33,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
-import com.unh.personal_health_buddy.BottomBar
+//import com.unh.personal_health_buddy.BottomBar
 import com.unh.personal_health_buddy.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

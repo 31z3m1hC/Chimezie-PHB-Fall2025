@@ -1,6 +1,7 @@
 
 package com.unh.personal_health_buddy.screens
 
+import BottomBar
 import LogoutConfirmationDialog
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -31,7 +32,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.unh.personal_health_buddy.BottomBar
+
 import com.unh.personal_health_buddy.R
 
 

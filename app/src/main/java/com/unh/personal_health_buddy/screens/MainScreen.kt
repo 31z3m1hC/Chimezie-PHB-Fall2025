@@ -2,6 +2,7 @@ package com.unh.personal_health_buddy.screens
 import AccountFormScreen
 import AccountFormScreen
 import AccountScreen
+import BottomBar
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,7 +20,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.unh.personal_health_buddy.BottomBar
 import com.unh.personal_health_buddy.FAQScreen
 import com.unh.personal_health_buddy.screens.ProfileScreen
 

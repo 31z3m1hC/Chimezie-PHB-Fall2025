@@ -5,6 +5,7 @@ package com.unh.personal_health_buddy.screens
 // import androidx.compose.foundation.border // No longer needed
 // NEW IMPORTS for Card
 // IMPORTS for project resources and theme
+import BottomBar
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -43,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.unh.personal_health_buddy.BottomBar
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.ui.theme.BloodOrange
 import com.unh.personal_health_buddy.ui.theme.BmiPink
