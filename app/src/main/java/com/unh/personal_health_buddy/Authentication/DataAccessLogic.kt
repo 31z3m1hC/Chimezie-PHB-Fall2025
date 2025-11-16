@@ -7,10 +7,14 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import com.unh.personal_health_buddy.database.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.util.UUID
 
 //
 //object FirestoreHelper {
@@ -746,11 +750,328 @@ import kotlinx.coroutines.withContext
 
 
 // Update your FirestoreHelper with these methods
+//
+//object FirestoreHelper {
+//    @SuppressLint("StaticFieldLeak")
+//    private val db = Firebase.firestore
+//    private val auth = Firebase.auth
+//
+//    fun getVerifiedUser(): Pair<String, String> {
+//        val user = FirebaseAuth.getInstance().currentUser
+//        requireNotNull(user?.uid) { "No authenticated user UID found." }
+//        requireNotNull(user.email) { "Authenticated user has no email." }
+//        return user.uid to user.email!!
+//    }
+//
+//    // Get current user ID
+//    private fun getCurrentUserId(): String {
+//        return auth.currentUser?.uid ?: throw Exception("No authenticated user")
+//    }
+//
+//    // Write emergency contact as subcollection under current user
+//    suspend fun writeEmergencyContact(contact: EmergencyContact) {
+//        return withContext(Dispatchers.IO) {
+//            val userId = getCurrentUserId()
+//            val contactRef = db.collection("users")
+//                .document(userId)
+//                .collection("emergencyContacts")
+//                .document() // Auto-generate ID
+//
+//            val contactWithId = contact.copy(contactId = contactRef.id)
+//
+//            contactRef.set(contactWithId).await()
+//        }
+//    }
+//
+//    // Read all emergency contacts for current user (no external userId)
+//    suspend fun readAllEmergencyContacts(): List<EmergencyContact> {
+//        return withContext(Dispatchers.IO) {
+//            val userId = getCurrentUserId()
+//            val snapshot = db.collection("users")
+//                .document(userId)
+//                .collection("emergencyContacts")
+//                .get()
+//                .await()
+//
+//            snapshot.documents.mapNotNull { doc ->
+//                doc.toObject(EmergencyContact::class.java)
+//            }
+//        }
+//    }
+//
+//    // Delete emergency contact
+//    suspend fun deleteEmergencyContact(contactId: String) {
+//        return withContext(Dispatchers.IO) {
+//            val userId = getCurrentUserId()
+//            db.collection("users")
+//                .document(userId)
+//                .collection("emergencyContacts")
+//                .document(contactId)
+//                .delete()
+//                .await()
+//        }
+//    }
+//
+//    // Update emergency contact
+//    suspend fun updateEmergencyContact(contact: EmergencyContact) {
+//        return withContext(Dispatchers.IO) {
+//            val userId = getCurrentUserId()
+//            db.collection("users")
+//                .document(userId)
+//                .collection("emergencyContacts")
+//                .document(contact.contactId)
+//                .set(contact)
+//                .await()
+//        }
+//    }
+//
+//    // Get any user by id (keep as-is)
+//    suspend fun getUser(userId: String): User? {
+//        return withContext(Dispatchers.IO) {
+//            try {
+//                val snapshot = db.collection("users")
+//                    .document(userId)
+//                    .get()
+//                    .await()
+//                snapshot.toObject(User::class.java)
+//            } catch (e: Exception) {
+//                Log.e("FirestoreHelper", "Error getting user: ${e.message}")
+//                null
+//            }
+//        }
+//    }
+//
+//    // Get a single emergency contact for current user (uses current user)
+//    suspend fun getEmergencyContact(): EmergencyContact? {
+//        return withContext(Dispatchers.IO) {
+//            try {
+//                val userId = getCurrentUserId()
+//                val snapshot = db.collection("users")
+//                    .document(userId)
+//                    .collection("emergencyContacts")
+//                    .limit(1)
+//                    .get()
+//                    .await()
+//                snapshot.documents.firstOrNull()?.toObject(EmergencyContact::class.java)
+//            } catch (e: Exception) {
+//                Log.e("FirestoreHelper", "Error getting emergency contact: ${e.message}")
+//                null
+//            }
+//        }
+//    }
+//
+//    // Get health information for current user (uses current user)
+//    suspend fun getHealthInformation(): HealthInformation? {
+//        return withContext(Dispatchers.IO) {
+//            try {
+//                val userId = getCurrentUserId()
+//                val snapshot = db.collection("users")
+//                    .document(userId)
+//                    .collection("healthInformation")
+//                    .document("info")
+//                    .get()
+//                    .await()
+//                snapshot.toObject(HealthInformation::class.java)
+//            } catch (e: Exception) {
+//                Log.e("FirestoreHelper", "Error getting health info: ${e.message}")
+//                null
+//            }
+//        }
+//    }
+//
+//    suspend fun writeUser(user: User, bitmap: Bitmap?) {
+//        return withContext(Dispatchers.IO) {
+//            val userId = getCurrentUserId()
+//
+//            // Upload profile image if provided
+//            var profileImageUrl: String? = null
+//            if (bitmap != null) {
+//                // You'll need Firebase Storage setup for this
+//                // For now, leaving it as null or implement storage upload
+//                profileImageUrl = uploadProfileImage(userId, bitmap)
+//            }
+//
+//            val userWithImage = user.copy(profileImageUrl = profileImageUrl)
+//
+//            db.collection("users")
+//                .document(userId)
+//                .set(userWithImage)
+//                .await()
+//        }
+//    }
+//
+//    suspend fun writeHealthInformation(healthInfo: HealthInformation) {
+//        return withContext(Dispatchers.IO) {
+//            val userId = getCurrentUserId()
+//            db.collection("users")
+//                .document(userId)
+//                .collection("healthInformation")
+//                .document("info")
+//                .set(healthInfo)
+//                .await()
+//        }
+//    }
+//
+//    // Helper function for image upload (you'll need Firebase Storage)
+////    private suspend fun uploadProfileImage(userId: String, bitmap: Bitmap): String {
+////        // TODO: Implement Firebase Storage upload
+////        // For now, return empty string
+////        return ""
+////    }
+//
+//
+//
+//    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
+//    private val storageRef: StorageReference = storage.reference
+//
+//    /**
+//     * Uploads a profile image to Firebase Storage
+//     * @param userId The user's unique ID
+//     * @param bitmap The profile image bitmap
+//     * @return The download URL of the uploaded image, or null if upload fails
+//     */
+//    suspend fun uploadProfileImage(userId: String, bitmap: Bitmap): String? {
+//        return try {
+//            // Create a reference to store the image
+//            val imageRef = storageRef.child("profile_images/$userId/${UUID.randomUUID()}.jpg")
+//
+//            // Compress bitmap to JPEG format
+//            val baos = ByteArrayOutputStream()
+//            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
+//            val imageData = baos.toByteArray()
+//
+//            // Upload the image
+//            val uploadTask = imageRef.putBytes(imageData).await()
+//
+//            // Get the download URL
+//            val downloadUrl = imageRef.downloadUrl.await()
+//
+//            Log.d("FirebaseStorage", "Image uploaded successfully: $downloadUrl")
+//            downloadUrl.toString()
+//
+//        } catch (e: Exception) {
+//            Log.e("FirebaseStorage", "Error uploading image: ${e.message}", e)
+//            null
+//        }
+//    }
+//
+//    /**
+//     * Deletes an old profile image from Firebase Storage
+//     * @param imageUrl The URL of the image to delete
+//     */
+//    suspend fun deleteProfileImage(imageUrl: String?): Boolean {
+//        if (imageUrl.isNullOrEmpty()) return false
+//
+//        return try {
+//            val imageRef = storage.getReferenceFromUrl(imageUrl)
+//            imageRef.delete().await()
+//            Log.d("FirebaseStorage", "Image deleted successfully")
+//            true
+//        } catch (e: Exception) {
+//            Log.e("FirebaseStorage", "Error deleting image: ${e.message}", e)
+//            false
+//        }
+//    }
+//
+//    /**
+//     * Updates profile image - deletes old image and uploads new one
+//     * @param userId The user's unique ID
+//     * @param oldImageUrl The URL of the old image to delete
+//     * @param newBitmap The new profile image bitmap
+//     * @return The download URL of the new uploaded image
+//     */
+//    suspend fun updateProfileImage(
+//        userId: String,
+//        oldImageUrl: String?,
+//        newBitmap: Bitmap
+//    ): String? {
+//        // Delete old image if it exists
+//        if (!oldImageUrl.isNullOrEmpty()) {
+//            deleteProfileImage(oldImageUrl)
+//        }
+//
+//        // Upload new image
+//        return uploadProfileImage(userId, newBitmap)
+//    }
+//}
+//
+///**
+// * Extended FirestoreHelper with integrated image upload
+// */
+//object FirestoreHelperExtended {
+//
+//    /**
+//     * Writes user data to Firestore and uploads profile image to Storage
+//     * @param user The user object to save
+//     * @param profileBitmap The profile image bitmap (nullable)
+//     */
+//    suspend fun writeUserWithImage(user: User, profileBitmap: Bitmap?) {
+//        try {
+//            val userId = FirebaseAuth.getInstance().currentUser?.uid
+//                ?: throw IllegalStateException("User not authenticated")
+//
+//            // Get existing user to check for old profile image
+//            val existingUser = FirestoreHelper.getUser(userId)
+//            val oldImageUrl = existingUser?.profileImageUrl
+//
+//            // Upload new profile image if provided
+//            val newImageUrl = if (profileBitmap != null) {
+//                FirestoreHelper.updateProfileImage(userId, oldImageUrl, profileBitmap)
+//            } else {
+//                oldImageUrl // Keep existing image URL
+//            }
+//
+//            // Update user object with image URL
+//            val updatedUser = user.copy(profileImageUrl = newImageUrl)
+//
+//            // Write to Firestore
+//            FirestoreHelper.writeUser(updatedUser, null)
+//
+//            Log.d("FirestoreHelper", "User saved with profile image")
+//
+//        } catch (e: Exception) {
+//            Log.e("FirestoreHelper", "Error saving user with image: ${e.message}", e)
+//            throw e
+//        }
+//    }
+//
+//    /**
+//     * Deletes user's profile image from Storage
+//     * @param userId The user's unique ID
+//     */
+//    suspend fun deleteUserProfileImage(userId: String) {
+//        try {
+//            val user = FirestoreHelper.getUser(userId)
+//            val imageUrl = user?.profileImageUrl
+//
+//            if (imageUrl != null) {
+//                FirestoreHelper.deleteProfileImage(imageUrl)
+//
+//                // Update Firestore to remove image URL
+//                val updatedUser = user.copy(profileImageUrl = null)
+//                FirestoreHelper.writeUser(updatedUser, null)
+//            }
+//
+//        } catch (e: Exception) {
+//            Log.e("FirestoreHelper", "Error deleting profile image: ${e.message}", e)
+//            throw e
+//        }
+//    }
+//}
 
+
+
+
+/**
+ * UPDATED FirestoreHelper with integrated Firebase Storage
+ * All operations use the current authenticated user
+ */
 object FirestoreHelper {
     @SuppressLint("StaticFieldLeak")
     private val db = Firebase.firestore
     private val auth = Firebase.auth
+    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
+    private val storageRef: StorageReference = storage.reference
 
     fun getVerifiedUser(): Pair<String, String> {
         val user = FirebaseAuth.getInstance().currentUser
@@ -764,22 +1085,21 @@ object FirestoreHelper {
         return auth.currentUser?.uid ?: throw Exception("No authenticated user")
     }
 
-    // Write emergency contact as subcollection under current user
+    // ==================== EMERGENCY CONTACTS ====================
+
     suspend fun writeEmergencyContact(contact: EmergencyContact) {
         return withContext(Dispatchers.IO) {
             val userId = getCurrentUserId()
             val contactRef = db.collection("users")
                 .document(userId)
                 .collection("emergencyContacts")
-                .document() // Auto-generate ID
+                .document()
 
             val contactWithId = contact.copy(contactId = contactRef.id)
-
             contactRef.set(contactWithId).await()
         }
     }
 
-    // Read all emergency contacts for current user (no external userId)
     suspend fun readAllEmergencyContacts(): List<EmergencyContact> {
         return withContext(Dispatchers.IO) {
             val userId = getCurrentUserId()
@@ -795,7 +1115,6 @@ object FirestoreHelper {
         }
     }
 
-    // Delete emergency contact
     suspend fun deleteEmergencyContact(contactId: String) {
         return withContext(Dispatchers.IO) {
             val userId = getCurrentUserId()
@@ -808,7 +1127,6 @@ object FirestoreHelper {
         }
     }
 
-    // Update emergency contact
     suspend fun updateEmergencyContact(contact: EmergencyContact) {
         return withContext(Dispatchers.IO) {
             val userId = getCurrentUserId()
@@ -821,23 +1139,6 @@ object FirestoreHelper {
         }
     }
 
-    // Get any user by id (keep as-is)
-    suspend fun getUser(userId: String): User? {
-        return withContext(Dispatchers.IO) {
-            try {
-                val snapshot = db.collection("users")
-                    .document(userId)
-                    .get()
-                    .await()
-                snapshot.toObject(User::class.java)
-            } catch (e: Exception) {
-                Log.e("FirestoreHelper", "Error getting user: ${e.message}")
-                null
-            }
-        }
-    }
-
-    // Get a single emergency contact for current user (uses current user)
     suspend fun getEmergencyContact(): EmergencyContact? {
         return withContext(Dispatchers.IO) {
             try {
@@ -856,7 +1157,59 @@ object FirestoreHelper {
         }
     }
 
-    // Get health information for current user (uses current user)
+    // ==================== USER OPERATIONS ====================
+
+    suspend fun getUser(userId: String): User? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val snapshot = db.collection("users")
+                    .document(userId)
+                    .get()
+                    .await()
+                snapshot.toObject(User::class.java)
+            } catch (e: Exception) {
+                Log.e("FirestoreHelper", "Error getting user: ${e.message}")
+                null
+            }
+        }
+    }
+
+    /**
+     * Writes user data with optional profile image
+     * Uses current authenticated user - no UUID generation needed
+     */
+    suspend fun writeUser(user: User, bitmap: Bitmap?) {
+        return withContext(Dispatchers.IO) {
+            val userId = getCurrentUserId()
+
+            // Get existing user to check for old profile image
+            val existingUser = getUser(userId)
+            val oldImageUrl = existingUser?.profileImageUrl
+
+            // Upload new profile image if provided
+            val profileImageUrl = if (bitmap != null) {
+                // Delete old image and upload new one
+                updateProfileImage(oldImageUrl, bitmap)
+            } else {
+                // Keep existing image URL if no new image provided
+                oldImageUrl
+            }
+
+            // Update user object with image URL
+            val userWithImage = user.copy(profileImageUrl = profileImageUrl)
+
+            // Save to Firestore
+            db.collection("users")
+                .document(userId)
+                .set(userWithImage)
+                .await()
+
+            Log.d("FirestoreHelper", "User saved successfully with image URL: $profileImageUrl")
+        }
+    }
+
+    // ==================== HEALTH INFORMATION ====================
+
     suspend fun getHealthInformation(): HealthInformation? {
         return withContext(Dispatchers.IO) {
             try {
@@ -875,27 +1228,6 @@ object FirestoreHelper {
         }
     }
 
-    suspend fun writeUser(user: User, bitmap: Bitmap?) {
-        return withContext(Dispatchers.IO) {
-            val userId = getCurrentUserId()
-
-            // Upload profile image if provided
-            var profileImageUrl: String? = null
-            if (bitmap != null) {
-                // You'll need Firebase Storage setup for this
-                // For now, leaving it as null or implement storage upload
-                profileImageUrl = uploadProfileImage(userId, bitmap)
-            }
-
-            val userWithImage = user.copy(profileImageUrl = profileImageUrl)
-
-            db.collection("users")
-                .document(userId)
-                .set(userWithImage)
-                .await()
-        }
-    }
-
     suspend fun writeHealthInformation(healthInfo: HealthInformation) {
         return withContext(Dispatchers.IO) {
             val userId = getCurrentUserId()
@@ -908,10 +1240,100 @@ object FirestoreHelper {
         }
     }
 
-    // Helper function for image upload (you'll need Firebase Storage)
-    private suspend fun uploadProfileImage(userId: String, bitmap: Bitmap): String {
-        // TODO: Implement Firebase Storage upload
-        // For now, return empty string
-        return ""
+    // ==================== FIREBASE STORAGE OPERATIONS ====================
+
+    /**
+     * Uploads profile image to Firebase Storage
+     * Path: profile_images/{currentUserId}/profile_image.jpg
+     * Only generates UUID for the filename to prevent caching issues
+     */
+    private suspend fun uploadProfileImage(bitmap: Bitmap): String? {
+        return try {
+            val userId = getCurrentUserId()
+
+            // Use consistent path with UUID filename to avoid caching issues
+            val imageRef = storageRef.child("profile_images/$userId/${UUID.randomUUID()}.jpg")
+
+            // Compress bitmap to JPEG format (85% quality for balance)
+            val baos = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
+            val imageData = baos.toByteArray()
+
+            // Upload the image
+            imageRef.putBytes(imageData).await()
+
+            // Get the download URL
+            val downloadUrl = imageRef.downloadUrl.await()
+
+            Log.d("FirestoreHelper", "Profile image uploaded: $downloadUrl")
+            downloadUrl.toString()
+
+        } catch (e: Exception) {
+            Log.e("FirestoreHelper", "Error uploading profile image: ${e.message}", e)
+            null
+        }
+    }
+
+    /**
+     * Deletes profile image from Firebase Storage
+     */
+    private suspend fun deleteProfileImage(imageUrl: String?): Boolean {
+        if (imageUrl.isNullOrEmpty()) return false
+
+        return try {
+            val imageRef = storage.getReferenceFromUrl(imageUrl)
+            imageRef.delete().await()
+            Log.d("FirestoreHelper", "Profile image deleted successfully")
+            true
+        } catch (e: Exception) {
+            Log.e("FirestoreHelper", "Error deleting profile image: ${e.message}", e)
+            false
+        }
+    }
+
+    /**
+     * Updates profile image - deletes old and uploads new
+     * Used internally by writeUser
+     */
+    private suspend fun updateProfileImage(oldImageUrl: String?, newBitmap: Bitmap): String? {
+        // Delete old image if it exists
+        if (!oldImageUrl.isNullOrEmpty()) {
+            deleteProfileImage(oldImageUrl)
+        }
+
+        // Upload new image
+        return uploadProfileImage(newBitmap)
+    }
+
+    /**
+     * Deletes user's profile image and updates Firestore
+     * Call this when user explicitly deletes their profile picture
+     */
+    suspend fun deleteUserProfileImage() {
+        return withContext(Dispatchers.IO) {
+            try {
+                val userId = getCurrentUserId()
+                val user = getUser(userId)
+                val imageUrl = user?.profileImageUrl
+
+                if (imageUrl != null) {
+                    // Delete from Storage
+                    deleteProfileImage(imageUrl)
+
+                    // Update Firestore to remove image URL
+                    val updatedUser = user.copy(profileImageUrl = null)
+                    db.collection("users")
+                        .document(userId)
+                        .set(updatedUser)
+                        .await()
+
+                    Log.d("FirestoreHelper", "User profile image deleted")
+                }
+            } catch (e: Exception) {
+                Log.e("FirestoreHelper", "Error deleting user profile image: ${e.message}", e)
+                throw e
+            }
+        }
     }
 }
+

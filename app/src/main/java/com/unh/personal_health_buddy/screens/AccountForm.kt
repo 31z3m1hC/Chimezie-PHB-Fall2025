@@ -1,6 +1,9 @@
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,10 +26,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Bloodtype
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Email
@@ -39,6 +45,8 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -46,6 +54,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -55,8 +65,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -67,7 +79,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.zIndex
@@ -82,6 +101,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 fun saveBitmapToCache(context: Context, bitmap: Bitmap): Uri {
@@ -235,6 +257,2755 @@ fun BackHeader(title: String, onBack: () -> Unit) {
 
 
 
+//@Composable
+//fun ProfileImage(capturedBitmap: ImageBitmap?) {
+//    val modifier = Modifier
+//        .size(140.dp)
+//        .clip(CircleShape)
+//        .border(1.dp, Color.White, CircleShape)
+//
+//    if (capturedBitmap != null) {
+//        Image(
+//            bitmap = capturedBitmap,
+//            contentDescription = "Captured Image",
+//            modifier = modifier,
+//            contentScale = ContentScale.Crop
+//        )
+//    } else {
+//        Image(
+//            painter = painterResource(id = R.drawable.profile),
+//            contentDescription = "Default Avatar",
+//            modifier = modifier,
+//            contentScale = ContentScale.Crop
+//        )
+//    }
+//    Log.d("ProfileImage", "CapturedBitmap: $capturedBitmap")
+//}
+//
+//
+//
+//
+//
+//
+//@Composable
+//fun PhotoOptionsMenu(
+//    showMenu: Boolean,
+//    onToggleMenu: () -> Unit,
+//    onTakePhoto: () -> Unit,
+//    onUpload: () -> Unit,
+//    onDelete: () -> Unit
+//) {
+//    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//        Row(verticalAlignment = Alignment.CenterVertically) {
+//            Text(
+//                modifier = Modifier.offset(x = (20).dp),
+//                text = "Photo Options",
+//                style = MaterialTheme.typography.bodyMedium
+//            )
+//            IconButton(onClick = onToggleMenu) {
+//                Icon(
+//                    modifier = Modifier.offset(10.dp),
+//                    imageVector = Icons.Default.ArrowDropDown,
+//                    contentDescription = "Show photo options"
+//                )
+//            }
+//        }
+//
+//        DropdownMenu(
+//            expanded = showMenu,
+//            onDismissRequest = onToggleMenu
+//        ) {
+//            DropdownMenuItem(text = { Text("Take Photo") }, onClick = onTakePhoto)
+//            DropdownMenuItem(text = { Text("Upload from Gallery") }, onClick = onUpload)
+//            DropdownMenuItem(text = { Text("Delete Photo") }, onClick = onDelete)
+//        }
+//    }
+//    Log.d("PhotoOptionsMenu", "ShowMenu: $showMenu")
+//}
+//
+//
+//
+//
+//@Composable
+//fun AccountFormBottom(
+//    firstname: MutableState<String>,
+//    lastname: MutableState<String>,
+//    dateOfBirth: MutableState<String>,
+//    homeAddress: MutableState<String>,
+//    gender: MutableState<Gender>,
+//    email: MutableState<String>,
+//    phoneNumber: MutableState<String>,
+//    city: MutableState<String>
+//) {
+//    var genderExpanded by remember { mutableStateOf(false) }
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        OutlinedTextField(
+//            value = firstname.value,
+//            onValueChange = { firstname.value = it },
+//            label = { Text("First Name") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = lastname.value,
+//            onValueChange = { lastname.value = it },
+//            label = { Text("Last Name") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = dateOfBirth.value,
+//            onValueChange = { dateOfBirth.value = it },
+//            label = { Text("Date of Birth") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.DateRange, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = homeAddress.value,
+//            onValueChange = { homeAddress.value = it },
+//            label = { Text("Home Address") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Home, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = city.value,
+//            onValueChange = { city.value = it },
+//            label = { Text("City") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.LocationCity, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        Box(modifier = Modifier.fillMaxWidth()) {
+//            OutlinedTextField(
+//                value = gender.value.name,
+//                onValueChange = {},
+//                readOnly = true,
+//                label = { Text("Gender") },
+//                leadingIcon = {
+//                    RoundedIcon(Icons.Default.Face2, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//                },
+//                trailingIcon = {
+//                    IconButton(onClick = { genderExpanded = true }) {
+//                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Gender")
+//                    }
+//                },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//
+//            DropdownMenu(
+//                expanded = genderExpanded,
+//                onDismissRequest = { genderExpanded = false }
+//            ) {
+//                Gender.entries.forEach { option ->
+//                    DropdownMenuItem(
+//                        text = { Text(option.name) },
+//                        onClick = {
+//                            gender.value = option
+//                            genderExpanded = false
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = email.value,
+//            onValueChange = { email.value = it },
+//            label = { Text("Email") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Email, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = phoneNumber.value,
+//            onValueChange = { phoneNumber.value = it },
+//            label = { Text("Phone Number") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Phone, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//    }
+//}
+//
+//
+//
+//
+//@Composable
+//fun HealthInformationSection(
+//    bloodGroup: MutableState<String>,
+//    allergies: MutableState<String>,
+//    medications: MutableState<String>
+//) {
+//    var bloodGroupExpanded by remember { mutableStateOf(false) }
+//    val bloodGroups = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        Text("Health Information", style = MaterialTheme.typography.titleMedium)
+//
+//        OutlinedTextField(
+//            value = medications.value,
+//            onValueChange = { medications.value = it },
+//            label = { Text("Medication") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Medication, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = allergies.value,
+//            onValueChange = { allergies.value = it },
+//            label = { Text("Allergies") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.MedicalInformation, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        Box(modifier = Modifier.fillMaxWidth().zIndex(1f)) {
+//            OutlinedTextField(
+//                value = bloodGroup.value,
+//                onValueChange = {},
+//                readOnly = true,
+//                label = { Text("Blood Group") },
+//                leadingIcon = {
+//                    RoundedIcon(Icons.Default.Bloodtype, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//                },
+//                trailingIcon = {
+//                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Blood Group")
+//                },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//
+//            Spacer(
+//                modifier = Modifier
+//                    .matchParentSize()
+//                    .clickable { bloodGroupExpanded = true }
+//            )
+//
+//            DropdownMenu(
+//                expanded = bloodGroupExpanded,
+//                onDismissRequest = { bloodGroupExpanded = false },
+//                modifier = Modifier.fillMaxWidth()
+//            ) {
+//                bloodGroups.forEach { group ->
+//                    DropdownMenuItem(
+//                        text = { Text(group) },
+//                        onClick = {
+//                            bloodGroup.value = group
+//                            bloodGroupExpanded = false
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//    }
+//    Log.d("HealthInformationSection", "Blood Group: ${bloodGroup.value}")
+//}
+//
+//
+//
+//@Composable
+//fun EmergencyContactSection(
+//    emergencyFirstname: MutableState<String>,
+//    emergencyLastname: MutableState<String>,
+//    emergencyPhone: MutableState<String>,
+//    emergencyRelationship: MutableState<String>
+//) {
+//    var relationExpanded by remember { mutableStateOf(false) }
+//    val relationOptions = listOf("Sibling", "Parent", "Friend", "Relative", "Spouse")
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        Text("Emergency Contact", style = MaterialTheme.typography.titleMedium)
+//
+//    }
+//    //Log.d("EmergencyContactSection", "Recomposing EmergencyContactSection")
+//}
+//
+//
+//@Composable
+//fun AccountFormTop(
+//    navController: NavHostController,
+//    profileBitmap: Bitmap?,
+//
+//    // User info
+//    firstname: MutableState<String>,
+//    lastname: MutableState<String>,
+//    dateOfBirth: MutableState<String>,
+//    homeAddress: MutableState<String>,
+//    gender: MutableState<Gender>,   // <-- FIXED (was Gender)
+//    email: MutableState<String>,
+//    phoneNumber: MutableState<String>,
+//    city: MutableState<String>,
+//
+//    // Health info
+//    bloodGroup: MutableState<String>,
+//    allergies: MutableState<String>,
+//    medications: MutableState<String>
+//) {
+//    val context = LocalContext.current
+//
+//    var capturedBitmap by remember { mutableStateOf(profileBitmap) }
+//    var previewImage by remember { mutableStateOf(profileBitmap?.asImageBitmap()) }
+//    var showMenu by remember { mutableStateOf(false) }
+//    var isValid by remember { mutableStateOf(false) }
+//    var isSaving by remember { mutableStateOf(false) }
+//
+//    // ---------------- USER OBJECT ----------------
+//    val user by remember {
+//        derivedStateOf {
+//            User(
+//                firstname = firstname.value,
+//                lastname = lastname.value,
+//                dateOfBirth = dateOfBirth.value,
+//                homeAddress = homeAddress.value,
+//                gender = gender.value,
+//                email = email.value,
+//                phoneNumber = phoneNumber.value,
+//                city = city.value
+//            )
+//        }
+//    }
+//
+//    // ---------------- VALIDATION ----------------
+//    LaunchedEffect(user) {
+//        try {
+//            val (_, firebaseEmail) = FirestoreHelper.getVerifiedUser()
+//            isValid = validateUserInput(user, firebaseEmail)
+//        } catch (e: Exception) {
+//            isValid = false
+//        }
+//    }
+//
+//    // ---------------- CAMERA ----------------
+//    val cameraLauncher =
+//        rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+//            bitmap?.let {
+//                capturedBitmap = it
+//                previewImage = it.asImageBitmap()
+//            }
+//        }
+//
+//    // ---------------- GALLERY ----------------
+//    val galleryLauncher =
+//        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+//            uri?.let {
+//                val source = ImageDecoder.createSource(context.contentResolver, it)
+//                val bitmap = ImageDecoder.decodeBitmap(source)
+//                capturedBitmap = bitmap
+//                previewImage = bitmap.asImageBitmap()
+//            }
+//        }
+//
+//    // ---------------- UI ----------------
+//    Box(modifier = Modifier.fillMaxWidth()) {
+//        Column(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(24.dp),
+//            horizontalAlignment = Alignment.CenterHorizontally
+//        ) {
+//            TopBarWithSave(
+//                title = "Account",
+//                onBack = { navController.navigate("profile") },   // <-- FIXED to navigate to profile
+//                onSave = {
+//                    if (!isValid) return@TopBarWithSave
+//
+//                    isSaving = true
+//
+//                    CoroutineScope(Dispatchers.Main).launch {
+//                        try {
+//                            val healthInfo = HealthInformation(
+//                                bloodGroup = bloodGroup.value,
+//                                allergies = allergies.value,
+//                                medication = medications.value
+//                            )
+//
+//                            withContext(Dispatchers.IO) {
+//                                FirestoreHelper.writeUser(user, capturedBitmap)
+//                                FirestoreHelper.writeHealthInformation(healthInfo)
+//                            }
+//
+//                            // ---------- CLEAR FIELDS ----------
+//                            firstname.value = ""
+//                            lastname.value = ""
+//                            dateOfBirth.value = ""
+//                            homeAddress.value = ""
+//                            gender.value = Gender.OTHER        // <-- FIXED (gender is String)
+//                            email.value = ""
+//                            phoneNumber.value = ""
+//                            city.value = ""
+//
+//                            bloodGroup.value = ""
+//                            allergies.value = ""
+//                            medications.value = ""
+//
+//                            previewImage = null      // <-- FIXED (was previewImage.value)
+//                            capturedBitmap = null
+//
+//                            Log.d("SaveAction", "Saved successfully")
+//                        } catch (e: Exception) {
+//                            Log.e("SaveAction", "Save failed: ${e.message}")
+//                        } finally {
+//                            isSaving = false
+//                        }
+//                    }
+//                },
+//                enabled = isValid,
+//                isSaving = isSaving
+//            )
+//
+//            Spacer(modifier = Modifier.height(24.dp))
+//
+//            ProfileImage(previewImage)
+//
+//            PhotoOptionsMenu(
+//                showMenu = showMenu,
+//                onToggleMenu = { showMenu = !showMenu },
+//                onTakePhoto = {
+//                    showMenu = false
+//                    cameraLauncher.launch(null)
+//                },
+//                onUpload = {
+//                    showMenu = false
+//                    galleryLauncher.launch("image/*")
+//                },
+//                onDelete = {
+//                    showMenu = false
+//                    capturedBitmap = null
+//                    previewImage = null
+//                }
+//            )
+//        }
+//    }
+//
+//    Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
+//}
+//
+//
+//
+//
+//@Composable
+//fun AccountFormScreen(navController: NavHostController) {
+//    // User info state
+//    val firstname = remember { mutableStateOf("") }
+//    val lastname = remember { mutableStateOf("") }
+//    val dateOfBirth = remember { mutableStateOf("") }
+//    val homeAddress = remember { mutableStateOf("") }
+//    val gender = remember { mutableStateOf(Gender.OTHER) }
+//    val email = remember { mutableStateOf("") }
+//    val phoneNumber = remember { mutableStateOf("") }
+//    val city = remember { mutableStateOf("") }
+//
+//
+//    // Health info state
+//    val bloodGroup = remember { mutableStateOf("") }
+//    val allergies = remember { mutableStateOf("") }
+//    val medications = remember { mutableStateOf("") }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .verticalScroll(rememberScrollState())
+//            .padding(vertical = 8.dp),
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        AccountFormTop(
+//            navController = navController,
+//            profileBitmap = null,
+//
+//            firstname = firstname,
+//            lastname = lastname,
+//            dateOfBirth = dateOfBirth,
+//            homeAddress = homeAddress,
+//            gender = gender,
+//            email = email,
+//            phoneNumber = phoneNumber,
+//            city = city,
+//
+//
+//
+//            bloodGroup = bloodGroup,
+//            allergies = allergies,
+//            medications = medications,
+//        )
+//
+//        AccountFormBottom(
+//            firstname = firstname,
+//            lastname = lastname,
+//            dateOfBirth = dateOfBirth,
+//            homeAddress = homeAddress,
+//            gender = gender,
+//            email = email,
+//            phoneNumber = phoneNumber,
+//            city = city
+//        )
+//
+//        HealthInformationSection(
+//            bloodGroup = bloodGroup,
+//            allergies = allergies,
+//            medications = medications
+//        )
+//
+//
+//    }
+//    Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
+//}
+
+
+
+//@Composable
+//fun ProfileImage(capturedBitmap: ImageBitmap?) {
+//    val modifier = Modifier
+//        .size(140.dp)
+//        .clip(CircleShape)
+//        .border(1.dp, Color.White, CircleShape)
+//
+//    if (capturedBitmap != null) {
+//        Image(
+//            bitmap = capturedBitmap,
+//            contentDescription = "Captured Image",
+//            modifier = modifier,
+//            contentScale = ContentScale.Crop
+//        )
+//    } else {
+//        Image(
+//            painter = painterResource(id = R.drawable.profile),
+//            contentDescription = "Default Avatar",
+//            modifier = modifier,
+//            contentScale = ContentScale.Crop
+//        )
+//    }
+//    Log.d("ProfileImage", "CapturedBitmap: $capturedBitmap")
+//}
+//
+//@Composable
+//fun PhotoOptionsMenu(
+//    showMenu: Boolean,
+//    onToggleMenu: () -> Unit,
+//    onTakePhoto: () -> Unit,
+//    onUpload: () -> Unit,
+//    onDelete: () -> Unit
+//) {
+//    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//        Row(verticalAlignment = Alignment.CenterVertically) {
+//            Text(
+//                modifier = Modifier.offset(x = (20).dp),
+//                text = "Photo Options",
+//                style = MaterialTheme.typography.bodyMedium
+//            )
+//            IconButton(onClick = onToggleMenu) {
+//                Icon(
+//                    modifier = Modifier.offset(10.dp),
+//                    imageVector = Icons.Default.ArrowDropDown,
+//                    contentDescription = "Show photo options"
+//                )
+//            }
+//        }
+//
+//        DropdownMenu(
+//            expanded = showMenu,
+//            onDismissRequest = onToggleMenu
+//        ) {
+//            DropdownMenuItem(text = { Text("Take Photo") }, onClick = onTakePhoto)
+//            DropdownMenuItem(text = { Text("Upload from Gallery") }, onClick = onUpload)
+//            DropdownMenuItem(text = { Text("Delete Photo") }, onClick = onDelete)
+//        }
+//    }
+//    Log.d("PhotoOptionsMenu", "ShowMenu: $showMenu")
+//}
+//
+//@Composable
+//fun AccountFormBottom(
+//    firstname: MutableState<String>,
+//    lastname: MutableState<String>,
+//    dateOfBirth: MutableState<String>,
+//    homeAddress: MutableState<String>,
+//    gender: MutableState<Gender>,
+//    email: MutableState<String>,
+//    phoneNumber: MutableState<String>,
+//    city: MutableState<String>
+//) {
+//    var genderExpanded by remember { mutableStateOf(false) }
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        OutlinedTextField(
+//            value = firstname.value,
+//            onValueChange = { firstname.value = it },
+//            label = { Text("First Name") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = lastname.value,
+//            onValueChange = { lastname.value = it },
+//            label = { Text("Last Name") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = dateOfBirth.value,
+//            onValueChange = { dateOfBirth.value = it },
+//            label = { Text("Date of Birth") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.DateRange, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = homeAddress.value,
+//            onValueChange = { homeAddress.value = it },
+//            label = { Text("Home Address") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Home, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = city.value,
+//            onValueChange = { city.value = it },
+//            label = { Text("City") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.LocationCity, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        Box(modifier = Modifier.fillMaxWidth()) {
+//            OutlinedTextField(
+//                value = gender.value.name,
+//                onValueChange = {},
+//                readOnly = true,
+//                label = { Text("Gender") },
+//                leadingIcon = {
+//                    RoundedIcon(Icons.Default.Face2, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//                },
+//                trailingIcon = {
+//                    IconButton(onClick = { genderExpanded = true }) {
+//                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Gender")
+//                    }
+//                },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//
+//            DropdownMenu(
+//                expanded = genderExpanded,
+//                onDismissRequest = { genderExpanded = false }
+//            ) {
+//                Gender.entries.forEach { option ->
+//                    DropdownMenuItem(
+//                        text = { Text(option.name) },
+//                        onClick = {
+//                            gender.value = option
+//                            genderExpanded = false
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = email.value,
+//            onValueChange = { email.value = it },
+//            label = { Text("Email") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Email, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = phoneNumber.value,
+//            onValueChange = { phoneNumber.value = it },
+//            label = { Text("Phone Number") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Phone, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//    }
+//}
+//
+//@Composable
+//fun HealthInformationSection(
+//    bloodGroup: MutableState<String>,
+//    allergies: MutableState<String>,
+//    medications: MutableState<String>
+//) {
+//    var bloodGroupExpanded by remember { mutableStateOf(false) }
+//    val bloodGroups = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        Text("Health Information", style = MaterialTheme.typography.titleMedium)
+//
+//        OutlinedTextField(
+//            value = medications.value,
+//            onValueChange = { medications.value = it },
+//            label = { Text("Medication") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Medication, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = allergies.value,
+//            onValueChange = { allergies.value = it },
+//            label = { Text("Allergies") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.MedicalInformation, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        Box(modifier = Modifier.fillMaxWidth().zIndex(1f)) {
+//            OutlinedTextField(
+//                value = bloodGroup.value,
+//                onValueChange = {},
+//                readOnly = true,
+//                label = { Text("Blood Group") },
+//                leadingIcon = {
+//                    RoundedIcon(Icons.Default.Bloodtype, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//                },
+//                trailingIcon = {
+//                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Blood Group")
+//                },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//
+//            Spacer(
+//                modifier = Modifier
+//                    .matchParentSize()
+//                    .clickable { bloodGroupExpanded = true }
+//            )
+//
+//            DropdownMenu(
+//                expanded = bloodGroupExpanded,
+//                onDismissRequest = { bloodGroupExpanded = false },
+//                modifier = Modifier.fillMaxWidth()
+//            ) {
+//                bloodGroups.forEach { group ->
+//                    DropdownMenuItem(
+//                        text = { Text(group) },
+//                        onClick = {
+//                            bloodGroup.value = group
+//                            bloodGroupExpanded = false
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//    }
+//    Log.d("HealthInformationSection", "Blood Group: ${bloodGroup.value}")
+//}
+//
+//@Composable
+//fun EmergencyContactSection(
+//    emergencyFirstname: MutableState<String>,
+//    emergencyLastname: MutableState<String>,
+//    emergencyPhone: MutableState<String>,
+//    emergencyRelationship: MutableState<String>
+//) {
+//    var relationExpanded by remember { mutableStateOf(false) }
+//    val relationOptions = listOf("Sibling", "Parent", "Friend", "Relative", "Spouse")
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        Text("Emergency Contact", style = MaterialTheme.typography.titleMedium)
+//    }
+//}
+//
+//@Composable
+//fun AccountFormTop(
+//    navController: NavHostController,
+//    profileBitmap: Bitmap?,
+//
+//    // User info
+//    firstname: MutableState<String>,
+//    lastname: MutableState<String>,
+//    dateOfBirth: MutableState<String>,
+//    homeAddress: MutableState<String>,
+//    gender: MutableState<Gender>,
+//    email: MutableState<String>,
+//    phoneNumber: MutableState<String>,
+//    city: MutableState<String>,
+//
+//    // Health info
+//    bloodGroup: MutableState<String>,
+//    allergies: MutableState<String>,
+//    medications: MutableState<String>
+//) {
+//    val context = LocalContext.current
+//
+//    var capturedBitmap by remember { mutableStateOf(profileBitmap) }
+//    var previewImage by remember { mutableStateOf(profileBitmap?.asImageBitmap()) }
+//    var showMenu by remember { mutableStateOf(false) }
+//    var isValid by remember { mutableStateOf(false) }
+//    var isSaving by remember { mutableStateOf(false) }
+//
+//    // ---------------- USER OBJECT ----------------
+//    val user by remember {
+//        derivedStateOf {
+//            User(
+//                firstname = firstname.value,
+//                lastname = lastname.value,
+//                dateOfBirth = dateOfBirth.value,
+//                homeAddress = homeAddress.value,
+//                gender = gender.value,
+//                email = email.value,
+//                phoneNumber = phoneNumber.value,
+//                city = city.value
+//            )
+//        }
+//    }
+//
+//    // ---------------- VALIDATION ----------------
+//    LaunchedEffect(user) {
+//        try {
+//            val (_, firebaseEmail) = FirestoreHelper.getVerifiedUser()
+//            isValid = validateUserInput(user, firebaseEmail)
+//        } catch (e: Exception) {
+//            isValid = false
+//        }
+//    }
+//
+//    // ---------------- CAMERA ----------------
+//    val cameraLauncher =
+//        rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+//            bitmap?.let {
+//                capturedBitmap = it
+//                previewImage = it.asImageBitmap()
+//            }
+//        }
+//
+//    // ---------------- GALLERY ----------------
+//    val galleryLauncher =
+//        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+//            uri?.let {
+//                val source = ImageDecoder.createSource(context.contentResolver, it)
+//                val bitmap = ImageDecoder.decodeBitmap(source)
+//                capturedBitmap = bitmap
+//                previewImage = bitmap.asImageBitmap()
+//            }
+//        }
+//
+//    // ---------------- UI ----------------
+//    Box(modifier = Modifier.fillMaxWidth()) {
+//        Column(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(24.dp),
+//            horizontalAlignment = Alignment.CenterHorizontally
+//        ) {
+//            TopBarWithSave(
+//                title = "Account",
+//                onBack = { navController.navigate("profile") },
+//                onSave = {
+//                    if (!isValid) return@TopBarWithSave
+//
+//                    isSaving = true
+//
+//                    CoroutineScope(Dispatchers.Main).launch {
+//                        try {
+//                            val healthInfo = HealthInformation(
+//                                bloodGroup = bloodGroup.value,
+//                                allergies = allergies.value,
+//                                medication = medications.value
+//                            )
+//
+//                            withContext(Dispatchers.IO) {
+//                                // This automatically handles image upload and old image deletion
+//                                FirestoreHelper.writeUser(user, capturedBitmap)
+//                                FirestoreHelper.writeHealthInformation(healthInfo)
+//                            }
+//
+//                            // ---------- CLEAR FIELDS ----------
+//                            firstname.value = ""
+//                            lastname.value = ""
+//                            dateOfBirth.value = ""
+//                            homeAddress.value = ""
+//                            gender.value = Gender.OTHER
+//                            email.value = ""
+//                            phoneNumber.value = ""
+//                            city.value = ""
+//
+//                            bloodGroup.value = ""
+//                            allergies.value = ""
+//                            medications.value = ""
+//
+//                            previewImage = null
+//                            capturedBitmap = null
+//
+//                            Log.d("SaveAction", "Saved successfully")
+//                        } catch (e: Exception) {
+//                            Log.e("SaveAction", "Save failed: ${e.message}")
+//                        } finally {
+//                            isSaving = false
+//                        }
+//                    }
+//                },
+//                enabled = isValid,
+//                isSaving = isSaving
+//            )
+//
+//            Spacer(modifier = Modifier.height(24.dp))
+//
+//            ProfileImage(previewImage)
+//
+//            PhotoOptionsMenu(
+//                showMenu = showMenu,
+//                onToggleMenu = { showMenu = !showMenu },
+//                onTakePhoto = {
+//                    showMenu = false
+//                    cameraLauncher.launch(null)
+//                },
+//                onUpload = {
+//                    showMenu = false
+//                    galleryLauncher.launch("image/*")
+//                },
+//                onDelete = {
+//                    showMenu = false
+//
+//                    // Delete from Firebase Storage and Firestore
+//                    CoroutineScope(Dispatchers.Main).launch {
+//                        try {
+//                            withContext(Dispatchers.IO) {
+//                                FirestoreHelper.deleteUserProfileImage()
+//                            }
+//                            capturedBitmap = null
+//                            previewImage = null
+//                            Log.d("DeletePhoto", "Profile image deleted successfully")
+//                        } catch (e: Exception) {
+//                            Log.e("DeletePhoto", "Failed to delete: ${e.message}")
+//                        }
+//                    }
+//                }
+//            )
+//        }
+//    }
+//
+//    Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
+//}
+//
+//@Composable
+//fun AccountFormScreen(navController: NavHostController) {
+//    // User info state
+//    val firstname = remember { mutableStateOf("") }
+//    val lastname = remember { mutableStateOf("") }
+//    val dateOfBirth = remember { mutableStateOf("") }
+//    val homeAddress = remember { mutableStateOf("") }
+//    val gender = remember { mutableStateOf(Gender.OTHER) }
+//    val email = remember { mutableStateOf("") }
+//    val phoneNumber = remember { mutableStateOf("") }
+//    val city = remember { mutableStateOf("") }
+//
+//    // Health info state
+//    val bloodGroup = remember { mutableStateOf("") }
+//    val allergies = remember { mutableStateOf("") }
+//    val medications = remember { mutableStateOf("") }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .verticalScroll(rememberScrollState())
+//            .padding(vertical = 8.dp),
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        AccountFormTop(
+//            navController = navController,
+//            profileBitmap = null,
+//
+//            firstname = firstname,
+//            lastname = lastname,
+//            dateOfBirth = dateOfBirth,
+//            homeAddress = homeAddress,
+//            gender = gender,
+//            email = email,
+//            phoneNumber = phoneNumber,
+//            city = city,
+//
+//            bloodGroup = bloodGroup,
+//            allergies = allergies,
+//            medications = medications,
+//        )
+//
+//        AccountFormBottom(
+//            firstname = firstname,
+//            lastname = lastname,
+//            dateOfBirth = dateOfBirth,
+//            homeAddress = homeAddress,
+//            gender = gender,
+//            email = email,
+//            phoneNumber = phoneNumber,
+//            city = city
+//        )
+//
+//        HealthInformationSection(
+//            bloodGroup = bloodGroup,
+//            allergies = allergies,
+//            medications = medications
+//        )
+//    }
+//    Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
+//}
+
+//
+//object TempProfileStorage {
+//    var tempProfileBitmap: Bitmap? = null
+//}
+//
+//// ============================================
+//// ACCOUNT FORM SCREEN COMPOSABLES
+//// ============================================
+//
+//@Composable
+//fun ProfileImage(capturedBitmap: ImageBitmap?) {
+//    val modifier = Modifier
+//        .size(140.dp)
+//        .clip(CircleShape)
+//        .border(1.dp, Color.White, CircleShape)
+//
+//    if (capturedBitmap != null) {
+//        Image(
+//            bitmap = capturedBitmap,
+//            contentDescription = "Captured Image",
+//            modifier = modifier,
+//            contentScale = ContentScale.Crop
+//        )
+//    } else {
+//        Image(
+//            painter = painterResource(id = R.drawable.profile),
+//            contentDescription = "Default Avatar",
+//            modifier = modifier,
+//            contentScale = ContentScale.Crop
+//        )
+//    }
+//    Log.d("ProfileImage", "CapturedBitmap: $capturedBitmap")
+//}
+//
+//@Composable
+//fun PhotoOptionsMenu(
+//    showMenu: Boolean,
+//    onToggleMenu: () -> Unit,
+//    onTakePhoto: () -> Unit,
+//    onUpload: () -> Unit,
+//    onDelete: () -> Unit
+//) {
+//    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//        Row(verticalAlignment = Alignment.CenterVertically) {
+//            Text(
+//                modifier = Modifier.offset(x = (20).dp),
+//                text = "Photo Options",
+//                style = MaterialTheme.typography.bodyMedium
+//            )
+//            IconButton(onClick = onToggleMenu) {
+//                Icon(
+//                    modifier = Modifier.offset(10.dp),
+//                    imageVector = Icons.Default.ArrowDropDown,
+//                    contentDescription = "Show photo options"
+//                )
+//            }
+//        }
+//
+//        DropdownMenu(
+//            expanded = showMenu,
+//            onDismissRequest = onToggleMenu
+//        ) {
+//            DropdownMenuItem(text = { Text("Take Photo") }, onClick = onTakePhoto)
+//            DropdownMenuItem(text = { Text("Upload from Gallery") }, onClick = onUpload)
+//            DropdownMenuItem(text = { Text("Delete Photo") }, onClick = onDelete)
+//        }
+//    }
+//    Log.d("PhotoOptionsMenu", "ShowMenu: $showMenu")
+//}
+//
+//@Composable
+//fun AccountFormBottom(
+//    firstname: MutableState<String>,
+//    lastname: MutableState<String>,
+//    dateOfBirth: MutableState<String>,
+//    homeAddress: MutableState<String>,
+//    gender: MutableState<Gender>,
+//    email: MutableState<String>,
+//    phoneNumber: MutableState<String>,
+//    city: MutableState<String>
+//) {
+//    var genderExpanded by remember { mutableStateOf(false) }
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        OutlinedTextField(
+//            value = firstname.value,
+//            onValueChange = { firstname.value = it },
+//            label = { Text("First Name") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = lastname.value,
+//            onValueChange = { lastname.value = it },
+//            label = { Text("Last Name") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = dateOfBirth.value,
+//            onValueChange = { dateOfBirth.value = it },
+//            label = { Text("Date of Birth") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.DateRange, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = homeAddress.value,
+//            onValueChange = { homeAddress.value = it },
+//            label = { Text("Home Address") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Home, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = city.value,
+//            onValueChange = { city.value = it },
+//            label = { Text("City") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.LocationCity, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        Box(modifier = Modifier.fillMaxWidth()) {
+//            OutlinedTextField(
+//                value = gender.value.name,
+//                onValueChange = {},
+//                readOnly = true,
+//                label = { Text("Gender") },
+//                leadingIcon = {
+//                    RoundedIcon(Icons.Default.Face2, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//                },
+//                trailingIcon = {
+//                    IconButton(onClick = { genderExpanded = true }) {
+//                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Gender")
+//                    }
+//                },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//
+//            DropdownMenu(
+//                expanded = genderExpanded,
+//                onDismissRequest = { genderExpanded = false }
+//            ) {
+//                Gender.entries.forEach { option ->
+//                    DropdownMenuItem(
+//                        text = { Text(option.name) },
+//                        onClick = {
+//                            gender.value = option
+//                            genderExpanded = false
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = email.value,
+//            onValueChange = { email.value = it },
+//            label = { Text("Email") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Email, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = phoneNumber.value,
+//            onValueChange = { phoneNumber.value = it },
+//            label = { Text("Phone Number") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Phone, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//    }
+//}
+//
+//@Composable
+//fun HealthInformationSection(
+//    bloodGroup: MutableState<String>,
+//    allergies: MutableState<String>,
+//    medications: MutableState<String>
+//) {
+//    var bloodGroupExpanded by remember { mutableStateOf(false) }
+//    val bloodGroups = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        Text("Health Information", style = MaterialTheme.typography.titleMedium)
+//
+//        OutlinedTextField(
+//            value = medications.value,
+//            onValueChange = { medications.value = it },
+//            label = { Text("Medication") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Medication, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = allergies.value,
+//            onValueChange = { allergies.value = it },
+//            label = { Text("Allergies") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.MedicalInformation, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        Box(modifier = Modifier.fillMaxWidth().zIndex(1f)) {
+//            OutlinedTextField(
+//                value = bloodGroup.value,
+//                onValueChange = {},
+//                readOnly = true,
+//                label = { Text("Blood Group") },
+//                leadingIcon = {
+//                    RoundedIcon(Icons.Default.Bloodtype, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//                },
+//                trailingIcon = {
+//                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Blood Group")
+//                },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//
+//            Spacer(
+//                modifier = Modifier
+//                    .matchParentSize()
+//                    .clickable { bloodGroupExpanded = true }
+//            )
+//
+//            DropdownMenu(
+//                expanded = bloodGroupExpanded,
+//                onDismissRequest = { bloodGroupExpanded = false },
+//                modifier = Modifier.fillMaxWidth()
+//            ) {
+//                bloodGroups.forEach { group ->
+//                    DropdownMenuItem(
+//                        text = { Text(group) },
+//                        onClick = {
+//                            bloodGroup.value = group
+//                            bloodGroupExpanded = false
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//    }
+//    Log.d("HealthInformationSection", "Blood Group: ${bloodGroup.value}")
+//}
+//
+//@Composable
+//fun EmergencyContactSection(
+//    emergencyFirstname: MutableState<String>,
+//    emergencyLastname: MutableState<String>,
+//    emergencyPhone: MutableState<String>,
+//    emergencyRelationship: MutableState<String>
+//) {
+//    var relationExpanded by remember { mutableStateOf(false) }
+//    val relationOptions = listOf("Sibling", "Parent", "Friend", "Relative", "Spouse")
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        Text("Emergency Contact", style = MaterialTheme.typography.titleMedium)
+//    }
+//}
+//
+//@Composable
+//fun AccountFormTop(
+//    navController: NavHostController,
+//    profileBitmap: Bitmap?,
+//
+//    // User info
+//    firstname: MutableState<String>,
+//    lastname: MutableState<String>,
+//    dateOfBirth: MutableState<String>,
+//    homeAddress: MutableState<String>,
+//    gender: MutableState<Gender>,
+//    email: MutableState<String>,
+//    phoneNumber: MutableState<String>,
+//    city: MutableState<String>,
+//
+//    // Health info
+//    bloodGroup: MutableState<String>,
+//    allergies: MutableState<String>,
+//    medications: MutableState<String>
+//) {
+//    val context = LocalContext.current
+//
+//    var capturedBitmap by remember { mutableStateOf(profileBitmap) }
+//    var previewImage by remember { mutableStateOf(profileBitmap?.asImageBitmap()) }
+//    var showMenu by remember { mutableStateOf(false) }
+//    var isValid by remember { mutableStateOf(false) }
+//    var isSaving by remember { mutableStateOf(false) }
+//
+//    // ---------------- USER OBJECT ----------------
+//    val user by remember {
+//        derivedStateOf {
+//            User(
+//                firstname = firstname.value,
+//                lastname = lastname.value,
+//                dateOfBirth = dateOfBirth.value,
+//                homeAddress = homeAddress.value,
+//                gender = gender.value,
+//                email = email.value,
+//                phoneNumber = phoneNumber.value,
+//                city = city.value
+//            )
+//        }
+//    }
+//
+//    // ---------------- VALIDATION ----------------
+//    LaunchedEffect(user) {
+//        try {
+//            val (_, firebaseEmail) = FirestoreHelper.getVerifiedUser()
+//            isValid = validateUserInput(user, firebaseEmail)
+//        } catch (e: Exception) {
+//            isValid = false
+//        }
+//    }
+//
+//    // ---------------- CAMERA ----------------
+//    val cameraLauncher =
+//        rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+//            bitmap?.let {
+//                capturedBitmap = it
+//                previewImage = it.asImageBitmap()
+//                // SAVE TO TEMP STORAGE
+//                TempProfileStorage.tempProfileBitmap = it
+//                Log.d("AccountFormTop", "Camera image saved to temp storage")
+//            }
+//        }
+//
+//    // ---------------- GALLERY ----------------
+//    val galleryLauncher =
+//        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+//            uri?.let {
+//                val source = ImageDecoder.createSource(context.contentResolver, it)
+//                val bitmap = ImageDecoder.decodeBitmap(source)
+//                capturedBitmap = bitmap
+//                previewImage = bitmap.asImageBitmap()
+//                // SAVE TO TEMP STORAGE
+//                TempProfileStorage.tempProfileBitmap = bitmap
+//                Log.d("AccountFormTop", "Gallery image saved to temp storage")
+//            }
+//        }
+//
+//    // ---------------- UI ----------------
+//    Box(modifier = Modifier.fillMaxWidth()) {
+//        Column(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(24.dp),
+//            horizontalAlignment = Alignment.CenterHorizontally
+//        ) {
+//            TopBarWithSave(
+//                title = "Account",
+//                onBack = { navController.navigate("profile") },
+//                onSave = {
+//                    if (!isValid) return@TopBarWithSave
+//
+//                    isSaving = true
+//
+//                    CoroutineScope(Dispatchers.Main).launch {
+//                        try {
+//                            val healthInfo = HealthInformation(
+//                                bloodGroup = bloodGroup.value,
+//                                allergies = allergies.value,
+//                                medication = medications.value
+//                            )
+//
+//                            withContext(Dispatchers.IO) {
+//                                // This automatically handles image upload and old image deletion
+//                                FirestoreHelper.writeUser(user, capturedBitmap)
+//                                FirestoreHelper.writeHealthInformation(healthInfo)
+//                            }
+//
+//                            // ---------- CLEAR FIELDS ----------
+//                            firstname.value = ""
+//                            lastname.value = ""
+//                            dateOfBirth.value = ""
+//                            homeAddress.value = ""
+//                            gender.value = Gender.OTHER
+//                            email.value = ""
+//                            phoneNumber.value = ""
+//                            city.value = ""
+//
+//                            bloodGroup.value = ""
+//                            allergies.value = ""
+//                            medications.value = ""
+//
+//                            previewImage = null
+//                            capturedBitmap = null
+//
+//                            // KEEP TEMP STORAGE - Don't clear it so Account screen can use it
+//                            Log.d("SaveAction", "Saved successfully - temp storage preserved")
+//                        } catch (e: Exception) {
+//                            Log.e("SaveAction", "Save failed: ${e.message}")
+//                        } finally {
+//                            isSaving = false
+//                        }
+//                    }
+//                },
+//                enabled = isValid,
+//                isSaving = isSaving
+//            )
+//
+//            Spacer(modifier = Modifier.height(24.dp))
+//
+//            ProfileImage(previewImage)
+//
+//            PhotoOptionsMenu(
+//                showMenu = showMenu,
+//                onToggleMenu = { showMenu = !showMenu },
+//                onTakePhoto = {
+//                    showMenu = false
+//                    cameraLauncher.launch(null)
+//                },
+//                onUpload = {
+//                    showMenu = false
+//                    galleryLauncher.launch("image/*")
+//                },
+//                onDelete = {
+//                    showMenu = false
+//
+//                    // Delete from Firebase Storage and Firestore
+//                    CoroutineScope(Dispatchers.Main).launch {
+//                        try {
+//                            withContext(Dispatchers.IO) {
+//                                FirestoreHelper.deleteUserProfileImage()
+//                            }
+//                            capturedBitmap = null
+//                            previewImage = null
+//                            // CLEAR TEMP STORAGE
+//                            TempProfileStorage.tempProfileBitmap = null
+//                            Log.d("DeletePhoto", "Profile image deleted successfully")
+//                        } catch (e: Exception) {
+//                            Log.e("DeletePhoto", "Failed to delete: ${e.message}")
+//                        }
+//                    }
+//                }
+//            )
+//        }
+//    }
+//
+//    Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
+//}
+//
+//@Composable
+//fun AccountFormScreen(navController: NavHostController) {
+//    // User info state
+//    val firstname = remember { mutableStateOf("") }
+//    val lastname = remember { mutableStateOf("") }
+//    val dateOfBirth = remember { mutableStateOf("") }
+//    val homeAddress = remember { mutableStateOf("") }
+//    val gender = remember { mutableStateOf(Gender.OTHER) }
+//    val email = remember { mutableStateOf("") }
+//    val phoneNumber = remember { mutableStateOf("") }
+//    val city = remember { mutableStateOf("") }
+//
+//    // Health info state
+//    val bloodGroup = remember { mutableStateOf("") }
+//    val allergies = remember { mutableStateOf("") }
+//    val medications = remember { mutableStateOf("") }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .verticalScroll(rememberScrollState())
+//            .padding(vertical = 8.dp),
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        AccountFormTop(
+//            navController = navController,
+//            profileBitmap = null,
+//
+//            firstname = firstname,
+//            lastname = lastname,
+//            dateOfBirth = dateOfBirth,
+//            homeAddress = homeAddress,
+//            gender = gender,
+//            email = email,
+//            phoneNumber = phoneNumber,
+//            city = city,
+//
+//            bloodGroup = bloodGroup,
+//            allergies = allergies,
+//            medications = medications,
+//        )
+//
+//        AccountFormBottom(
+//            firstname = firstname,
+//            lastname = lastname,
+//            dateOfBirth = dateOfBirth,
+//            homeAddress = homeAddress,
+//            gender = gender,
+//            email = email,
+//            phoneNumber = phoneNumber,
+//            city = city
+//        )
+//
+//        HealthInformationSection(
+//            bloodGroup = bloodGroup,
+//            allergies = allergies,
+//            medications = medications
+//        )
+//    }
+//    Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
+//}
+//
+
+
+
+// ============================================
+// GLOBAL STATE TO STORE TEMPORARY PROFILE IMAGE
+// ============================================
+//object TempProfileStorage {
+//    var tempProfileBitmap: Bitmap? = null
+//}
+//
+//// ============================================
+//// ACCOUNT FORM SCREEN COMPOSABLES
+//// ============================================
+//
+//@Composable
+//fun ProfileImage(capturedBitmap: ImageBitmap?) {
+//    val modifier = Modifier
+//        .size(140.dp)
+//        .clip(CircleShape)
+//        .border(1.dp, Color.White, CircleShape)
+//
+//    if (capturedBitmap != null) {
+//        Image(
+//            bitmap = capturedBitmap,
+//            contentDescription = "Captured Image",
+//            modifier = modifier,
+//            contentScale = ContentScale.Crop
+//        )
+//    } else {
+//        Image(
+//            painter = painterResource(id = R.drawable.profile),
+//            contentDescription = "Default Avatar",
+//            modifier = modifier,
+//            contentScale = ContentScale.Crop
+//        )
+//    }
+//    Log.d("ProfileImage", "CapturedBitmap: $capturedBitmap")
+//}
+//
+//@Composable
+//fun PhotoOptionsMenu(
+//    showMenu: Boolean,
+//    onToggleMenu: () -> Unit,
+//    onTakePhoto: () -> Unit,
+//    onUpload: () -> Unit,
+//    onDelete: () -> Unit
+//) {
+//    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//        Row(verticalAlignment = Alignment.CenterVertically) {
+//            Text(
+//                modifier = Modifier.offset(x = (20).dp),
+//                text = "Photo Options",
+//                style = MaterialTheme.typography.bodyMedium
+//            )
+//            IconButton(onClick = onToggleMenu) {
+//                Icon(
+//                    modifier = Modifier.offset(10.dp),
+//                    imageVector = Icons.Default.ArrowDropDown,
+//                    contentDescription = "Show photo options"
+//                )
+//            }
+//        }
+//
+//        DropdownMenu(
+//            expanded = showMenu,
+//            onDismissRequest = onToggleMenu
+//        ) {
+//            DropdownMenuItem(text = { Text("Take Photo") }, onClick = onTakePhoto)
+//            DropdownMenuItem(text = { Text("Upload from Gallery") }, onClick = onUpload)
+//            DropdownMenuItem(text = { Text("Delete Photo") }, onClick = onDelete)
+//        }
+//    }
+//    Log.d("PhotoOptionsMenu", "ShowMenu: $showMenu")
+//}
+//
+//@Composable
+//fun AccountFormBottom(
+//    firstname: MutableState<String>,
+//    lastname: MutableState<String>,
+//    dateOfBirth: MutableState<String>,
+//    homeAddress: MutableState<String>,
+//    gender: MutableState<Gender>,
+//    email: MutableState<String>,
+//    phoneNumber: MutableState<String>,
+//    city: MutableState<String>
+//) {
+//    var genderExpanded by remember { mutableStateOf(false) }
+//    var showDatePicker by remember { mutableStateOf(false) }
+//    val focusManager = LocalFocusManager.current
+//    val datePickerState = rememberDatePickerState()
+//
+//    // Date Picker Dialog
+//    if (showDatePicker) {
+//        DatePickerDialog(
+//            onDismissRequest = { showDatePicker = false },
+//            confirmButton = {
+//                TextButton(onClick = {
+//                    datePickerState.selectedDateMillis?.let { millis ->
+//                        val date = java.util.Date(millis)
+//                        val formatter = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+//                        dateOfBirth.value = formatter.format(date)
+//                    }
+//                    showDatePicker = false
+//                }) {
+//                    Text("OK")
+//                }
+//            },
+//            dismissButton = {
+//                TextButton(onClick = { showDatePicker = false }) {
+//                    Text("Cancel")
+//                }
+//            }
+//        ) {
+//            DatePicker(state = datePickerState)
+//        }
+//    }
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        OutlinedTextField(
+//            value = firstname.value,
+//            onValueChange = { firstname.value = it },
+//            label = { Text("First Name") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+//            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = lastname.value,
+//            onValueChange = { lastname.value = it },
+//            label = { Text("Last Name") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+//            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = dateOfBirth.value,
+//            onValueChange = {},
+//            readOnly = true,
+//            label = { Text("Date of Birth") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.DateRange, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            trailingIcon = {
+//                IconButton(onClick = { showDatePicker = true }) {
+//                    Icon(Icons.Default.CalendarToday, contentDescription = "Select Date")
+//                }
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .clickable { showDatePicker = true }
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = homeAddress.value,
+//            onValueChange = { homeAddress.value = it },
+//            label = { Text("Home Address") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Home, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+//            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = city.value,
+//            onValueChange = { city.value = it },
+//            label = { Text("City") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.LocationCity, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+//            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        Box(modifier = Modifier.fillMaxWidth()) {
+//            OutlinedTextField(
+//                value = gender.value.name,
+//                onValueChange = {},
+//                readOnly = true,
+//                label = { Text("Gender") },
+//                leadingIcon = {
+//                    RoundedIcon(Icons.Default.Face2, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//                },
+//                trailingIcon = {
+//                    IconButton(onClick = { genderExpanded = true }) {
+//                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Gender")
+//                    }
+//                },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//
+//            DropdownMenu(
+//                expanded = genderExpanded,
+//                onDismissRequest = { genderExpanded = false }
+//            ) {
+//                Gender.entries.forEach { option ->
+//                    DropdownMenuItem(
+//                        text = { Text(option.name) },
+//                        onClick = {
+//                            gender.value = option
+//                            genderExpanded = false
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = email.value,
+//            onValueChange = { email.value = it },
+//            label = { Text("Email") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Email, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            keyboardOptions = KeyboardOptions(
+//                keyboardType = KeyboardType.Email,
+//                imeAction = ImeAction.Next
+//            ),
+//            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = phoneNumber.value,
+//            onValueChange = { phoneNumber.value = it },
+//            label = { Text("Phone Number") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Phone, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            keyboardOptions = KeyboardOptions(
+//                keyboardType = KeyboardType.Phone,
+//                imeAction = ImeAction.Done
+//            ),
+//            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//    }
+//}
+//
+//@Composable
+//fun HealthInformationSection(
+//    bloodGroup: MutableState<String>,
+//    allergies: MutableState<String>,
+//    medications: MutableState<String>
+//) {
+//    var bloodGroupExpanded by remember { mutableStateOf(false) }
+//    val bloodGroups = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        Text("Health Information", style = MaterialTheme.typography.titleMedium)
+//
+//        OutlinedTextField(
+//            value = medications.value,
+//            onValueChange = { medications.value = it },
+//            label = { Text("Medication") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Medication, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = allergies.value,
+//            onValueChange = { allergies.value = it },
+//            label = { Text("Allergies") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.MedicalInformation, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        Box(modifier = Modifier.fillMaxWidth().zIndex(1f)) {
+//            OutlinedTextField(
+//                value = bloodGroup.value,
+//                onValueChange = {},
+//                readOnly = true,
+//                label = { Text("Blood Group") },
+//                leadingIcon = {
+//                    RoundedIcon(Icons.Default.Bloodtype, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//                },
+//                trailingIcon = {
+//                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Blood Group")
+//                },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//
+//            Spacer(
+//                modifier = Modifier
+//                    .matchParentSize()
+//                    .clickable { bloodGroupExpanded = true }
+//            )
+//
+//            DropdownMenu(
+//                expanded = bloodGroupExpanded,
+//                onDismissRequest = { bloodGroupExpanded = false },
+//                modifier = Modifier.fillMaxWidth()
+//            ) {
+//                bloodGroups.forEach { group ->
+//                    DropdownMenuItem(
+//                        text = { Text(group) },
+//                        onClick = {
+//                            bloodGroup.value = group
+//                            bloodGroupExpanded = false
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//    }
+//    Log.d("HealthInformationSection", "Blood Group: ${bloodGroup.value}")
+//}
+//
+//@Composable
+//fun EmergencyContactSection(
+//    emergencyFirstname: MutableState<String>,
+//    emergencyLastname: MutableState<String>,
+//    emergencyPhone: MutableState<String>,
+//    emergencyRelationship: MutableState<String>
+//) {
+//    var relationExpanded by remember { mutableStateOf(false) }
+//    val relationOptions = listOf("Sibling", "Parent", "Friend", "Relative", "Spouse")
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        Text("Emergency Contact", style = MaterialTheme.typography.titleMedium)
+//    }
+//}
+//
+//@Composable
+//fun AccountFormTop(
+//    navController: NavHostController,
+//    profileBitmap: Bitmap?,
+//
+//    // User info
+//    firstname: MutableState<String>,
+//    lastname: MutableState<String>,
+//    dateOfBirth: MutableState<String>,
+//    homeAddress: MutableState<String>,
+//    gender: MutableState<Gender>,
+//    email: MutableState<String>,
+//    phoneNumber: MutableState<String>,
+//    city: MutableState<String>,
+//
+//    // Health info
+//    bloodGroup: MutableState<String>,
+//    allergies: MutableState<String>,
+//    medications: MutableState<String>
+//) {
+//    val context = LocalContext.current
+//
+//    var capturedBitmap by remember { mutableStateOf(profileBitmap) }
+//    var previewImage by remember { mutableStateOf(profileBitmap?.asImageBitmap()) }
+//    var showMenu by remember { mutableStateOf(false) }
+//    var isValid by remember { mutableStateOf(false) }
+//    var isSaving by remember { mutableStateOf(false) }
+//
+//    // ---------------- USER OBJECT ----------------
+//    val user by remember {
+//        derivedStateOf {
+//            User(
+//                firstname = firstname.value,
+//                lastname = lastname.value,
+//                dateOfBirth = dateOfBirth.value,
+//                homeAddress = homeAddress.value,
+//                gender = gender.value,
+//                email = email.value,
+//                phoneNumber = phoneNumber.value,
+//                city = city.value
+//            )
+//        }
+//    }
+//
+//    // ---------------- VALIDATION ----------------
+//    LaunchedEffect(user) {
+//        try {
+//            val (_, firebaseEmail) = FirestoreHelper.getVerifiedUser()
+//            isValid = validateUserInput(user, firebaseEmail)
+//        } catch (e: Exception) {
+//            isValid = false
+//        }
+//    }
+//
+//    // ---------------- CAMERA ----------------
+//    val cameraLauncher =
+//        rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+//            bitmap?.let {
+//                capturedBitmap = it
+//                previewImage = it.asImageBitmap()
+//                // SAVE TO TEMP STORAGE
+//                TempProfileStorage.tempProfileBitmap = it
+//                Log.d("AccountFormTop", "Camera image saved to temp storage")
+//            }
+//        }
+//
+//    // ---------------- GALLERY ----------------
+//    val galleryLauncher =
+//        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+//            uri?.let {
+//                val source = ImageDecoder.createSource(context.contentResolver, it)
+//                val bitmap = ImageDecoder.decodeBitmap(source)
+//                capturedBitmap = bitmap
+//                previewImage = bitmap.asImageBitmap()
+//                // SAVE TO TEMP STORAGE
+//                TempProfileStorage.tempProfileBitmap = bitmap
+//                Log.d("AccountFormTop", "Gallery image saved to temp storage")
+//            }
+//        }
+//
+//    // ---------------- UI ----------------
+//    Box(modifier = Modifier.fillMaxWidth()) {
+//        Column(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(24.dp),
+//            horizontalAlignment = Alignment.CenterHorizontally
+//        ) {
+//            TopBarWithSave(
+//                title = "Account",
+//                onBack = { navController.navigate("profile") },
+//                onSave = {
+//                    if (!isValid) return@TopBarWithSave
+//
+//                    isSaving = true
+//
+//                    CoroutineScope(Dispatchers.Main).launch {
+//                        try {
+//                            val healthInfo = HealthInformation(
+//                                bloodGroup = bloodGroup.value,
+//                                allergies = allergies.value,
+//                                medication = medications.value
+//                            )
+//
+//                            withContext(Dispatchers.IO) {
+//                                // This automatically handles image upload and old image deletion
+//                                FirestoreHelper.writeUser(user, capturedBitmap)
+//                                FirestoreHelper.writeHealthInformation(healthInfo)
+//                            }
+//
+//                            // ---------- CLEAR FIELDS ----------
+//                            firstname.value = ""
+//                            lastname.value = ""
+//                            dateOfBirth.value = ""
+//                            homeAddress.value = ""
+//                            gender.value = Gender.OTHER
+//                            email.value = ""
+//                            phoneNumber.value = ""
+//                            city.value = ""
+//
+//                            bloodGroup.value = ""
+//                            allergies.value = ""
+//                            medications.value = ""
+//
+//                            previewImage = null
+//                            capturedBitmap = null
+//
+//                            // KEEP TEMP STORAGE - Don't clear it so Account screen can use it
+//                            Log.d("SaveAction", "Saved successfully - temp storage preserved")
+//                        } catch (e: Exception) {
+//                            Log.e("SaveAction", "Save failed: ${e.message}")
+//                        } finally {
+//                            isSaving = false
+//                        }
+//                    }
+//                },
+//                enabled = isValid,
+//                isSaving = isSaving
+//            )
+//
+//            Spacer(modifier = Modifier.height(24.dp))
+//
+//            ProfileImage(previewImage)
+//
+//            PhotoOptionsMenu(
+//                showMenu = showMenu,
+//                onToggleMenu = { showMenu = !showMenu },
+//                onTakePhoto = {
+//                    showMenu = false
+//                    cameraLauncher.launch(null)
+//                },
+//                onUpload = {
+//                    showMenu = false
+//                    galleryLauncher.launch("image/*")
+//                },
+//                onDelete = {
+//                    showMenu = false
+//
+//                    // Delete from Firebase Storage and Firestore
+//                    CoroutineScope(Dispatchers.Main).launch {
+//                        try {
+//                            withContext(Dispatchers.IO) {
+//                                FirestoreHelper.deleteUserProfileImage()
+//                            }
+//                            capturedBitmap = null
+//                            previewImage = null
+//                            // CLEAR TEMP STORAGE
+//                            TempProfileStorage.tempProfileBitmap = null
+//                            Log.d("DeletePhoto", "Profile image deleted successfully")
+//                        } catch (e: Exception) {
+//                            Log.e("DeletePhoto", "Failed to delete: ${e.message}")
+//                        }
+//                    }
+//                }
+//            )
+//        }
+//    }
+//
+//    Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
+//}
+//
+//@Composable
+//fun AccountFormScreen(navController: NavHostController) {
+//    // User info state
+//    val firstname = remember { mutableStateOf("") }
+//    val lastname = remember { mutableStateOf("") }
+//    val dateOfBirth = remember { mutableStateOf("") }
+//    val homeAddress = remember { mutableStateOf("") }
+//    val gender = remember { mutableStateOf(Gender.OTHER) }
+//    val email = remember { mutableStateOf("") }
+//    val phoneNumber = remember { mutableStateOf("") }
+//    val city = remember { mutableStateOf("") }
+//
+//    // Health info state
+//    val bloodGroup = remember { mutableStateOf("") }
+//    val allergies = remember { mutableStateOf("") }
+//    val medications = remember { mutableStateOf("") }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .verticalScroll(rememberScrollState())
+//            .padding(vertical = 8.dp),
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        AccountFormTop(
+//            navController = navController,
+//            profileBitmap = null,
+//
+//            firstname = firstname,
+//            lastname = lastname,
+//            dateOfBirth = dateOfBirth,
+//            homeAddress = homeAddress,
+//            gender = gender,
+//            email = email,
+//            phoneNumber = phoneNumber,
+//            city = city,
+//
+//            bloodGroup = bloodGroup,
+//            allergies = allergies,
+//            medications = medications,
+//        )
+//
+//        AccountFormBottom(
+//            firstname = firstname,
+//            lastname = lastname,
+//            dateOfBirth = dateOfBirth,
+//            homeAddress = homeAddress,
+//            gender = gender,
+//            email = email,
+//            phoneNumber = phoneNumber,
+//            city = city
+//        )
+//
+//        HealthInformationSection(
+//            bloodGroup = bloodGroup,
+//            allergies = allergies,
+//            medications = medications
+//        )
+//    }
+//    Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
+//}
+//
+//
+//
+
+
+
+// ============================================
+// GLOBAL STATE TO STORE TEMPORARY PROFILE IMAGE
+// ============================================
+//object TempProfileStorage {
+//    var tempProfileBitmap: Bitmap? = null
+//}
+//
+//// ============================================
+//// ACCOUNT FORM SCREEN COMPOSABLES
+//// ============================================
+//
+//@Composable
+//fun ProfileImage(capturedBitmap: ImageBitmap?) {
+//    val modifier = Modifier
+//        .size(140.dp)
+//        .clip(CircleShape)
+//        .border(1.dp, Color.White, CircleShape)
+//
+//    if (capturedBitmap != null) {
+//        Image(
+//            bitmap = capturedBitmap,
+//            contentDescription = "Captured Image",
+//            modifier = modifier,
+//            contentScale = ContentScale.Crop
+//        )
+//    } else {
+//        Image(
+//            painter = painterResource(id = R.drawable.profile),
+//            contentDescription = "Default Avatar",
+//            modifier = modifier,
+//            contentScale = ContentScale.Crop
+//        )
+//    }
+//    Log.d("ProfileImage", "CapturedBitmap: $capturedBitmap")
+//}
+//
+//@Composable
+//fun PhotoOptionsMenu(
+//    showMenu: Boolean,
+//    onToggleMenu: () -> Unit,
+//    onTakePhoto: () -> Unit,
+//    onUpload: () -> Unit,
+//    onDelete: () -> Unit
+//) {
+//    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//        Row(verticalAlignment = Alignment.CenterVertically) {
+//            Text(
+//                modifier = Modifier.offset(x = (20).dp),
+//                text = "Photo Options",
+//                style = MaterialTheme.typography.bodyMedium
+//            )
+//            IconButton(onClick = onToggleMenu) {
+//                Icon(
+//                    modifier = Modifier.offset(10.dp),
+//                    imageVector = Icons.Default.ArrowDropDown,
+//                    contentDescription = "Show photo options"
+//                )
+//            }
+//        }
+//
+//        DropdownMenu(
+//            expanded = showMenu,
+//            onDismissRequest = onToggleMenu
+//        ) {
+//            DropdownMenuItem(text = { Text("Take Photo") }, onClick = onTakePhoto)
+//            DropdownMenuItem(text = { Text("Upload from Gallery") }, onClick = onUpload)
+//            DropdownMenuItem(text = { Text("Delete Photo") }, onClick = onDelete)
+//        }
+//    }
+//    Log.d("PhotoOptionsMenu", "ShowMenu: $showMenu")
+//}
+//
+//@Composable
+//fun AccountFormBottom(
+//    firstname: MutableState<String>,
+//    lastname: MutableState<String>,
+//    dateOfBirth: MutableState<String>,
+//    homeAddress: MutableState<String>,
+//    gender: MutableState<Gender>,
+//    email: MutableState<String>,
+//    phoneNumber: MutableState<String>,
+//    city: MutableState<String>
+//) {
+//    var genderExpanded by remember { mutableStateOf(false) }
+//    var showDatePicker by remember { mutableStateOf(false) }
+//    val focusManager = LocalFocusManager.current
+//    val datePickerState = rememberDatePickerState()
+//
+//    // Date Picker Dialog
+//    if (showDatePicker) {
+//        DatePickerDialog(
+//            onDismissRequest = { showDatePicker = false },
+//            confirmButton = {
+//                TextButton(onClick = {
+//                    datePickerState.selectedDateMillis?.let { millis ->
+//                        val date = Date(millis)
+//                        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+//                        dateOfBirth.value = formatter.format(date)
+//                    }
+//                    showDatePicker = false
+//                    focusManager.moveFocus(FocusDirection.Down)
+//                }) {
+//                    Text("OK")
+//                }
+//            },
+//            dismissButton = {
+//                TextButton(onClick = { showDatePicker = false }) {
+//                    Text("Cancel")
+//                }
+//            }
+//        ) {
+//            DatePicker(state = datePickerState)
+//        }
+//    }
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        OutlinedTextField(
+//            value = firstname.value,
+//            onValueChange = { firstname.value = it },
+//            label = { Text("First Name") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+//            keyboardActions = KeyboardActions(
+//                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+//            ),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = lastname.value,
+//            onValueChange = { lastname.value = it },
+//            label = { Text("Last Name") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+//            keyboardActions = KeyboardActions(
+//                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+//            ),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        Box(modifier = Modifier.fillMaxWidth()) {
+//            OutlinedTextField(
+//                value = dateOfBirth.value,
+//                onValueChange = {},
+//                readOnly = true,
+//                label = { Text("Date of Birth") },
+//                placeholder = { Text("DD/MM/YYYY") },
+//                leadingIcon = {
+//                    RoundedIcon(Icons.Default.DateRange, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//                },
+//                trailingIcon = {
+//                    IconButton(onClick = { showDatePicker = true }) {
+//                        Icon(Icons.Default.CalendarToday, contentDescription = "Select Date")
+//                    }
+//                },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//            // Invisible clickable layer to trigger date picker
+//            Box(
+//                modifier = Modifier
+//                    .matchParentSize()
+//                    .clickable { showDatePicker = true }
+//            )
+//        }
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = homeAddress.value,
+//            onValueChange = { homeAddress.value = it },
+//            label = { Text("Home Address") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Home, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+//            keyboardActions = KeyboardActions(
+//                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+//            ),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = city.value,
+//            onValueChange = { city.value = it },
+//            label = { Text("City") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.LocationCity, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+//            keyboardActions = KeyboardActions(
+//                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+//            ),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        Box(modifier = Modifier.fillMaxWidth()) {
+//            OutlinedTextField(
+//                value = gender.value.name,
+//                onValueChange = {},
+//                readOnly = true,
+//                label = { Text("Gender") },
+//                leadingIcon = {
+//                    RoundedIcon(Icons.Default.Face2, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//                },
+//                trailingIcon = {
+//                    IconButton(onClick = { genderExpanded = true }) {
+//                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Gender")
+//                    }
+//                },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//
+//            DropdownMenu(
+//                expanded = genderExpanded,
+//                onDismissRequest = { genderExpanded = false }
+//            ) {
+//                Gender.entries.forEach { option ->
+//                    DropdownMenuItem(
+//                        text = { Text(option.name) },
+//                        onClick = {
+//                            gender.value = option
+//                            genderExpanded = false
+//                            focusManager.moveFocus(FocusDirection.Down)
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = email.value,
+//            onValueChange = { email.value = it },
+//            label = { Text("Email") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Email, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(
+//                keyboardType = KeyboardType.Email,
+//                imeAction = ImeAction.Next
+//            ),
+//            keyboardActions = KeyboardActions(
+//                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+//            ),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = phoneNumber.value,
+//            onValueChange = { phoneNumber.value = it },
+//            label = { Text("Phone Number") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Phone, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(
+//                keyboardType = KeyboardType.Phone,
+//                imeAction = ImeAction.Done
+//            ),
+//            keyboardActions = KeyboardActions(
+//                onDone = { focusManager.clearFocus() }
+//            ),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//    }
+//}
+//
+//@Composable
+//fun HealthInformationSection(
+//    bloodGroup: MutableState<String>,
+//    allergies: MutableState<String>,
+//    medications: MutableState<String>
+//) {
+//    var bloodGroupExpanded by remember { mutableStateOf(false) }
+//    val bloodGroups = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        Text("Health Information", style = MaterialTheme.typography.titleMedium)
+//
+//        OutlinedTextField(
+//            value = medications.value,
+//            onValueChange = { medications.value = it },
+//            label = { Text("Medication") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Medication, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        OutlinedTextField(
+//            value = allergies.value,
+//            onValueChange = { allergies.value = it },
+//            label = { Text("Allergies") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.MedicalInformation, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//        Spacer(modifier = Modifier.height(8.dp))
+//        Box(modifier = Modifier.fillMaxWidth().zIndex(1f)) {
+//            OutlinedTextField(
+//                value = bloodGroup.value,
+//                onValueChange = {},
+//                readOnly = true,
+//                label = { Text("Blood Group") },
+//                leadingIcon = {
+//                    RoundedIcon(Icons.Default.Bloodtype, Color(0xFF87CEEB), Color(0xFFEF6C00))
+//                },
+//                trailingIcon = {
+//                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Blood Group")
+//                },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//
+//            Spacer(
+//                modifier = Modifier
+//                    .matchParentSize()
+//                    .clickable { bloodGroupExpanded = true }
+//            )
+//
+//            DropdownMenu(
+//                expanded = bloodGroupExpanded,
+//                onDismissRequest = { bloodGroupExpanded = false },
+//                modifier = Modifier.fillMaxWidth()
+//            ) {
+//                bloodGroups.forEach { group ->
+//                    DropdownMenuItem(
+//                        text = { Text(group) },
+//                        onClick = {
+//                            bloodGroup.value = group
+//                            bloodGroupExpanded = false
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//    }
+//    Log.d("HealthInformationSection", "Blood Group: ${bloodGroup.value}")
+//}
+//
+//@Composable
+//fun EmergencyContactSection(
+//    emergencyFirstname: MutableState<String>,
+//    emergencyLastname: MutableState<String>,
+//    emergencyPhone: MutableState<String>,
+//    emergencyRelationship: MutableState<String>
+//) {
+//    var relationExpanded by remember { mutableStateOf(false) }
+//    val relationOptions = listOf("Sibling", "Parent", "Friend", "Relative", "Spouse")
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        Text("Emergency Contact", style = MaterialTheme.typography.titleMedium)
+//    }
+//}
+//
+//@Composable
+//fun AccountFormTop(
+//    navController: NavHostController,
+//    profileBitmap: Bitmap?,
+//
+//    // User info
+//    firstname: MutableState<String>,
+//    lastname: MutableState<String>,
+//    dateOfBirth: MutableState<String>,
+//    homeAddress: MutableState<String>,
+//    gender: MutableState<Gender>,
+//    email: MutableState<String>,
+//    phoneNumber: MutableState<String>,
+//    city: MutableState<String>,
+//
+//    // Health info
+//    bloodGroup: MutableState<String>,
+//    allergies: MutableState<String>,
+//    medications: MutableState<String>
+//) {
+//    val context = LocalContext.current
+//
+//    var capturedBitmap by remember { mutableStateOf(profileBitmap) }
+//    var previewImage by remember { mutableStateOf(profileBitmap?.asImageBitmap()) }
+//    var showMenu by remember { mutableStateOf(false) }
+//    var isValid by remember { mutableStateOf(false) }
+//    var isSaving by remember { mutableStateOf(false) }
+//
+//    // ---------------- USER OBJECT ----------------
+//    val user by remember {
+//        derivedStateOf {
+//            User(
+//                firstname = firstname.value,
+//                lastname = lastname.value,
+//                dateOfBirth = dateOfBirth.value,
+//                homeAddress = homeAddress.value,
+//                gender = gender.value,
+//                email = email.value,
+//                phoneNumber = phoneNumber.value,
+//                city = city.value
+//            )
+//        }
+//    }
+//
+//    // ---------------- VALIDATION ----------------
+//    LaunchedEffect(user) {
+//        try {
+//            val (_, firebaseEmail) = FirestoreHelper.getVerifiedUser()
+//            isValid = validateUserInput(user, firebaseEmail)
+//        } catch (e: Exception) {
+//            isValid = false
+//        }
+//    }
+//
+//    // ---------------- CAMERA ----------------
+//    val cameraLauncher =
+//        rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+//            bitmap?.let {
+//                capturedBitmap = it
+//                previewImage = it.asImageBitmap()
+//                // SAVE TO TEMP STORAGE
+//                TempProfileStorage.tempProfileBitmap = it
+//                Log.d("AccountFormTop", "Camera image saved to temp storage")
+//            }
+//        }
+//
+//    // ---------------- GALLERY ----------------
+//    val galleryLauncher =
+//        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+//            uri?.let {
+//                val source = ImageDecoder.createSource(context.contentResolver, it)
+//                val bitmap = ImageDecoder.decodeBitmap(source)
+//                capturedBitmap = bitmap
+//                previewImage = bitmap.asImageBitmap()
+//                // SAVE TO TEMP STORAGE
+//                TempProfileStorage.tempProfileBitmap = bitmap
+//                Log.d("AccountFormTop", "Gallery image saved to temp storage")
+//            }
+//        }
+//
+//    // ---------------- UI ----------------
+//    Box(modifier = Modifier.fillMaxWidth()) {
+//        Column(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(24.dp),
+//            horizontalAlignment = Alignment.CenterHorizontally
+//        ) {
+//            TopBarWithSave(
+//                title = "Account",
+//                onBack = { navController.navigate("profile") },
+//                onSave = {
+//                    if (!isValid) return@TopBarWithSave
+//
+//                    isSaving = true
+//
+//                    CoroutineScope(Dispatchers.Main).launch {
+//                        try {
+//                            val healthInfo = HealthInformation(
+//                                bloodGroup = bloodGroup.value,
+//                                allergies = allergies.value,
+//                                medication = medications.value
+//                            )
+//
+//                            withContext(Dispatchers.IO) {
+//                                // This automatically handles image upload and old image deletion
+//                                FirestoreHelper.writeUser(user, capturedBitmap)
+//                                FirestoreHelper.writeHealthInformation(healthInfo)
+//                            }
+//
+//                            // ---------- CLEAR FIELDS ----------
+//                            firstname.value = ""
+//                            lastname.value = ""
+//                            dateOfBirth.value = ""
+//                            homeAddress.value = ""
+//                            gender.value = Gender.OTHER
+//                            email.value = ""
+//                            phoneNumber.value = ""
+//                            city.value = ""
+//
+//                            bloodGroup.value = ""
+//                            allergies.value = ""
+//                            medications.value = ""
+//
+//                            previewImage = null
+//                            capturedBitmap = null
+//
+//                            // KEEP TEMP STORAGE - Don't clear it so Account screen can use it
+//                            Log.d("SaveAction", "Saved successfully - temp storage preserved")
+//                        } catch (e: Exception) {
+//                            Log.e("SaveAction", "Save failed: ${e.message}")
+//                        } finally {
+//                            isSaving = false
+//                        }
+//                    }
+//                },
+//                enabled = isValid,
+//                isSaving = isSaving
+//            )
+//
+//            Spacer(modifier = Modifier.height(24.dp))
+//
+//            ProfileImage(previewImage)
+//
+//            PhotoOptionsMenu(
+//                showMenu = showMenu,
+//                onToggleMenu = { showMenu = !showMenu },
+//                onTakePhoto = {
+//                    showMenu = false
+//                    cameraLauncher.launch(null)
+//                },
+//                onUpload = {
+//                    showMenu = false
+//                    galleryLauncher.launch("image/*")
+//                },
+//                onDelete = {
+//                    showMenu = false
+//
+//                    // Delete from Firebase Storage and Firestore
+//                    CoroutineScope(Dispatchers.Main).launch {
+//                        try {
+//                            withContext(Dispatchers.IO) {
+//                                FirestoreHelper.deleteUserProfileImage()
+//                            }
+//                            capturedBitmap = null
+//                            previewImage = null
+//                            // CLEAR TEMP STORAGE
+//                            TempProfileStorage.tempProfileBitmap = null
+//                            Log.d("DeletePhoto", "Profile image deleted successfully")
+//                        } catch (e: Exception) {
+//                            Log.e("DeletePhoto", "Failed to delete: ${e.message}")
+//                        }
+//                    }
+//                }
+//            )
+//        }
+//    }
+//
+//    Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
+//}
+//
+//@Composable
+//fun AccountFormScreen(navController: NavHostController) {
+//    // User info state
+//    val firstname = remember { mutableStateOf("") }
+//    val lastname = remember { mutableStateOf("") }
+//    val dateOfBirth = remember { mutableStateOf("") }
+//    val homeAddress = remember { mutableStateOf("") }
+//    val gender = remember { mutableStateOf(Gender.OTHER) }
+//    val email = remember { mutableStateOf("") }
+//    val phoneNumber = remember { mutableStateOf("") }
+//    val city = remember { mutableStateOf("") }
+//
+//    // Health info state
+//    val bloodGroup = remember { mutableStateOf("") }
+//    val allergies = remember { mutableStateOf("") }
+//    val medications = remember { mutableStateOf("") }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .verticalScroll(rememberScrollState())
+//            .padding(vertical = 8.dp),
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        AccountFormTop(
+//            navController = navController,
+//            profileBitmap = null,
+//
+//            firstname = firstname,
+//            lastname = lastname,
+//            dateOfBirth = dateOfBirth,
+//            homeAddress = homeAddress,
+//            gender = gender,
+//            email = email,
+//            phoneNumber = phoneNumber,
+//            city = city,
+//
+//            bloodGroup = bloodGroup,
+//            allergies = allergies,
+//            medications = medications,
+//        )
+//
+//        AccountFormBottom(
+//            firstname = firstname,
+//            lastname = lastname,
+//            dateOfBirth = dateOfBirth,
+//            homeAddress = homeAddress,
+//            gender = gender,
+//            email = email,
+//            phoneNumber = phoneNumber,
+//            city = city
+//        )
+//
+//        HealthInformationSection(
+//            bloodGroup = bloodGroup,
+//            allergies = allergies,
+//            medications = medications
+//        )
+//    }
+//    Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
+//}
+
+
+
+// ============================================
+// GLOBAL STATE TO STORE TEMPORARY PROFILE IMAGE
+// ============================================
+object TempProfileStorage {
+    var tempProfileBitmap: Bitmap? = null
+}
+
+// ============================================
+// ACCOUNT FORM SCREEN COMPOSABLES
+// ============================================
+
 @Composable
 fun ProfileImage(capturedBitmap: ImageBitmap?) {
     val modifier = Modifier
@@ -259,11 +3030,6 @@ fun ProfileImage(capturedBitmap: ImageBitmap?) {
     }
     Log.d("ProfileImage", "CapturedBitmap: $capturedBitmap")
 }
-
-
-
-
-
 
 @Composable
 fun PhotoOptionsMenu(
@@ -301,9 +3067,7 @@ fun PhotoOptionsMenu(
     Log.d("PhotoOptionsMenu", "ShowMenu: $showMenu")
 }
 
-
-
-
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AccountFormBottom(
     firstname: MutableState<String>,
@@ -316,6 +3080,36 @@ fun AccountFormBottom(
     city: MutableState<String>
 ) {
     var genderExpanded by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+    val datePickerState = rememberDatePickerState()
+
+    // Date Picker Dialog
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val date = Date(millis)
+                        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                        dateOfBirth.value = formatter.format(date)
+                    }
+                    showDatePicker = false
+                    focusManager.moveFocus(FocusDirection.Down)
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 
     Column(modifier = Modifier.padding(16.dp)) {
         OutlinedTextField(
@@ -325,7 +3119,21 @@ fun AccountFormBottom(
             leadingIcon = {
                 RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
             },
-            modifier = Modifier.fillMaxWidth()
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .onPreviewKeyEvent { keyEvent ->
+                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                        focusManager.moveFocus(FocusDirection.Down)
+                        true
+                    } else {
+                        false
+                    }
+                }
         )
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
@@ -335,18 +3143,59 @@ fun AccountFormBottom(
             leadingIcon = {
                 RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
             },
-            modifier = Modifier.fillMaxWidth()
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .onPreviewKeyEvent { keyEvent ->
+                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                        focusManager.moveFocus(FocusDirection.Down)
+                        true
+                    } else {
+                        false
+                    }
+                }
         )
         Spacer(modifier = Modifier.height(8.dp))
-        OutlinedTextField(
-            value = dateOfBirth.value,
-            onValueChange = { dateOfBirth.value = it },
-            label = { Text("Date of Birth") },
-            leadingIcon = {
-                RoundedIcon(Icons.Default.DateRange, Color(0xFF87CEEB), Color(0xFFEF6C00))
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = dateOfBirth.value,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Date of Birth") },
+                placeholder = { Text("DD/MM/YYYY") },
+                leadingIcon = {
+                    RoundedIcon(Icons.Default.DateRange, Color(0xFF87CEEB), Color(0xFFEF6C00))
+                },
+                trailingIcon = {
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(Icons.Default.CalendarToday, contentDescription = "Select Date")
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onPreviewKeyEvent { keyEvent ->
+                        if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                            focusManager.moveFocus(FocusDirection.Down)
+                            true
+                        } else if (keyEvent.key == Key.Enter && keyEvent.type == KeyEventType.KeyDown) {
+                            showDatePicker = true
+                            true
+                        } else {
+                            false
+                        }
+                    }
+            )
+            // Invisible clickable layer to trigger date picker
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable { showDatePicker = true }
+            )
+        }
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = homeAddress.value,
@@ -355,7 +3204,21 @@ fun AccountFormBottom(
             leadingIcon = {
                 RoundedIcon(Icons.Default.Home, Color(0xFF87CEEB), Color(0xFFEF6C00))
             },
-            modifier = Modifier.fillMaxWidth()
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .onPreviewKeyEvent { keyEvent ->
+                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                        focusManager.moveFocus(FocusDirection.Down)
+                        true
+                    } else {
+                        false
+                    }
+                }
         )
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
@@ -365,7 +3228,21 @@ fun AccountFormBottom(
             leadingIcon = {
                 RoundedIcon(Icons.Default.LocationCity, Color(0xFF87CEEB), Color(0xFFEF6C00))
             },
-            modifier = Modifier.fillMaxWidth()
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .onPreviewKeyEvent { keyEvent ->
+                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                        focusManager.moveFocus(FocusDirection.Down)
+                        true
+                    } else {
+                        false
+                    }
+                }
         )
         Spacer(modifier = Modifier.height(8.dp))
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -382,7 +3259,19 @@ fun AccountFormBottom(
                         Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Gender")
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onPreviewKeyEvent { keyEvent ->
+                        if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                            focusManager.moveFocus(FocusDirection.Down)
+                            true
+                        } else if (keyEvent.key == Key.Enter && keyEvent.type == KeyEventType.KeyDown) {
+                            genderExpanded = true
+                            true
+                        } else {
+                            false
+                        }
+                    }
             )
 
             DropdownMenu(
@@ -395,6 +3284,7 @@ fun AccountFormBottom(
                         onClick = {
                             gender.value = option
                             genderExpanded = false
+                            focusManager.moveFocus(FocusDirection.Down)
                         }
                     )
                 }
@@ -408,7 +3298,24 @@ fun AccountFormBottom(
             leadingIcon = {
                 RoundedIcon(Icons.Default.Email, Color(0xFF87CEEB), Color(0xFFEF6C00))
             },
-            modifier = Modifier.fillMaxWidth()
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .onPreviewKeyEvent { keyEvent ->
+                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                        focusManager.moveFocus(FocusDirection.Down)
+                        true
+                    } else {
+                        false
+                    }
+                }
         )
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
@@ -418,13 +3325,27 @@ fun AccountFormBottom(
             leadingIcon = {
                 RoundedIcon(Icons.Default.Phone, Color(0xFF87CEEB), Color(0xFFEF6C00))
             },
-            modifier = Modifier.fillMaxWidth()
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Phone,
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = { focusManager.clearFocus() }
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .onPreviewKeyEvent { keyEvent ->
+                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                        focusManager.clearFocus()
+                        true
+                    } else {
+                        false
+                    }
+                }
         )
     }
 }
-
-
-
 
 @Composable
 fun HealthInformationSection(
@@ -434,6 +3355,7 @@ fun HealthInformationSection(
 ) {
     var bloodGroupExpanded by remember { mutableStateOf(false) }
     val bloodGroups = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
+    val focusManager = LocalFocusManager.current
 
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Health Information", style = MaterialTheme.typography.titleMedium)
@@ -445,9 +3367,22 @@ fun HealthInformationSection(
             leadingIcon = {
                 RoundedIcon(Icons.Default.Medication, Color(0xFF87CEEB), Color(0xFFEF6C00))
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxWidth()
+                .onPreviewKeyEvent { keyEvent ->
+                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                        focusManager.moveFocus(FocusDirection.Down)
+                        true
+                    } else {
+                        false
+                    }
+                }
         )
         Spacer(modifier = Modifier.height(8.dp))
+
+
+
         OutlinedTextField(
             value = allergies.value,
             onValueChange = { allergies.value = it },
@@ -455,9 +3390,20 @@ fun HealthInformationSection(
             leadingIcon = {
                 RoundedIcon(Icons.Default.MedicalInformation, Color(0xFF87CEEB), Color(0xFFEF6C00))
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .onPreviewKeyEvent { keyEvent ->
+                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                        focusManager.moveFocus(FocusDirection.Down)
+                        true
+                    } else {
+                        false
+                    }
+                }
         )
         Spacer(modifier = Modifier.height(8.dp))
+        //val focusManager = LocalFocusManager.current
+
         Box(modifier = Modifier.fillMaxWidth().zIndex(1f)) {
             OutlinedTextField(
                 value = bloodGroup.value,
@@ -470,7 +3416,16 @@ fun HealthInformationSection(
                 trailingIcon = {
                     Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Blood Group")
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onPreviewKeyEvent { keyEvent ->
+                        if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                            focusManager.moveFocus(FocusDirection.Down)
+                            true
+                        } else {
+                            false
+                        }
+                    }
             )
 
             Spacer(
@@ -499,8 +3454,6 @@ fun HealthInformationSection(
     Log.d("HealthInformationSection", "Blood Group: ${bloodGroup.value}")
 }
 
-
-
 @Composable
 fun EmergencyContactSection(
     emergencyFirstname: MutableState<String>,
@@ -513,11 +3466,8 @@ fun EmergencyContactSection(
 
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Emergency Contact", style = MaterialTheme.typography.titleMedium)
-
     }
-    //Log.d("EmergencyContactSection", "Recomposing EmergencyContactSection")
 }
-
 
 @Composable
 fun AccountFormTop(
@@ -529,7 +3479,7 @@ fun AccountFormTop(
     lastname: MutableState<String>,
     dateOfBirth: MutableState<String>,
     homeAddress: MutableState<String>,
-    gender: MutableState<Gender>,   // <-- FIXED (was Gender)
+    gender: MutableState<Gender>,
     email: MutableState<String>,
     phoneNumber: MutableState<String>,
     city: MutableState<String>,
@@ -579,6 +3529,9 @@ fun AccountFormTop(
             bitmap?.let {
                 capturedBitmap = it
                 previewImage = it.asImageBitmap()
+                // SAVE TO TEMP STORAGE
+                TempProfileStorage.tempProfileBitmap = it
+                Log.d("AccountFormTop", "Camera image saved to temp storage")
             }
         }
 
@@ -590,6 +3543,9 @@ fun AccountFormTop(
                 val bitmap = ImageDecoder.decodeBitmap(source)
                 capturedBitmap = bitmap
                 previewImage = bitmap.asImageBitmap()
+                // SAVE TO TEMP STORAGE
+                TempProfileStorage.tempProfileBitmap = bitmap
+                Log.d("AccountFormTop", "Gallery image saved to temp storage")
             }
         }
 
@@ -603,7 +3559,7 @@ fun AccountFormTop(
         ) {
             TopBarWithSave(
                 title = "Account",
-                onBack = { navController.navigate("profile") },   // <-- FIXED to navigate to profile
+                onBack = { navController.navigate("profile") },
                 onSave = {
                     if (!isValid) return@TopBarWithSave
 
@@ -618,6 +3574,7 @@ fun AccountFormTop(
                             )
 
                             withContext(Dispatchers.IO) {
+                                // This automatically handles image upload and old image deletion
                                 FirestoreHelper.writeUser(user, capturedBitmap)
                                 FirestoreHelper.writeHealthInformation(healthInfo)
                             }
@@ -627,7 +3584,7 @@ fun AccountFormTop(
                             lastname.value = ""
                             dateOfBirth.value = ""
                             homeAddress.value = ""
-                            gender.value = Gender.OTHER        // <-- FIXED (gender is String)
+                            gender.value = Gender.OTHER
                             email.value = ""
                             phoneNumber.value = ""
                             city.value = ""
@@ -636,10 +3593,11 @@ fun AccountFormTop(
                             allergies.value = ""
                             medications.value = ""
 
-                            previewImage = null      // <-- FIXED (was previewImage.value)
+                            previewImage = null
                             capturedBitmap = null
 
-                            Log.d("SaveAction", "Saved successfully")
+                            // KEEP TEMP STORAGE - Don't clear it so Account screen can use it
+                            Log.d("SaveAction", "Saved successfully - temp storage preserved")
                         } catch (e: Exception) {
                             Log.e("SaveAction", "Save failed: ${e.message}")
                         } finally {
@@ -668,8 +3626,22 @@ fun AccountFormTop(
                 },
                 onDelete = {
                     showMenu = false
-                    capturedBitmap = null
-                    previewImage = null
+
+                    // Delete from Firebase Storage and Firestore
+                    CoroutineScope(Dispatchers.Main).launch {
+                        try {
+                            withContext(Dispatchers.IO) {
+                                FirestoreHelper.deleteUserProfileImage()
+                            }
+                            capturedBitmap = null
+                            previewImage = null
+                            // CLEAR TEMP STORAGE
+                            TempProfileStorage.tempProfileBitmap = null
+                            Log.d("DeletePhoto", "Profile image deleted successfully")
+                        } catch (e: Exception) {
+                            Log.e("DeletePhoto", "Failed to delete: ${e.message}")
+                        }
+                    }
                 }
             )
         }
@@ -677,9 +3649,6 @@ fun AccountFormTop(
 
     Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
 }
-
-
-
 
 @Composable
 fun AccountFormScreen(navController: NavHostController) {
@@ -692,7 +3661,6 @@ fun AccountFormScreen(navController: NavHostController) {
     val email = remember { mutableStateOf("") }
     val phoneNumber = remember { mutableStateOf("") }
     val city = remember { mutableStateOf("") }
-
 
     // Health info state
     val bloodGroup = remember { mutableStateOf("") }
@@ -721,8 +3689,6 @@ fun AccountFormScreen(navController: NavHostController) {
             phoneNumber = phoneNumber,
             city = city,
 
-
-
             bloodGroup = bloodGroup,
             allergies = allergies,
             medications = medications,
@@ -744,11 +3710,12 @@ fun AccountFormScreen(navController: NavHostController) {
             allergies = allergies,
             medications = medications
         )
-
-
     }
     Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
 }
+
+
+
 
 
 @Preview(showBackground = true, showSystemUi = true)

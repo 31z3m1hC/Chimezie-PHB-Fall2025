@@ -1,9 +1,14 @@
 import android.util.Log
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.foundation.focusable
 import com.unh.personal_health_buddy.R
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import com.unh.personal_health_buddy.screens.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -15,13 +20,22 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
@@ -148,6 +162,7 @@ fun AddEmergencyContactDialog(
     var relationship by remember { mutableStateOf("") }
     var expandedDropdown by remember { mutableStateOf(false) }
     var isSaving by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
 
     val relationships = listOf("Parent", "Sibling", "Friend", "Others")
 
@@ -155,6 +170,7 @@ fun AddEmergencyContactDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
+
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
@@ -177,7 +193,25 @@ fun AddEmergencyContactDialog(
                     value = firstname,
                     onValueChange = { firstname = it },
                     label = { Text("First Name") },
-                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Phone,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    ),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                        .focusable()
+                        .onPreviewKeyEvent { keyEvent ->
+                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                        focusManager.moveFocus(FocusDirection.Down)
+                        true
+                    } else {
+                        false
+                    }
+                },
+
                     //leadingIcon = {
                         //Icon(Icons.Default.Person, contentDescription = null)
                    // }
@@ -193,7 +227,24 @@ fun AddEmergencyContactDialog(
                     value = lastname,
                     onValueChange = { lastname = it },
                     label = { Text("Last Name") },
-                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Phone,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    ),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                        .focusable()
+                        .onPreviewKeyEvent { keyEvent ->
+                            if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                                focusManager.moveFocus(FocusDirection.Down)
+                                true
+                            } else {
+                                false
+                            }
+                        },
                     //leadingIcon = {
                         //Icon(Icons.Default.Person, contentDescription = null)
                    //}
@@ -209,8 +260,23 @@ fun AddEmergencyContactDialog(
                     value = phoneNumber,
                     onValueChange = { phoneNumber = it },
                     label = { Text("Phone Number") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Phone,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                        .onPreviewKeyEvent { keyEvent ->
+                            if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                                focusManager.moveFocus(FocusDirection.Down)
+                                true
+                            } else {
+                                false
+                            }
+                        },
+                    //keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     //leadingIcon = {
                         //Icon(Icons.Default.Phone, contentDescription = null)
                     //},
@@ -240,9 +306,24 @@ fun AddEmergencyContactDialog(
                         //leadingIcon = {
                             //Icon(Icons.Default.People, contentDescription = null)
                         //},
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Phone,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
+                            .onPreviewKeyEvent { keyEvent ->
+                                if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                                    focusManager.moveFocus(FocusDirection.Down)
+                                    true
+                                } else {
+                                    false
+                                }
+                            },
                     )
 
                     ExposedDropdownMenu(
