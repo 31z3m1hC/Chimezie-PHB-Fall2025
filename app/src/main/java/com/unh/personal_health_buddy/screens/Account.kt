@@ -1,6 +1,7 @@
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -9,6 +10,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,8 +20,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -28,6 +33,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
 import com.unh.personal_health_buddy.database.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.net.URL
 
 
@@ -377,7 +384,7 @@ import java.net.URL
 //    }
 //}
 
-
+//
 //
 //@Composable
 //fun AccountScreen(navController: NavHostController) {
@@ -563,15 +570,278 @@ import java.net.URL
 
 
 
+//@Composable
+//fun AccountScreen(navController: NavHostController) {
+//    val scrollState = rememberScrollState()
+//    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+//
+//    var user by remember { mutableStateOf<User?>(null) }
+//    var emergencyContacts by remember { mutableStateOf<List<EmergencyContact>>(emptyList()) }
+//    var healthInfo by remember { mutableStateOf<HealthInformation?>(null) }
+//    var isLoading by remember { mutableStateOf(true) }
+//
+//    LaunchedEffect(userId) {
+//        isLoading = true
+//        try {
+//            withContext(Dispatchers.IO) {
+//                user = FirestoreHelper.getUser(userId)
+//                emergencyContacts = FirestoreHelper.readAllEmergencyContacts()
+//                healthInfo = FirestoreHelper.getHealthInformation()
+//            }
+//        } catch (e: Exception) {
+//            Log.e("AccountScreen", "Error fetching data: ${e.message}")
+//        } finally {
+//            isLoading = false
+//        }
+//    }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .verticalScroll(scrollState)
+//            .padding(16.dp)
+//    ) {
+//        // Top section: profile pic and first name
+//        AccountTopSection(navController = navController, user = user)
+//        Spacer(modifier = Modifier.height(16.dp))
+//
+//        // Bottom section: personal info, emergency contacts, health info
+//        BottomSection(
+//            user = user,
+//            emergencyContacts = emergencyContacts,
+//            healthInfo = healthInfo,
+//            isLoading = isLoading
+//        )
+//
+//        // Extra space at bottom for better scrolling experience
+//        Spacer(modifier = Modifier.height(32.dp))
+//    }
+//}
+//
+//@Composable
+//fun BottomSection(
+//    user: User?,
+//    emergencyContacts: List<EmergencyContact>,
+//    healthInfo: HealthInformation?,
+//    isLoading: Boolean
+//) {
+//    Column(modifier = Modifier.fillMaxWidth()) {
+//        if (isLoading) {
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(32.dp),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                CircularProgressIndicator()
+//            }
+//        } else {
+//            // Personal Information Card
+//            user?.let { u ->
+//                Card(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+//                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+//                ) {
+//                    Column(modifier = Modifier.padding(16.dp)) {
+//                        Text(
+//                            "Personal Information",
+//                            fontWeight = FontWeight.Bold,
+//                            style = MaterialTheme.typography.titleMedium,
+//                            color = MaterialTheme.colorScheme.primary
+//                        )
+//                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+//                        InfoRow("Full Name", "${u.firstname} ${u.lastname}")
+//                        InfoRow("Date of Birth", u.dateOfBirth)
+//                        InfoRow("Gender", u.gender.toString())
+//                        InfoRow("Email", u.email)
+//                        InfoRow("Phone Number", u.phoneNumber)
+//                        InfoRow("Home Address", u.homeAddress)
+//                        InfoRow("City", u.city)
+//                    }
+//                }
+//                Spacer(modifier = Modifier.height(16.dp))
+//            }
+//
+//            // Emergency Contacts Card
+//            Card(
+//                modifier = Modifier.fillMaxWidth(),
+//                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+//                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+//            ) {
+//                Column(modifier = Modifier.padding(16.dp)) {
+//                    Text(
+//                        "Emergency Contacts",
+//                        fontWeight = FontWeight.Bold,
+//                        style = MaterialTheme.typography.titleMedium,
+//                        color = MaterialTheme.colorScheme.primary
+//                    )
+//                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+//
+//                    if (emergencyContacts.isNotEmpty()) {
+//                        emergencyContacts.forEachIndexed { index, c ->
+//                            if (index > 0) {
+//                                Spacer(modifier = Modifier.height(12.dp))
+//                                Divider(thickness = 0.5.dp, color = Color.LightGray)
+//                                Spacer(modifier = Modifier.height(12.dp))
+//                            }
+//                            InfoRow("First Name", c.firstname)
+//                            InfoRow("Last Name", c.lastname)
+//                            InfoRow("Phone", c.phoneNumber)
+//                            InfoRow("Relationship", c.relationship)
+//                        }
+//                    } else {
+//                        Text(
+//                            "No emergency contacts added.",
+//                            fontStyle = FontStyle.Italic,
+//                            color = Color.Gray
+//                        )
+//                    }
+//                }
+//            }
+//            Spacer(modifier = Modifier.height(16.dp))
+//
+//            // Health Information Card
+//            Card(
+//                modifier = Modifier.fillMaxWidth(),
+//                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+//                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+//            ) {
+//                Column(modifier = Modifier.padding(16.dp)) {
+//                    Text(
+//                        "Health Information",
+//                        fontWeight = FontWeight.Bold,
+//                        style = MaterialTheme.typography.titleMedium,
+//                        color = MaterialTheme.colorScheme.primary
+//                    )
+//                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+//
+//                    healthInfo?.let { h ->
+//                        InfoRow("Blood Group", h.bloodGroup)
+//                        InfoRow("Allergies", h.allergies)
+//                        InfoRow("Medications", h.medication)
+//                    } ?: run {
+//                        Text(
+//                            "No health information added.",
+//                            fontStyle = FontStyle.Italic,
+//                            color = Color.Gray
+//                        )
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+//
+//@Composable
+//fun InfoRow(label: String, value: String) {
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(vertical = 4.dp),
+//        horizontalArrangement = Arrangement.SpaceBetween
+//    ) {
+//        Text(
+//            text = label,
+//            fontWeight = FontWeight.Medium,
+//            color = Color.DarkGray,
+//            modifier = Modifier.weight(0.4f)
+//        )
+//        Text(
+//            text = value,
+//            fontWeight = FontWeight.Normal,
+//            modifier = Modifier.weight(0.6f)
+//        )
+//    }
+//}
+//
+//@Composable
+//fun AccountTopSection(navController: NavHostController, user: User?) {
+//    var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
+//    val firstName = user?.firstname ?: "User"
+//
+//    // UPDATED: Check temp storage first, then Firebase
+//    LaunchedEffect(user?.profileImageUrl, TempProfileStorage.tempProfileBitmap) {
+//        // Priority 1: Check temp storage first
+//        val tempBitmap = TempProfileStorage.tempProfileBitmap
+//        if (tempBitmap != null) {
+//            profileBitmap = tempBitmap
+//            Log.d("AccountTopSection", "Using temp storage image")
+//        } else {
+//            // Priority 2: Load from Firebase if no temp image
+//            user?.profileImageUrl?.let { url ->
+//                try {
+//                    withContext(Dispatchers.IO) {
+//                        val stream = URL(url).openStream()
+//                        profileBitmap = BitmapFactory.decodeStream(stream)
+//                        Log.d("AccountTopSection", "Loaded image from Firebase")
+//                    }
+//                } catch (e: Exception) {
+//                    Log.e("AccountTopSection", "Error loading image: ${e.message}")
+//                }
+//            }
+//        }
+//    }
+//
+//    val imageBitmap = profileBitmap?.asImageBitmap()
+//
+//    Column(
+//        modifier = Modifier.fillMaxWidth(),
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        Spacer(modifier = Modifier.height(16.dp))
+//
+//        BackHeader(
+//            title = "Profile",
+//            onBack = { navController.navigate("profile") }
+//        )
+//
+//        Spacer(modifier = Modifier.height(16.dp))
+//
+//        if (imageBitmap != null) {
+//            Image(
+//                bitmap = imageBitmap,
+//                contentDescription = "Profile Picture",
+//                modifier = Modifier
+//                    .size(140.dp)
+//                    .clip(CircleShape)
+//                    .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
+//                contentScale = ContentScale.Crop
+//            )
+//        } else {
+//            Icon(
+//                imageVector = Icons.Default.AccountCircle,
+//                contentDescription = "Default Profile",
+//                modifier = Modifier.size(120.dp),
+//                tint = Color.Gray
+//            )
+//        }
+//
+//        Spacer(modifier = Modifier.height(8.dp))
+//        Text(text = firstName, fontWeight = FontWeight.SemiBold)
+//        Spacer(modifier = Modifier.height(8.dp))
+//    }
+//}
+
+
+
 @Composable
 fun AccountScreen(navController: NavHostController) {
     val scrollState = rememberScrollState()
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+    val context = LocalContext.current
 
     var user by remember { mutableStateOf<User?>(null) }
     var emergencyContacts by remember { mutableStateOf<List<EmergencyContact>>(emptyList()) }
     var healthInfo by remember { mutableStateOf<HealthInformation?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+
+    // Delete account dialog states
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showPasswordDialog by remember { mutableStateOf(false) }
+    var passwordInput by remember { mutableStateOf("") }
+    var isDeleting by remember { mutableStateOf(false) }
+    var deleteError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(userId) {
         isLoading = true
@@ -586,6 +856,174 @@ fun AccountScreen(navController: NavHostController) {
         } finally {
             isLoading = false
         }
+    }
+
+    // Delete Confirmation Dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            icon = {
+                Icon(
+                    Icons.Default.Warning,
+                    contentDescription = "Warning",
+                    tint = Color(0xFFFF9800)
+                )
+            },
+            title = {
+                Text(text = "Delete Account?")
+            },
+            text = {
+                Column {
+                    Text(text = "This action cannot be undone. All your data will be permanently deleted including:")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("• Personal information", style = MaterialTheme.typography.bodySmall)
+                    Text("• Emergency contacts", style = MaterialTheme.typography.bodySmall)
+                    Text("• Health information", style = MaterialTheme.typography.bodySmall)
+                    Text("• Profile pictures", style = MaterialTheme.typography.bodySmall)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Are you absolutely sure?",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Red
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        showPasswordDialog = true
+                    }
+                ) {
+                    Text("Continue", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Password Re-authentication Dialog
+    if (showPasswordDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!isDeleting) {
+                    showPasswordDialog = false
+                    passwordInput = ""
+                    deleteError = null
+                }
+            },
+            title = {
+                Text(text = "Confirm Password")
+            },
+            text = {
+                Column {
+                    Text("Please enter your password to confirm account deletion:")
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = passwordInput,
+                        onValueChange = {
+                            passwordInput = it
+                            deleteError = null
+                        },
+                        label = { Text("Password") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                        enabled = !isDeleting,
+                        isError = deleteError != null,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (deleteError != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = deleteError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (passwordInput.isNotBlank() && !isDeleting) {
+                            isDeleting = true
+                            val email = user?.email ?: ""
+
+                            CoroutineScope(Dispatchers.IO).launch {
+                                try {
+                                    val success = FirestoreHelper.deleteUserAccountWithReauth(
+                                        email = email,
+                                        password = passwordInput
+                                    )
+
+                                    withContext(Dispatchers.Main) {
+                                        if (success) {
+                                            Toast.makeText(
+                                                context,
+                                                "Account deleted successfully",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+
+                                            // Clear temp storage
+                                            TempProfileStorage.tempProfileBitmap = null
+
+                                            // Navigate to welcome screen
+                                            navController.navigate("welcome") {
+                                                popUpTo(0) { inclusive = true }
+                                            }
+                                        } else {
+                                            deleteError = "Failed to delete account. Please try again."
+                                            isDeleting = false
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    withContext(Dispatchers.Main) {
+                                        deleteError = when {
+                                            e.message?.contains("password") == true ->
+                                                "Incorrect password. Please try again."
+                                            e.message?.contains("network") == true ->
+                                                "Network error. Please check your connection."
+                                            else -> "Error: ${e.message}"
+                                        }
+                                        isDeleting = false
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    enabled = passwordInput.isNotBlank() && !isDeleting,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red,
+                        contentColor = Color.White
+                    )
+                ) {
+                    if (isDeleting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = Color.White
+                        )
+                    } else {
+                        Text("Delete Account")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showPasswordDialog = false
+                        passwordInput = ""
+                        deleteError = null
+                    },
+                    enabled = !isDeleting
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     Column(
@@ -605,6 +1043,29 @@ fun AccountScreen(navController: NavHostController) {
             healthInfo = healthInfo,
             isLoading = isLoading
         )
+
+        // Delete Account Button
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = { showDeleteDialog = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Red,
+                contentColor = Color.White
+            ),
+            enabled = !isLoading
+        ) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Delete Account",
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Delete Account")
+        }
 
         // Extra space at bottom for better scrolling experience
         Spacer(modifier = Modifier.height(32.dp))

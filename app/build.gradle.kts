@@ -51,9 +51,19 @@ android {
         compose = true
         buildConfig = true
     }
-
-    packagingOptions {
-        resources.excludes.add("META-INF/DEPENDENCIES")
+//
+//    packagingOptions {
+//        resources.excludes.add("META-INF/DEPENDENCIES")
+//    }
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE.txt",
+                "META-INF/NOTICE.md",
+                "META-INF/NOTICE.txt"
+            )
+        }
     }
 }
 
@@ -90,6 +100,7 @@ dependencies {
     implementation(libs.androidx.foundation.layout)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.text)
+    implementation(libs.compose.material3)
 
 
     // Optional: debugging / tooling
@@ -139,6 +150,10 @@ dependencies {
     implementation("com.google.firebase:firebase-storage-ktx:21.0.1")
     implementation("io.coil-kt:coil-compose:2.4.0")
 
+
+
+    implementation("com.sun.mail:android-mail:1.6.7")
+    implementation("com.sun.mail:android-activation:1.6.7")
 
 
 

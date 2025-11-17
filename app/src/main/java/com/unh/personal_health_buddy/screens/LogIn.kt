@@ -15,9 +15,13 @@ import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -29,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -43,6 +48,7 @@ import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInCredential
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
@@ -52,15 +58,20 @@ import com.unh.personal_health_buddy.firebase.performSignIn
 //@Composable
 //fun SignInScreen(
 //    navController: NavHostController,
-//    googleSignInClient: GoogleSignInClient?,
-//    launcher: ActivityResultLauncher<Intent> // unused for One Tap now
+//    googleSignInClient: GoogleSignInClient?, // Can be null if not used
+//    launcher: ActivityResultLauncher<Intent>
 //) {
 //    val context = LocalContext.current
+//    val activity = context as Activity
 //    val email = remember { mutableStateOf("") }
 //    val password = remember { mutableStateOf("") }
 //    val emailErrorState = remember { mutableStateOf(false) }
 //    val passwordErrorState = remember { mutableStateOf(false) }
 //    var passwordVisible by remember { mutableStateOf(false) }
+//
+//    // State for showing the account selection dialog
+//    var showAccountDialog by remember { mutableStateOf(false) }
+//    var existingUserEmail by remember { mutableStateOf<String?>(null) }
 //
 //    // ---------------- One Tap launcher ----------------
 //    val oneTapLauncher = rememberLauncherForActivityResult(
@@ -68,15 +79,17 @@ import com.unh.personal_health_buddy.firebase.performSignIn
 //    ) { result ->
 //        if (result.resultCode == Activity.RESULT_OK) {
 //            try {
-//                val credential: SignInCredential = Identity.getSignInClient(context)
-//                    .getSignInCredentialFromIntent(result.data)
+//                val credential: SignInCredential =
+//                    Identity.getSignInClient(context).getSignInCredentialFromIntent(result.data)
 //                val idToken = credential.googleIdToken
-//                if (idToken != null) {
+//                if (!idToken.isNullOrEmpty()) {
 //                    val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
 //                    FirebaseAuth.getInstance().signInWithCredential(firebaseCredential)
 //                        .addOnCompleteListener { task ->
 //                            if (task.isSuccessful) {
-//                                navController.navigate("home") { popUpTo("sign-in") { inclusive = true } }
+//                                navController.navigate("home") {
+//                                    popUpTo("sign-in") { inclusive = true }
+//                                }
 //                            } else {
 //                                Toast.makeText(
 //                                    context,
@@ -90,6 +103,47 @@ import com.unh.personal_health_buddy.firebase.performSignIn
 //                Toast.makeText(context, "One Tap error: ${e.message}", Toast.LENGTH_SHORT).show()
 //            }
 //        }
+//    }
+//
+//    // Account selection dialog
+//    if (showAccountDialog && existingUserEmail != null) {
+//        androidx.compose.material3.AlertDialog(
+//            onDismissRequest = { showAccountDialog = false },
+//            title = {
+//                Text(
+//                    text = "Choose verified account",
+//                    style = MaterialTheme.typography.titleLarge
+//                )
+//            },
+//            text = {
+//                Column(
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    TextButton(
+//                        onClick = {
+//                            showAccountDialog = false
+//                            navController.navigate("home") {
+//                                popUpTo("sign-in") { inclusive = true }
+//                            }
+//                        },
+//                        modifier = Modifier.fillMaxWidth()
+//                    ) {
+//                        Text(
+//                            text = existingUserEmail!!,
+//                            modifier = Modifier.fillMaxWidth(),
+//                            textAlign = TextAlign.Start,
+//                            style = MaterialTheme.typography.bodyLarge
+//                        )
+//                    }
+//                }
+//            },
+//            confirmButton = {},
+//            dismissButton = {
+//                TextButton(onClick = { showAccountDialog = false }) {
+//                    Text("Cancel")
+//                }
+//            }
+//        )
 //    }
 //
 //    Column(
@@ -140,13 +194,15 @@ import com.unh.personal_health_buddy.firebase.performSignIn
 //            label = { Text("Password") },
 //            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
 //            trailingIcon = {
-//                val icon = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+//                val icon =
+//                    if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
 //                IconButton(onClick = { passwordVisible = !passwordVisible }) {
 //                    Icon(imageVector = icon, contentDescription = "Toggle Password")
 //                }
 //            },
 //            singleLine = true,
-//            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+//            visualTransformation =
+//                if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
 //            modifier = Modifier.fillMaxWidth(0.9f)
 //        )
 //
@@ -193,30 +249,24 @@ import com.unh.personal_health_buddy.firebase.performSignIn
 //
 //        OutlinedButton(
 //            onClick = {
-//                // ---------------- Google One Tap ----------------
-//                val auth = FirebaseAuth.getInstance()
-//                val existingUser = auth.currentUser
+//                // ----------- SAFE Google Sign-In -----------
+//                val existingUser = FirebaseAuth.getInstance().currentUser
+//                val userEmail = existingUser?.email
 //
-//                if (existingUser != null && existingUser.email != null) {
-//                    // Already signed in
-//                    val emails = arrayOf(existingUser.email!!)
-//                    AlertDialog.Builder(context)
-//                        .setTitle("Choose verified account")
-//                        .setItems(emails) { _, _ ->
-//                            navController.navigate("home") { popUpTo("sign-in") { inclusive = true } }
-//                        }
-//                        .setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
-//                        .show()
+//                if (!userEmail.isNullOrEmpty()) {
+//                    // Show Compose dialog instead of traditional AlertDialog
+//                    existingUserEmail = userEmail
+//                    showAccountDialog = true
 //                    return@OutlinedButton
 //                }
 //
-//                // Launch One Tap
-//                val oneTapClient: SignInClient = Identity.getSignInClient(context)
+//                // Launch Google One Tap
+//                val oneTapClient = Identity.getSignInClient(activity)
 //                val signInRequest = BeginSignInRequest.builder()
 //                    .setGoogleIdTokenRequestOptions(
 //                        BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
 //                            .setSupported(true)
-//                            .setServerClientId(context.getString(R.string.default_web_client_id))
+//                            .setServerClientId(activity.getString(R.string.default_web_client_id))
 //                            .setFilterByAuthorizedAccounts(false)
 //                            .build()
 //                    )
@@ -225,17 +275,16 @@ import com.unh.personal_health_buddy.firebase.performSignIn
 //
 //                oneTapClient.beginSignIn(signInRequest)
 //                    .addOnSuccessListener { result ->
-//                        try {
-//                            val intentSenderRequest =
-//                                androidx.activity.result.IntentSenderRequest.Builder(result.pendingIntent.intentSender)
-//                                    .build()
-//                            oneTapLauncher.launch(intentSenderRequest)
-//                        } catch (e: Exception) {
-//                            Toast.makeText(context, "Failed to launch One Tap: ${e.message}", Toast.LENGTH_SHORT).show()
-//                        }
+//                        val intentSenderRequest =
+//                            IntentSenderRequest.Builder(result.pendingIntent.intentSender).build()
+//                        oneTapLauncher.launch(intentSenderRequest)
 //                    }
 //                    .addOnFailureListener { e ->
-//                        Toast.makeText(context, "Google One Tap failed: ${e.message}", Toast.LENGTH_SHORT).show()
+//                        Toast.makeText(
+//                            context,
+//                            "Google Sign-In failed: ${e.message}",
+//                            Toast.LENGTH_SHORT
+//                        ).show()
 //                    }
 //            },
 //            modifier = Modifier
@@ -265,21 +314,1570 @@ import com.unh.personal_health_buddy.firebase.performSignIn
 //
 //    Log.d("SignInScreen", "Sign in screen displayed")
 //}
-//
-//@Preview(showBackground = true, showSystemUi = true)
+
+
 //@Composable
-//fun PreviewSignInScreen() {
-//    val navController = rememberNavController()
-//    val fakeLauncher = rememberLauncherForActivityResult(
-//        contract = ActivityResultContracts.StartActivityForResult()
-//    ) { }
+//fun SignInScreen(
+//    navController: NavHostController,
+//    googleSignInClient: GoogleSignInClient?, // Can be null if not used
+//    launcher: ActivityResultLauncher<Intent>
+//) {
+//    val context = LocalContext.current
+//    val activity = context as Activity
+//    val email = remember { mutableStateOf("") }
+//    val password = remember { mutableStateOf("") }
+//    val emailErrorState = remember { mutableStateOf(false) }
+//    val passwordErrorState = remember { mutableStateOf(false) }
+//    var passwordVisible by remember { mutableStateOf(false) }
+//    var showErrorDialog by remember { mutableStateOf(false) }
+//    var errorMessage by remember { mutableStateOf("") }
 //
-//    SignInScreen(
-//        navController = navController,
-//        googleSignInClient = null,
-//        launcher = fakeLauncher
-//    )
+//    // State for showing the account selection dialog
+//    var showAccountDialog by remember { mutableStateOf(false) }
+//    var existingUserEmail by remember { mutableStateOf<String?>(null) }
+//
+//    // ---------------- One Tap launcher ----------------
+//    val oneTapLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.StartIntentSenderForResult()
+//    ) { result ->
+//        if (result.resultCode == Activity.RESULT_OK) {
+//            try {
+//                val credential: SignInCredential =
+//                    Identity.getSignInClient(context).getSignInCredentialFromIntent(result.data)
+//                val idToken = credential.googleIdToken
+//                if (!idToken.isNullOrEmpty()) {
+//                    val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+//                    FirebaseAuth.getInstance().signInWithCredential(firebaseCredential)
+//                        .addOnCompleteListener { task ->
+//                            if (task.isSuccessful) {
+//                                navController.navigate("home") {
+//                                    popUpTo("sign-in") { inclusive = true }
+//                                }
+//                            } else {
+//                                errorMessage = task.exception?.localizedMessage ?: "Sign-In failed"
+//                                showErrorDialog = true
+//                            }
+//                        }
+//                }
+//            } catch (e: Exception) {
+//                errorMessage = "One Tap error: ${e.message}"
+//                showErrorDialog = true
+//            }
+//        }
+//    }
+//
+//    // Error Dialog for Invalid Credentials
+//    if (showErrorDialog) {
+//        AlertDialog(
+//            onDismissRequest = { showErrorDialog = false },
+//            icon = {
+//                Icon(
+//                    Icons.Default.Error,
+//                    contentDescription = "Error",
+//                    tint = MaterialTheme.colorScheme.error
+//                )
+//            },
+//            title = {
+//                Text(text = "Invalid Credentials")
+//            },
+//            text = {
+//                Text(text = errorMessage)
+//            },
+//            confirmButton = {
+//                TextButton(onClick = { showErrorDialog = false }) {
+//                    Text("OK")
+//                }
+//            }
+//        )
+//    }
+//
+//    // Account selection dialog
+//    if (showAccountDialog && existingUserEmail != null) {
+//        androidx.compose.material3.AlertDialog(
+//            onDismissRequest = { showAccountDialog = false },
+//            title = {
+//                Text(
+//                    text = "Choose verified account",
+//                    style = MaterialTheme.typography.titleLarge
+//                )
+//            },
+//            text = {
+//                Column(
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    TextButton(
+//                        onClick = {
+//                            showAccountDialog = false
+//                            navController.navigate("home") {
+//                                popUpTo("sign-in") { inclusive = true }
+//                            }
+//                        },
+//                        modifier = Modifier.fillMaxWidth()
+//                    ) {
+//                        Text(
+//                            text = existingUserEmail!!,
+//                            modifier = Modifier.fillMaxWidth(),
+//                            textAlign = TextAlign.Start,
+//                            style = MaterialTheme.typography.bodyLarge
+//                        )
+//                    }
+//                }
+//            },
+//            confirmButton = {},
+//            dismissButton = {
+//                TextButton(onClick = { showAccountDialog = false }) {
+//                    Text("Cancel")
+//                }
+//            }
+//        )
+//    }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(top = 16.dp),
+//        verticalArrangement = Arrangement.Top,
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        Box(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(start = 16.dp),
+//            contentAlignment = Alignment.TopStart
+//        ) {
+//            IconButton(onClick = { navController.navigate("welcome") }) {
+//                Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
+//            }
+//        }
+//
+//        Spacer(modifier = Modifier.height(50.dp))
+//
+//        Text(
+//            text = "Sign In",
+//            style = MaterialTheme.typography.headlineMedium
+//        )
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        OutlinedTextField(
+//            value = email.value,
+//            onValueChange = {
+//                email.value = it
+//                if (emailErrorState.value) emailErrorState.value = false
+//            },
+//            isError = emailErrorState.value,
+//            label = { Text("Email") },
+//            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+//            modifier = Modifier.fillMaxWidth(0.9f)
+//        )
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        OutlinedTextField(
+//            value = password.value,
+//            onValueChange = {
+//                password.value = it
+//                if (passwordErrorState.value) passwordErrorState.value = false
+//            },
+//            isError = passwordErrorState.value,
+//            label = { Text("Password") },
+//            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
+//            trailingIcon = {
+//                val icon =
+//                    if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+//                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+//                    Icon(imageVector = icon, contentDescription = "Toggle Password")
+//                }
+//            },
+//            singleLine = true,
+//            visualTransformation =
+//                if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+//            modifier = Modifier.fillMaxWidth(0.9f)
+//        )
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        Text(
+//            text = "Forgot Password?",
+//            fontSize = 14.sp,
+//            color = MaterialTheme.colorScheme.primary,
+//            textAlign = TextAlign.End,
+//            modifier = Modifier
+//                .fillMaxWidth(0.9f)
+//                .padding(top = 8.dp)
+//                .clickable { navController.navigate("reset-password") }
+//        )
+//
+//        Spacer(modifier = Modifier.height(20.dp))
+//
+//        Button(
+//            onClick = {
+//                // Validate fields before attempting sign in
+//                if (email.value.isBlank() || password.value.isBlank()) {
+//                    emailErrorState.value = email.value.isBlank()
+//                    passwordErrorState.value = password.value.isBlank()
+//                    errorMessage = "Please enter both email and password"
+//                    showErrorDialog = true
+//                    return@Button
+//                }
+//
+//                // Perform sign in with custom error handling
+//                FirebaseAuth.getInstance().signInWithEmailAndPassword(email.value, password.value)
+//                    .addOnCompleteListener { task ->
+//                        if (task.isSuccessful) {
+//                            navController.navigate("home") {
+//                                popUpTo("sign-in") { inclusive = true }
+//                            }
+//                        } else {
+//                            emailErrorState.value = true
+//                            passwordErrorState.value = true
+//                            errorMessage = when (task.exception) {
+//                                is com.google.firebase.auth.FirebaseAuthInvalidUserException ->
+//                                    "No account found with this email address"
+//                                is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ->
+//                                    "Invalid email or password. Please try again."
+//                                else -> task.exception?.localizedMessage ?: "Invalid credentials. Please check your email and password."
+//                            }
+//                            showErrorDialog = true
+//                        }
+//                    }
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth(0.9f)
+//                .height(50.dp),
+//            colors = ButtonDefaults.buttonColors(
+//                containerColor = colorResource(id = R.color.purple_500),
+//                contentColor = Color.White
+//            )
+//        ) {
+//            Text("Sign In")
+//        }
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//        Text("OR")
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        OutlinedButton(
+//            onClick = {
+//                // ----------- SAFE Google Sign-In -----------
+//                val existingUser = FirebaseAuth.getInstance().currentUser
+//                val userEmail = existingUser?.email
+//
+//                if (!userEmail.isNullOrEmpty()) {
+//                    // Show Compose dialog instead of traditional AlertDialog
+//                    existingUserEmail = userEmail
+//                    showAccountDialog = true
+//                    return@OutlinedButton
+//                }
+//
+//                // Launch Google One Tap
+//                val oneTapClient = Identity.getSignInClient(activity)
+//                val signInRequest = BeginSignInRequest.builder()
+//                    .setGoogleIdTokenRequestOptions(
+//                        BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
+//                            .setSupported(true)
+//                            .setServerClientId(activity.getString(R.string.default_web_client_id))
+//                            .setFilterByAuthorizedAccounts(false)
+//                            .build()
+//                    )
+//                    .setAutoSelectEnabled(true)
+//                    .build()
+//
+//                oneTapClient.beginSignIn(signInRequest)
+//                    .addOnSuccessListener { result ->
+//                        val intentSenderRequest =
+//                            IntentSenderRequest.Builder(result.pendingIntent.intentSender).build()
+//                        oneTapLauncher.launch(intentSenderRequest)
+//                    }
+//                    .addOnFailureListener { e ->
+//                        errorMessage = "Google Sign-In failed: ${e.message}"
+//                        showErrorDialog = true
+//                    }
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth(0.9f)
+//                .height(50.dp),
+//        ) {
+//            Row(verticalAlignment = Alignment.CenterVertically) {
+//                Image(
+//                    painter = painterResource(id = R.drawable.google),
+//                    contentDescription = "Google Icon",
+//                    modifier = Modifier.size(24.dp)
+//                )
+//                Spacer(modifier = Modifier.width(8.dp))
+//                Text("Sign in with Google")
+//            }
+//        }
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        Text(
+//            text = "Don't have an account? Sign Up",
+//            fontSize = 14.sp,
+//            color = MaterialTheme.colorScheme.primary,
+//            modifier = Modifier.clickable { navController.navigate("sign-up") }
+//        )
+//    }
+//
+//    Log.d("SignInScreen", "Sign in screen displayed")
 //}
+
+//
+//@Composable
+//fun SignInScreen(
+//    navController: NavHostController,
+//    googleSignInClient: GoogleSignInClient?, // Can be null if not used
+//    launcher: ActivityResultLauncher<Intent>
+//) {
+//    val context = LocalContext.current
+//    val activity = context as Activity
+//    val email = remember { mutableStateOf("") }
+//    val password = remember { mutableStateOf("") }
+//    val emailErrorState = remember { mutableStateOf(false) }
+//    val passwordErrorState = remember { mutableStateOf(false) }
+//    var passwordVisible by remember { mutableStateOf(false) }
+//    var showErrorDialog by remember { mutableStateOf(false) }
+//    var errorMessage by remember { mutableStateOf("") }
+//
+//    // State for showing the account selection dialog
+//    var showAccountDialog by remember { mutableStateOf(false) }
+//    var existingUserEmail by remember { mutableStateOf<String?>(null) }
+//
+//    // ---------------- One Tap launcher ----------------
+//    val oneTapLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.StartIntentSenderForResult()
+//    ) { result ->
+//        if (result.resultCode == Activity.RESULT_OK) {
+//            try {
+//                val credential: SignInCredential =
+//                    Identity.getSignInClient(context).getSignInCredentialFromIntent(result.data)
+//                val idToken = credential.googleIdToken
+//                if (!idToken.isNullOrEmpty()) {
+//                    val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+//                    FirebaseAuth.getInstance().signInWithCredential(firebaseCredential)
+//                        .addOnCompleteListener { task ->
+//                            if (task.isSuccessful) {
+//                                navController.navigate("home") {
+//                                    popUpTo("sign-in") { inclusive = true }
+//                                }
+//                            } else {
+//                                errorMessage = task.exception?.localizedMessage ?: "Sign-In failed"
+//                                showErrorDialog = true
+//                            }
+//                        }
+//                }
+//            } catch (e: Exception) {
+//                errorMessage = "One Tap error: ${e.message}"
+//                showErrorDialog = true
+//            }
+//        }
+//    }
+//
+//    // Error Dialog for Invalid Credentials
+//    if (showErrorDialog) {
+//        AlertDialog(
+//            onDismissRequest = { showErrorDialog = false },
+//            icon = {
+//                Icon(
+//                    Icons.Default.Info,
+//                    contentDescription = "Info",
+//                    tint = Color.Blue
+//                )
+//            },
+//            title = {
+//                Text(text = "Invalid Credentials")
+//            },
+//            text = {
+//                Text(text = errorMessage)
+//            },
+//            confirmButton = {
+//                TextButton(onClick = { showErrorDialog = false }) {
+//                    Text("OK")
+//                }
+//            }
+//        )
+//    }
+//
+//    // Account selection dialog
+//    if (showAccountDialog && existingUserEmail != null) {
+//        androidx.compose.material3.AlertDialog(
+//            onDismissRequest = { showAccountDialog = false },
+//            title = {
+//                Text(
+//                    text = "Choose verified account",
+//                    style = MaterialTheme.typography.titleLarge
+//                )
+//            },
+//            text = {
+//                Column(
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    TextButton(
+//                        onClick = {
+//                            showAccountDialog = false
+//                            navController.navigate("home") {
+//                                popUpTo("sign-in") { inclusive = true }
+//                            }
+//                        },
+//                        modifier = Modifier.fillMaxWidth()
+//                    ) {
+//                        Text(
+//                            text = existingUserEmail!!,
+//                            modifier = Modifier.fillMaxWidth(),
+//                            textAlign = TextAlign.Start,
+//                            style = MaterialTheme.typography.bodyLarge
+//                        )
+//                    }
+//                }
+//            },
+//            confirmButton = {},
+//            dismissButton = {
+//                TextButton(onClick = { showAccountDialog = false }) {
+//                    Text("Cancel")
+//                }
+//            }
+//        )
+//    }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(top = 16.dp),
+//        verticalArrangement = Arrangement.Top,
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        Box(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(start = 16.dp),
+//            contentAlignment = Alignment.TopStart
+//        ) {
+//            IconButton(onClick = { navController.navigate("welcome") }) {
+//                Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
+//            }
+//        }
+//
+//        Spacer(modifier = Modifier.height(50.dp))
+//
+//        Text(
+//            text = "Sign In",
+//            style = MaterialTheme.typography.headlineMedium
+//        )
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        OutlinedTextField(
+//            value = email.value,
+//            onValueChange = {
+//                email.value = it
+//                if (emailErrorState.value) emailErrorState.value = false
+//            },
+//            isError = emailErrorState.value,
+//            label = { Text("Email") },
+//            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+//            modifier = Modifier.fillMaxWidth(0.9f)
+//        )
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        OutlinedTextField(
+//            value = password.value,
+//            onValueChange = {
+//                password.value = it
+//                if (passwordErrorState.value) passwordErrorState.value = false
+//            },
+//            isError = passwordErrorState.value,
+//            label = { Text("Password") },
+//            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
+//            trailingIcon = {
+//                val icon =
+//                    if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+//                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+//                    Icon(imageVector = icon, contentDescription = "Toggle Password")
+//                }
+//            },
+//            singleLine = true,
+//            visualTransformation =
+//                if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+//            modifier = Modifier.fillMaxWidth(0.9f)
+//        )
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        Text(
+//            text = "Forgot Password?",
+//            fontSize = 14.sp,
+//            color = MaterialTheme.colorScheme.primary,
+//            textAlign = TextAlign.End,
+//            modifier = Modifier
+//                .fillMaxWidth(0.9f)
+//                .padding(top = 8.dp)
+//                .clickable { navController.navigate("reset-password") }
+//        )
+//
+//        Spacer(modifier = Modifier.height(20.dp))
+//
+//        Button(
+//            onClick = {
+//                // Validate fields before attempting sign in
+//                if (email.value.isBlank() || password.value.isBlank()) {
+//                    emailErrorState.value = email.value.isBlank()
+//                    passwordErrorState.value = password.value.isBlank()
+//                    errorMessage = "Please enter both email and password"
+//                    showErrorDialog = true
+//                    return@Button
+//                }
+//
+//                // Perform sign in with custom error handling
+//                FirebaseAuth.getInstance().signInWithEmailAndPassword(email.value, password.value)
+//                    .addOnCompleteListener { task ->
+//                        if (task.isSuccessful) {
+//                            navController.navigate("home") {
+//                                popUpTo("sign-in") { inclusive = true }
+//                            }
+//                        } else {
+//                            emailErrorState.value = true
+//                            passwordErrorState.value = true
+//                            errorMessage = when (task.exception) {
+//                                is com.google.firebase.auth.FirebaseAuthInvalidUserException ->
+//                                    "No account found with this email address"
+//                                is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ->
+//                                    "Invalid email or password. Please try again."
+//                                else -> task.exception?.localizedMessage ?: "Invalid credentials. Please check your email and password."
+//                            }
+//                            showErrorDialog = true
+//                        }
+//                    }
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth(0.9f)
+//                .height(50.dp),
+//            colors = ButtonDefaults.buttonColors(
+//                containerColor = colorResource(id = R.color.purple_500),
+//                contentColor = Color.White
+//            )
+//        ) {
+//            Text("Sign In")
+//        }
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//        Text("OR")
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        OutlinedButton(
+//            onClick = {
+//                // ----------- SAFE Google Sign-In -----------
+//                val existingUser = FirebaseAuth.getInstance().currentUser
+//                val userEmail = existingUser?.email
+//
+//                if (!userEmail.isNullOrEmpty()) {
+//                    // Show Compose dialog instead of traditional AlertDialog
+//                    existingUserEmail = userEmail
+//                    showAccountDialog = true
+//                    return@OutlinedButton
+//                }
+//
+//                // Launch Google One Tap
+//                val oneTapClient = Identity.getSignInClient(activity)
+//                val signInRequest = BeginSignInRequest.builder()
+//                    .setGoogleIdTokenRequestOptions(
+//                        BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
+//                            .setSupported(true)
+//                            .setServerClientId(activity.getString(R.string.default_web_client_id))
+//                            .setFilterByAuthorizedAccounts(false)
+//                            .build()
+//                    )
+//                    .setAutoSelectEnabled(true)
+//                    .build()
+//
+//                oneTapClient.beginSignIn(signInRequest)
+//                    .addOnSuccessListener { result ->
+//                        val intentSenderRequest =
+//                            IntentSenderRequest.Builder(result.pendingIntent.intentSender).build()
+//                        oneTapLauncher.launch(intentSenderRequest)
+//                    }
+//                    .addOnFailureListener { e ->
+//                        errorMessage = "Google Sign-In failed: ${e.message}"
+//                        showErrorDialog = true
+//                    }
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth(0.9f)
+//                .height(50.dp),
+//        ) {
+//            Row(verticalAlignment = Alignment.CenterVertically) {
+//                Image(
+//                    painter = painterResource(id = R.drawable.google),
+//                    contentDescription = "Google Icon",
+//                    modifier = Modifier.size(24.dp)
+//                )
+//                Spacer(modifier = Modifier.width(8.dp))
+//                Text("Sign in with Google")
+//            }
+//        }
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        Text(
+//            text = "Don't have an account? Sign Up",
+//            fontSize = 14.sp,
+//            color = MaterialTheme.colorScheme.primary,
+//            modifier = Modifier.clickable { navController.navigate("sign-up") }
+//        )
+//    }
+//
+//    Log.d("SignInScreen", "Sign in screen displayed")
+//}
+
+
+//@Composable
+//fun SignInScreen(
+//    navController: NavHostController,
+//    googleSignInClient: GoogleSignInClient?, // Can be null if not used
+//    launcher: ActivityResultLauncher<Intent>
+//) {
+//    val context = LocalContext.current
+//    val activity = context as Activity
+//    val email = remember { mutableStateOf("") }
+//    val password = remember { mutableStateOf("") }
+//    val emailErrorState = remember { mutableStateOf(false) }
+//    val passwordErrorState = remember { mutableStateOf(false) }
+//    var passwordVisible by remember { mutableStateOf(false) }
+//    var showErrorDialog by remember { mutableStateOf(false) }
+//    var errorMessage by remember { mutableStateOf("") }
+//
+//    // State for showing the account selection dialog
+//    var showAccountDialog by remember { mutableStateOf(false) }
+//    var existingUserEmail by remember { mutableStateOf<String?>(null) }
+//
+//    // ---------------- One Tap launcher ----------------
+//    val oneTapLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.StartIntentSenderForResult()
+//    ) { result ->
+//        if (result.resultCode == Activity.RESULT_OK) {
+//            try {
+//                val credential: SignInCredential =
+//                    Identity.getSignInClient(context).getSignInCredentialFromIntent(result.data)
+//                val idToken = credential.googleIdToken
+//                if (!idToken.isNullOrEmpty()) {
+//                    val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+//                    FirebaseAuth.getInstance().signInWithCredential(firebaseCredential)
+//                        .addOnCompleteListener { task ->
+//                            if (task.isSuccessful) {
+//                                navController.navigate("home") {
+//                                    popUpTo("sign-in") { inclusive = true }
+//                                }
+//                            } else {
+//                                errorMessage = "You are not a valid user. Please sign up first."
+//                                showErrorDialog = true
+//                            }
+//                        }
+//                }
+//            } catch (e: Exception) {
+//                errorMessage = "You are not a valid user. Please sign up first."
+//                showErrorDialog = true
+//            }
+//        }
+//    }
+//
+//    // Error Dialog for Invalid Credentials
+//    if (showErrorDialog) {
+//        AlertDialog(
+//            onDismissRequest = { showErrorDialog = false },
+//            icon = {
+//                Icon(
+//                    Icons.Default.Info,
+//                    contentDescription = "Info",
+//                    tint = Color.Blue
+//                )
+//            },
+//            title = {
+//                Text(text = "Sign In Failed")
+//            },
+//            text = {
+//                Text(text = errorMessage)
+//            },
+//            confirmButton = {
+//                TextButton(onClick = { showErrorDialog = false }) {
+//                    Text("OK")
+//                }
+//            }
+//        )
+//    }
+//
+//    // Account selection dialog
+//    if (showAccountDialog && existingUserEmail != null) {
+//        androidx.compose.material3.AlertDialog(
+//            onDismissRequest = { showAccountDialog = false },
+//            title = {
+//                Text(
+//                    text = "Choose verified account",
+//                    style = MaterialTheme.typography.titleLarge
+//                )
+//            },
+//            text = {
+//                Column(
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    TextButton(
+//                        onClick = {
+//                            showAccountDialog = false
+//                            navController.navigate("home") {
+//                                popUpTo("sign-in") { inclusive = true }
+//                            }
+//                        },
+//                        modifier = Modifier.fillMaxWidth()
+//                    ) {
+//                        Text(
+//                            text = existingUserEmail!!,
+//                            modifier = Modifier.fillMaxWidth(),
+//                            textAlign = TextAlign.Start,
+//                            style = MaterialTheme.typography.bodyLarge
+//                        )
+//                    }
+//                }
+//            },
+//            confirmButton = {},
+//            dismissButton = {
+//                TextButton(onClick = { showAccountDialog = false }) {
+//                    Text("Cancel")
+//                }
+//            }
+//        )
+//    }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(top = 16.dp),
+//        verticalArrangement = Arrangement.Top,
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        Box(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(start = 16.dp),
+//            contentAlignment = Alignment.TopStart
+//        ) {
+//            IconButton(onClick = { navController.navigate("welcome") }) {
+//                Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
+//            }
+//        }
+//
+//        Spacer(modifier = Modifier.height(50.dp))
+//
+//        Text(
+//            text = "Sign In",
+//            style = MaterialTheme.typography.headlineMedium
+//        )
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        OutlinedTextField(
+//            value = email.value,
+//            onValueChange = {
+//                email.value = it
+//                if (emailErrorState.value) emailErrorState.value = false
+//            },
+//            isError = emailErrorState.value,
+//            label = { Text("Email") },
+//            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+//            modifier = Modifier.fillMaxWidth(0.9f)
+//        )
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        OutlinedTextField(
+//            value = password.value,
+//            onValueChange = {
+//                password.value = it
+//                if (passwordErrorState.value) passwordErrorState.value = false
+//            },
+//            isError = passwordErrorState.value,
+//            label = { Text("Password") },
+//            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
+//            trailingIcon = {
+//                val icon =
+//                    if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+//                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+//                    Icon(imageVector = icon, contentDescription = "Toggle Password")
+//                }
+//            },
+//            singleLine = true,
+//            visualTransformation =
+//                if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+//            modifier = Modifier.fillMaxWidth(0.9f)
+//        )
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        Text(
+//            text = "Forgot Password?",
+//            fontSize = 14.sp,
+//            color = MaterialTheme.colorScheme.primary,
+//            textAlign = TextAlign.End,
+//            modifier = Modifier
+//                .fillMaxWidth(0.9f)
+//                .padding(top = 8.dp)
+//                .clickable { navController.navigate("reset-password") }
+//        )
+//
+//        Spacer(modifier = Modifier.height(20.dp))
+//
+//        Button(
+//            onClick = {
+//                // Validate fields before attempting sign in
+//                if (email.value.isBlank() || password.value.isBlank()) {
+//                    emailErrorState.value = email.value.isBlank()
+//                    passwordErrorState.value = password.value.isBlank()
+//                    errorMessage = "Please enter both email and password"
+//                    showErrorDialog = true
+//                    return@Button
+//                }
+//
+//                // Perform sign in with custom error handling
+//                FirebaseAuth.getInstance().signInWithEmailAndPassword(email.value, password.value)
+//                    .addOnCompleteListener { task ->
+//                        if (task.isSuccessful) {
+//                            navController.navigate("home") {
+//                                popUpTo("sign-in") { inclusive = true }
+//                            }
+//                        } else {
+//                            emailErrorState.value = true
+//                            passwordErrorState.value = true
+//                            errorMessage = when (task.exception) {
+//                                is com.google.firebase.auth.FirebaseAuthInvalidUserException ->
+//                                    "No account found with this email address"
+//                                is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ->
+//                                    "Invalid email or password. Please try again."
+//                                else -> task.exception?.localizedMessage ?: "Invalid credentials. Please check your email and password."
+//                            }
+//                            showErrorDialog = true
+//                        }
+//                    }
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth(0.9f)
+//                .height(50.dp),
+//            colors = ButtonDefaults.buttonColors(
+//                containerColor = colorResource(id = R.color.purple_500),
+//                contentColor = Color.White
+//            )
+//        ) {
+//            Text("Sign In")
+//        }
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//        Text("OR")
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        OutlinedButton(
+//            onClick = {
+//                // ----------- SAFE Google Sign-In -----------
+//                val existingUser = FirebaseAuth.getInstance().currentUser
+//                val userEmail = existingUser?.email
+//
+//                if (!userEmail.isNullOrEmpty()) {
+//                    // Show Compose dialog instead of traditional AlertDialog
+//                    existingUserEmail = userEmail
+//                    showAccountDialog = true
+//                    return@OutlinedButton
+//                }
+//
+//                // Launch Google One Tap
+//                val oneTapClient = Identity.getSignInClient(activity)
+//                val signInRequest = BeginSignInRequest.builder()
+//                    .setGoogleIdTokenRequestOptions(
+//                        BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
+//                            .setSupported(true)
+//                            .setServerClientId(activity.getString(R.string.default_web_client_id))
+//                            .setFilterByAuthorizedAccounts(false)
+//                            .build()
+//                    )
+//                    .setAutoSelectEnabled(true)
+//                    .build()
+//
+//                oneTapClient.beginSignIn(signInRequest)
+//                    .addOnSuccessListener { result ->
+//                        val intentSenderRequest =
+//                            IntentSenderRequest.Builder(result.pendingIntent.intentSender).build()
+//                        oneTapLauncher.launch(intentSenderRequest)
+//                    }
+//                    .addOnFailureListener { e ->
+//                        errorMessage = "Google Sign-In failed: ${e.message}"
+//                        showErrorDialog = true
+//                    }
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth(0.9f)
+//                .height(50.dp),
+//        ) {
+//            Row(verticalAlignment = Alignment.CenterVertically) {
+//                Image(
+//                    painter = painterResource(id = R.drawable.google),
+//                    contentDescription = "Google Icon",
+//                    modifier = Modifier.size(24.dp)
+//                )
+//                Spacer(modifier = Modifier.width(8.dp))
+//                Text("Sign in with Google")
+//            }
+//        }
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        Text(
+//            text = "Don't have an account? Sign Up",
+//            fontSize = 14.sp,
+//            color = MaterialTheme.colorScheme.primary,
+//            modifier = Modifier.clickable { navController.navigate("sign-up") }
+//        )
+//    }
+//
+//    Log.d("SignInScreen", "Sign in screen displayed")
+//}
+
+
+//
+//@Composable
+//fun SignInScreen(
+//    navController: NavHostController,
+//    googleSignInClient: GoogleSignInClient?, // Can be null if not used
+//    launcher: ActivityResultLauncher<Intent>
+//) {
+//    val context = LocalContext.current
+//    val activity = context as Activity
+//    val email = remember { mutableStateOf("") }
+//    val password = remember { mutableStateOf("") }
+//    val emailErrorState = remember { mutableStateOf(false) }
+//    val passwordErrorState = remember { mutableStateOf(false) }
+//    var passwordVisible by remember { mutableStateOf(false) }
+//    var showErrorDialog by remember { mutableStateOf(false) }
+//    var errorMessage by remember { mutableStateOf("") }
+//
+//    // State for showing the account selection dialog
+//    var showAccountDialog by remember { mutableStateOf(false) }
+//    var existingUserEmail by remember { mutableStateOf<String?>(null) }
+//
+//    // ---------------- One Tap launcher ----------------
+//    val oneTapLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.StartIntentSenderForResult()
+//    ) { result ->
+//        if (result.resultCode == Activity.RESULT_OK) {
+//            try {
+//                val credential: SignInCredential =
+//                    Identity.getSignInClient(context).getSignInCredentialFromIntent(result.data)
+//                val idToken = credential.googleIdToken
+//                if (!idToken.isNullOrEmpty()) {
+//                    val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+//                    FirebaseAuth.getInstance().signInWithCredential(firebaseCredential)
+//                        .addOnCompleteListener { task ->
+//                            if (task.isSuccessful) {
+//                                navController.navigate("home") {
+//                                    popUpTo("sign-in") { inclusive = true }
+//                                }
+//                            } else {
+//                                errorMessage = "You are not a valid user. Please sign up first."
+//                                showErrorDialog = true
+//                            }
+//                        }
+//                }
+//            } catch (e: Exception) {
+//                errorMessage = "You are not a valid user. Please sign up first."
+//                showErrorDialog = true
+//            }
+//        }
+//    }
+//
+//    // Error Dialog for Invalid Credentials
+//    if (showErrorDialog) {
+//        AlertDialog(
+//            onDismissRequest = { showErrorDialog = false },
+//            icon = {
+//                Icon(
+//                    Icons.Default.Info,
+//                    contentDescription = "Info",
+//                    tint = Color.Blue
+//                )
+//            },
+//            title = {
+//                Text(text = "Sign In Failed")
+//            },
+//            text = {
+//                Text(text = errorMessage)
+//            },
+//            confirmButton = {
+//                TextButton(onClick = { showErrorDialog = false }) {
+//                    Text("OK")
+//                }
+//            }
+//        )
+//    }
+//
+//    // Account selection dialog
+//    if (showAccountDialog && existingUserEmail != null) {
+//        androidx.compose.material3.AlertDialog(
+//            onDismissRequest = { showAccountDialog = false },
+//            title = {
+//                Text(
+//                    text = "Choose verified account",
+//                    style = MaterialTheme.typography.titleLarge
+//                )
+//            },
+//            text = {
+//                Column(
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    TextButton(
+//                        onClick = {
+//                            showAccountDialog = false
+//                            navController.navigate("home") {
+//                                popUpTo("sign-in") { inclusive = true }
+//                            }
+//                        },
+//                        modifier = Modifier.fillMaxWidth()
+//                    ) {
+//                        Text(
+//                            text = existingUserEmail!!,
+//                            modifier = Modifier.fillMaxWidth(),
+//                            textAlign = TextAlign.Start,
+//                            style = MaterialTheme.typography.bodyLarge
+//                        )
+//                    }
+//                }
+//            },
+//            confirmButton = {},
+//            dismissButton = {
+//                TextButton(onClick = { showAccountDialog = false }) {
+//                    Text("Cancel")
+//                }
+//            }
+//        )
+//    }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(top = 16.dp),
+//        verticalArrangement = Arrangement.Top,
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        Box(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(start = 16.dp),
+//            contentAlignment = Alignment.TopStart
+//        ) {
+//            IconButton(onClick = { navController.navigate("welcome") }) {
+//                Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
+//            }
+//        }
+//
+//        Spacer(modifier = Modifier.height(50.dp))
+//
+//        Text(
+//            text = "Sign In",
+//            style = MaterialTheme.typography.headlineMedium
+//        )
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        OutlinedTextField(
+//            value = email.value,
+//            onValueChange = {
+//                email.value = it
+//                if (emailErrorState.value) emailErrorState.value = false
+//            },
+//            isError = emailErrorState.value,
+//            label = { Text("Email") },
+//            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+//            modifier = Modifier.fillMaxWidth(0.9f)
+//        )
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        OutlinedTextField(
+//            value = password.value,
+//            onValueChange = {
+//                password.value = it
+//                if (passwordErrorState.value) passwordErrorState.value = false
+//            },
+//            isError = passwordErrorState.value,
+//            label = { Text("Password") },
+//            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
+//            trailingIcon = {
+//                val icon =
+//                    if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+//                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+//                    Icon(imageVector = icon, contentDescription = "Toggle Password")
+//                }
+//            },
+//            singleLine = true,
+//            visualTransformation =
+//                if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+//            modifier = Modifier.fillMaxWidth(0.9f)
+//        )
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        Text(
+//            text = "Forgot Password?",
+//            fontSize = 14.sp,
+//            color = MaterialTheme.colorScheme.primary,
+//            textAlign = TextAlign.End,
+//            modifier = Modifier
+//                .fillMaxWidth(0.9f)
+//                .padding(top = 8.dp)
+//                .clickable { navController.navigate("reset-password") }
+//        )
+//
+//        Spacer(modifier = Modifier.height(20.dp))
+//
+//        Button(
+//            onClick = {
+//                // Validate fields before attempting sign in
+//                if (email.value.isBlank() || password.value.isBlank()) {
+//                    emailErrorState.value = email.value.isBlank()
+//                    passwordErrorState.value = password.value.isBlank()
+//                    errorMessage = "Please enter both email and password"
+//                    showErrorDialog = true
+//                    return@Button
+//                }
+//
+//                // Perform sign in with custom error handling
+//                FirebaseAuth.getInstance().signInWithEmailAndPassword(email.value, password.value)
+//                    .addOnCompleteListener { task ->
+//                        if (task.isSuccessful) {
+//                            navController.navigate("home") {
+//                                popUpTo("sign-in") { inclusive = true }
+//                            }
+//                        } else {
+//                            emailErrorState.value = true
+//                            passwordErrorState.value = true
+//                            errorMessage = when (task.exception) {
+//                                is com.google.firebase.auth.FirebaseAuthInvalidUserException ->
+//                                    "No account found with this email address"
+//                                is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ->
+//                                    "Invalid email or password. Please try again."
+//                                else -> task.exception?.localizedMessage ?: "Invalid credentials. Please check your email and password."
+//                            }
+//                            showErrorDialog = true
+//                        }
+//                    }
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth(0.9f)
+//                .height(50.dp),
+//            colors = ButtonDefaults.buttonColors(
+//                containerColor = colorResource(id = R.color.purple_500),
+//                contentColor = Color.White
+//            )
+//        ) {
+//            Text("Sign In")
+//        }
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//        Text("OR")
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        OutlinedButton(
+//            onClick = {
+//                // ----------- SAFE Google Sign-In -----------
+//                val existingUser = FirebaseAuth.getInstance().currentUser
+//                val userEmail = existingUser?.email
+//
+//                if (!userEmail.isNullOrEmpty()) {
+//                    // Show Compose dialog instead of traditional AlertDialog
+//                    existingUserEmail = userEmail
+//                    showAccountDialog = true
+//                    return@OutlinedButton
+//                }
+//
+//                // Launch Google One Tap
+//                val oneTapClient = Identity.getSignInClient(activity)
+//                val signInRequest = BeginSignInRequest.builder()
+//                    .setGoogleIdTokenRequestOptions(
+//                        BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
+//                            .setSupported(true)
+//                            .setServerClientId(activity.getString(R.string.default_web_client_id))
+//                            .setFilterByAuthorizedAccounts(false)
+//                            .build()
+//                    )
+//                    .setAutoSelectEnabled(true)
+//                    .build()
+//
+//                oneTapClient.beginSignIn(signInRequest)
+//                    .addOnSuccessListener { result ->
+//                        val intentSenderRequest =
+//                            IntentSenderRequest.Builder(result.pendingIntent.intentSender).build()
+//                        oneTapLauncher.launch(intentSenderRequest)
+//                    }
+//                    .addOnFailureListener { e ->
+//                        errorMessage = "No Google account found. Please sign up first or use email and password to sign in."
+//                        showErrorDialog = true
+//                    }
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth(0.9f)
+//                .height(50.dp),
+//        ) {
+//            Row(verticalAlignment = Alignment.CenterVertically) {
+//                Image(
+//                    painter = painterResource(id = R.drawable.google),
+//                    contentDescription = "Google Icon",
+//                    modifier = Modifier.size(24.dp)
+//                )
+//                Spacer(modifier = Modifier.width(8.dp))
+//                Text("Sign in with Google")
+//            }
+//        }
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        Text(
+//            text = "Don't have an account? Sign Up",
+//            fontSize = 14.sp,
+//            color = MaterialTheme.colorScheme.primary,
+//            modifier = Modifier.clickable { navController.navigate("sign-up") }
+//        )
+//    }
+//
+//    Log.d("SignInScreen", "Sign in screen displayed")
+//}
+
+
+
+//@Composable
+//fun SignInScreen(
+//    navController: NavHostController,
+//    googleSignInClient: GoogleSignInClient?, // Can be null if not used
+//    launcher: ActivityResultLauncher<Intent>
+//) {
+//    val context = LocalContext.current
+//    val activity = context as Activity
+//    val email = remember { mutableStateOf("") }
+//    val password = remember { mutableStateOf("") }
+//    val emailErrorState = remember { mutableStateOf(false) }
+//    val passwordErrorState = remember { mutableStateOf(false) }
+//    var passwordVisible by remember { mutableStateOf(false) }
+//    var showErrorDialog by remember { mutableStateOf(false) }
+//    var errorMessage by remember { mutableStateOf("") }
+//
+//    // State for showing the account selection dialog
+//    var showAccountDialog by remember { mutableStateOf(false) }
+//    var existingUserEmail by remember { mutableStateOf<String?>(null) }
+//
+//    // ---------------- One Tap launcher ----------------
+//    val oneTapLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.StartIntentSenderForResult()
+//    ) { result ->
+//        if (result.resultCode == Activity.RESULT_OK) {
+//            try {
+//                val credential: SignInCredential =
+//                    Identity.getSignInClient(context).getSignInCredentialFromIntent(result.data)
+//                val idToken = credential.googleIdToken
+//                if (!idToken.isNullOrEmpty()) {
+//                    val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+//                    FirebaseAuth.getInstance().signInWithCredential(firebaseCredential)
+//                        .addOnCompleteListener { task ->
+//                            if (task.isSuccessful) {
+//                                navController.navigate("home") {
+//                                    popUpTo("sign-in") { inclusive = true }
+//                                }
+//                            } else {
+//                                errorMessage = "You are not a valid user. Please sign up first."
+//                                showErrorDialog = true
+//                            }
+//                        }
+//                }
+//            } catch (e: Exception) {
+//                errorMessage = "You are not a valid user. Please sign up first."
+//                showErrorDialog = true
+//            }
+//        }
+//    }
+//
+//    // Error Dialog for Invalid Credentials
+//    if (showErrorDialog) {
+//        AlertDialog(
+//            onDismissRequest = { showErrorDialog = false },
+//            icon = {
+//                Icon(
+//                    Icons.Default.Info,
+//                    contentDescription = "Info",
+//                    tint = Color.Blue
+//                )
+//            },
+//            title = {
+//                Text(text = "Sign In Failed")
+//            },
+//            text = {
+//                Text(text = errorMessage)
+//            },
+//            confirmButton = {
+//                TextButton(onClick = { showErrorDialog = false }) {
+//                    Text("OK")
+//                }
+//            }
+//        )
+//    }
+//
+//    // Account selection dialog
+//    if (showAccountDialog && existingUserEmail != null) {
+//        androidx.compose.material3.AlertDialog(
+//            onDismissRequest = { showAccountDialog = false },
+//            title = {
+//                Text(
+//                    text = "Choose verified account",
+//                    style = MaterialTheme.typography.titleLarge
+//                )
+//            },
+//            text = {
+//                Column(
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    TextButton(
+//                        onClick = {
+//                            showAccountDialog = false
+//                            navController.navigate("home") {
+//                                popUpTo("sign-in") { inclusive = true }
+//                            }
+//                        },
+//                        modifier = Modifier.fillMaxWidth()
+//                    ) {
+//                        Text(
+//                            text = existingUserEmail!!,
+//                            modifier = Modifier.fillMaxWidth(),
+//                            textAlign = TextAlign.Start,
+//                            style = MaterialTheme.typography.bodyLarge
+//                        )
+//                    }
+//                }
+//            },
+//            confirmButton = {},
+//            dismissButton = {
+//                TextButton(onClick = { showAccountDialog = false }) {
+//                    Text("Cancel")
+//                }
+//            }
+//        )
+//    }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(top = 16.dp),
+//        verticalArrangement = Arrangement.Top,
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        Box(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(start = 16.dp),
+//            contentAlignment = Alignment.TopStart
+//        ) {
+//            IconButton(onClick = { navController.navigate("welcome") }) {
+//                Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
+//            }
+//        }
+//
+//        Spacer(modifier = Modifier.height(50.dp))
+//
+//        Text(
+//            text = "Sign In",
+//            style = MaterialTheme.typography.headlineMedium
+//        )
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        OutlinedTextField(
+//            value = email.value,
+//            onValueChange = {
+//                email.value = it
+//                if (emailErrorState.value) emailErrorState.value = false
+//            },
+//            isError = emailErrorState.value,
+//            label = { Text("Email") },
+//            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+//            modifier = Modifier.fillMaxWidth(0.9f)
+//        )
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        OutlinedTextField(
+//            value = password.value,
+//            onValueChange = {
+//                password.value = it
+//                if (passwordErrorState.value) passwordErrorState.value = false
+//            },
+//            isError = passwordErrorState.value,
+//            label = { Text("Password") },
+//            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
+//            trailingIcon = {
+//                val icon =
+//                    if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+//                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+//                    Icon(imageVector = icon, contentDescription = "Toggle Password")
+//                }
+//            },
+//            singleLine = true,
+//            visualTransformation =
+//                if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+//            modifier = Modifier.fillMaxWidth(0.9f)
+//        )
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        Text(
+//            text = "Forgot Password?",
+//            fontSize = 14.sp,
+//            color = MaterialTheme.colorScheme.primary,
+//            textAlign = TextAlign.End,
+//            modifier = Modifier
+//                .fillMaxWidth(0.9f)
+//                .padding(top = 8.dp)
+//                .clickable { navController.navigate("reset-password") }
+//        )
+//
+//        Spacer(modifier = Modifier.height(20.dp))
+//
+//        Button(
+//            onClick = {
+//                // Validate fields before attempting sign in
+//                if (email.value.isBlank() || password.value.isBlank()) {
+//                    emailErrorState.value = email.value.isBlank()
+//                    passwordErrorState.value = password.value.isBlank()
+//                    errorMessage = "Please enter both email and password"
+//                    showErrorDialog = true
+//                    return@Button
+//                }
+//
+//                // Perform sign in with custom error handling
+//                FirebaseAuth.getInstance().signInWithEmailAndPassword(email.value, password.value)
+//                    .addOnCompleteListener { task ->
+//                        if (task.isSuccessful) {
+//                            navController.navigate("home") {
+//                                popUpTo("sign-in") { inclusive = true }
+//                            }
+//                        } else {
+//                            emailErrorState.value = true
+//                            passwordErrorState.value = true
+//                            errorMessage = when (task.exception) {
+//                                is com.google.firebase.auth.FirebaseAuthInvalidUserException ->
+//                                    "No account found with this email address"
+//                                is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ->
+//                                    "Invalid email or password. Please try again."
+//                                else -> task.exception?.localizedMessage ?: "Invalid credentials. Please check your email and password."
+//                            }
+//                            showErrorDialog = true
+//                        }
+//                    }
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth(0.9f)
+//                .height(50.dp),
+//            colors = ButtonDefaults.buttonColors(
+//                containerColor = colorResource(id = R.color.purple_500),
+//                contentColor = Color.White
+//            )
+//        ) {
+//            Text("Sign In")
+//        }
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//        Text("OR")
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        OutlinedButton(
+//            onClick = {
+//                // ----------- SAFE Google Sign-In -----------
+//                val existingUser = FirebaseAuth.getInstance().currentUser
+//                val userEmail = existingUser?.email
+//
+//                if (!userEmail.isNullOrEmpty()) {
+//                    // Show Compose dialog instead of traditional AlertDialog
+//                    existingUserEmail = userEmail
+//                    showAccountDialog = true
+//                    return@OutlinedButton
+//                }
+//
+//                // Launch Google One Tap
+//                val oneTapClient = Identity.getSignInClient(activity)
+//                val signInRequest = BeginSignInRequest.builder()
+//                    .setGoogleIdTokenRequestOptions(
+//                        BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
+//                            .setSupported(true)
+//                            .setServerClientId(activity.getString(R.string.default_web_client_id))
+//                            .setFilterByAuthorizedAccounts(false)
+//                            .build()
+//                    )
+//                    .setAutoSelectEnabled(true)
+//                    .build()
+//
+//                oneTapClient.beginSignIn(signInRequest)
+//                    .addOnSuccessListener { result ->
+//                        val intentSenderRequest =
+//                            IntentSenderRequest.Builder(result.pendingIntent.intentSender).build()
+//                        oneTapLauncher.launch(intentSenderRequest)
+//                    }
+//                    .addOnFailureListener { e ->
+//                        errorMessage = "No Google account found. Please sign up first or use email and password to sign in."
+//                        showErrorDialog = true
+//                    }
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth(0.9f)
+//                .height(50.dp),
+//        ) {
+//            Row(verticalAlignment = Alignment.CenterVertically) {
+//                Image(
+//                    painter = painterResource(id = R.drawable.google),
+//                    contentDescription = "Google Icon",
+//                    modifier = Modifier.size(24.dp)
+//                )
+//                Spacer(modifier = Modifier.width(8.dp))
+//                Text("Sign in with Google")
+//            }
+//        }
+//
+//        Spacer(modifier = Modifier.height(12.dp))
+//
+//        Text(
+//            text = "Don't have an account? Sign Up",
+//            fontSize = 14.sp,
+//            color = MaterialTheme.colorScheme.primary,
+//            modifier = Modifier.clickable { navController.navigate("sign-up") }
+//        )
+//    }
+//
+//    Log.d("SignInScreen", "Sign in screen displayed")
+//}
+
+
 @Composable
 fun SignInScreen(
     navController: NavHostController,
@@ -293,6 +1891,8 @@ fun SignInScreen(
     val emailErrorState = remember { mutableStateOf(false) }
     val passwordErrorState = remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
     // State for showing the account selection dialog
     var showAccountDialog by remember { mutableStateOf(false) }
@@ -316,18 +1916,41 @@ fun SignInScreen(
                                     popUpTo("sign-in") { inclusive = true }
                                 }
                             } else {
-                                Toast.makeText(
-                                    context,
-                                    task.exception?.localizedMessage ?: "Sign-In failed",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                errorMessage = "You are not a valid user. Please sign up first."
+                                showErrorDialog = true
                             }
                         }
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "One Tap error: ${e.message}", Toast.LENGTH_SHORT).show()
+                errorMessage = "You are not a valid user. Please sign up first."
+                showErrorDialog = true
             }
         }
+    }
+
+    // Error Dialog for Invalid Credentials
+    if (showErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            icon = {
+                Icon(
+                    Icons.Default.Info,
+                    contentDescription = "Info",
+                    tint = Color.Blue
+                )
+            },
+            title = {
+                Text(text = "Sign In Failed")
+            },
+            text = {
+                Text(text = errorMessage)
+            },
+            confirmButton = {
+                TextButton(onClick = { showErrorDialog = false }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 
     // Account selection dialog
@@ -402,11 +2025,15 @@ fun SignInScreen(
 
         OutlinedTextField(
             value = email.value,
-            onValueChange = { email.value = it },
+            onValueChange = {
+                email.value = it
+                if (emailErrorState.value) emailErrorState.value = false
+            },
             isError = emailErrorState.value,
             label = { Text("Email") },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier.fillMaxWidth(0.9f)
         )
 
@@ -414,7 +2041,10 @@ fun SignInScreen(
 
         OutlinedTextField(
             value = password.value,
-            onValueChange = { password.value = it },
+            onValueChange = {
+                password.value = it
+                if (passwordErrorState.value) passwordErrorState.value = false
+            },
             isError = passwordErrorState.value,
             label = { Text("Password") },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
@@ -428,6 +2058,7 @@ fun SignInScreen(
             singleLine = true,
             visualTransformation =
                 if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier.fillMaxWidth(0.9f)
         )
 
@@ -448,14 +2079,35 @@ fun SignInScreen(
 
         Button(
             onClick = {
-                performSignIn(
-                    email.value,
-                    password.value,
-                    emailErrorState,
-                    passwordErrorState,
-                    context,
-                    navController
-                )
+                // Validate fields before attempting sign in
+                if (email.value.isBlank() || password.value.isBlank()) {
+                    emailErrorState.value = email.value.isBlank()
+                    passwordErrorState.value = password.value.isBlank()
+                    errorMessage = "Please enter both email and password"
+                    showErrorDialog = true
+                    return@Button
+                }
+
+                // Perform sign in with custom error handling
+                FirebaseAuth.getInstance().signInWithEmailAndPassword(email.value, password.value)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            navController.navigate("home") {
+                                popUpTo("sign-in") { inclusive = true }
+                            }
+                        } else {
+                            emailErrorState.value = true
+                            passwordErrorState.value = true
+                            errorMessage = when (task.exception) {
+                                is com.google.firebase.auth.FirebaseAuthInvalidUserException ->
+                                    "No account found with this email address"
+                                is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ->
+                                    "Invalid email or password. Please try again."
+                                else -> task.exception?.localizedMessage ?: "Invalid credentials. Please check your email and password."
+                            }
+                            showErrorDialog = true
+                        }
+                    }
             },
             modifier = Modifier
                 .fillMaxWidth(0.9f)
@@ -505,11 +2157,8 @@ fun SignInScreen(
                         oneTapLauncher.launch(intentSenderRequest)
                     }
                     .addOnFailureListener { e ->
-                        Toast.makeText(
-                            context,
-                            "Google Sign-In failed: ${e.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        errorMessage = "No Google account found. Please sign up first or use email and password to sign in."
+                        showErrorDialog = true
                     }
             },
             modifier = Modifier
