@@ -35,11 +35,13 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -496,9 +498,15 @@ fun EmergencyContactScreen(navController: NavHostController) {
             onClick = { showDialog = true },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(16.dp)
+                .padding(16.dp),
+            containerColor = colorResource(id = R.color.purple_500),
+            contentColor = Color.White
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Add Emergency Contact")
+            Text(
+                text = "Add",
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
         }
 
         if (showDialog) {

@@ -10,7 +10,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,8 +28,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -35,795 +39,8 @@ import com.unh.personal_health_buddy.Authentication.FirestoreHelper
 import com.unh.personal_health_buddy.database.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.net.URL
-
-
-//@Composable
-//fun AccountScreen(navController: NavHostController) {
-//    val scrollState = rememberScrollState()
-//    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
-//
-//    var user by remember { mutableStateOf<User?>(null) }
-//    var emergencyContacts by remember { mutableStateOf<List<EmergencyContact>>(emptyList()) }
-//    var healthInfo by remember { mutableStateOf<HealthInformation?>(null) }
-//    var isLoading by remember { mutableStateOf(true) }
-//
-//    LaunchedEffect(userId) {
-//        isLoading = true
-//        try {
-//            withContext(Dispatchers.IO) {
-//                user = FirestoreHelper.getUser(userId)
-//                emergencyContacts = FirestoreHelper.readAllEmergencyContacts()
-//                healthInfo = FirestoreHelper.getHealthInformation()
-//            }
-//        } catch (e: Exception) {
-//            Log.e("AccountScreen", "Error fetching data: ${e.message}")
-//        } finally {
-//            isLoading = false
-//        }
-//    }
-//
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .verticalScroll(scrollState)
-//            .padding(16.dp)
-//    ) {
-//        // Top section: profile pic and first name
-//        AccountTopSection(navController = navController, user = user)
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        // Bottom section: personal info, emergency contacts, health info
-//        BottomSection(
-//            user = user,
-//            emergencyContacts = emergencyContacts,
-//            healthInfo = healthInfo,
-//            isLoading = isLoading
-//        )
-//    }
-//}
-//
-//
-//@Composable
-//fun BottomSection(
-//    user: User?,
-//    emergencyContacts: List<EmergencyContact>,
-//    healthInfo: HealthInformation?,
-//    isLoading: Boolean
-//) {
-//    Column(modifier = Modifier.fillMaxWidth()) {
-//        if (isLoading) {
-//            Text(
-//                "Loading...",
-//                modifier = Modifier.align(Alignment.CenterHorizontally),
-//                fontWeight = FontWeight.Medium
-//            )
-//        } else {
-//            // Personal Information
-//            user?.let { u ->
-//                Text("Personal Information", fontWeight = FontWeight.Bold)
-//                Divider()
-//                Text("Full Name: ${u.firstname} ${u.lastname}")
-//                Text("Date of Birth: ${u.dateOfBirth}")
-//                Text("Gender: ${u.gender}")
-//                Text("Email: ${u.email}")
-//                Text("Phone Number: ${u.phoneNumber}")
-//                Text("Home Address: ${u.homeAddress}")
-//                Text("City: ${u.city}")
-//                Spacer(modifier = Modifier.height(16.dp))
-//            }
-//
-//            // Emergency Contacts
-//            if (emergencyContacts.isNotEmpty()) {
-//                emergencyContacts.forEach { c ->
-//                    Text("Emergency Contact", fontWeight = FontWeight.Bold)
-//                    Divider()
-//                    Text("First Name: ${c.firstname}")
-//                    Text("Last Name: ${c.lastname}")
-//                    Text("Phone: ${c.phoneNumber}")
-//                    Text("Relation: ${c.relationship}")
-//                    Spacer(modifier = Modifier.height(16.dp))
-//                }
-//            } else {
-//                Text("No emergency contacts added.", fontStyle = FontStyle.Italic)
-//                Spacer(modifier = Modifier.height(16.dp))
-//            }
-//
-//            // Health Information
-//            healthInfo?.let { h ->
-//                Text("Health Information", fontWeight = FontWeight.Bold)
-//                Divider()
-//                Text("Blood Group: ${h.bloodGroup}")
-//                Text("Allergies: ${h.allergies}")
-//                Text("Medications: ${h.medication}")
-//                Spacer(modifier = Modifier.height(16.dp))
-//            } ?: run {
-//                Text("No health information added.", fontStyle = FontStyle.Italic)
-//                Spacer(modifier = Modifier.height(16.dp))
-//            }
-//        }
-//    }
-//}
-//
-//
-//
-//@Composable
-//fun AccountTopSection(navController: NavHostController, user: User?) {
-//    var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
-//    val firstName = user?.firstname ?: "User"  // Only the first name
-//
-//    LaunchedEffect(user?.profileImageUrl) {
-//        user?.profileImageUrl?.let { url ->
-//            try {
-//                withContext(Dispatchers.IO) {
-//                    val stream = URL(url).openStream()
-//                    profileBitmap = BitmapFactory.decodeStream(stream)
-//                }
-//            } catch (e: Exception) {
-//                Log.e("AccountTopSection", "Error loading image: ${e.message}")
-//            }
-//        }
-//    }
-//
-//    val imageBitmap = profileBitmap?.asImageBitmap()
-//
-//    Column(
-//        modifier = Modifier.fillMaxWidth(),
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        BackHeader(
-//            title = "Profile",
-//            onBack = { navController.navigate("profile") } // Navigate to profile screen
-//        )
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        if (imageBitmap != null) {
-//            Image(
-//                bitmap = imageBitmap,
-//                contentDescription = "Profile Picture",
-//                modifier = Modifier.size(140.dp).clip(CircleShape)
-//            )
-//        } else {
-//            Icon(
-//                imageVector = Icons.Default.AccountCircle,
-//                contentDescription = "Default Profile",
-//                modifier = Modifier.size(120.dp),
-//                tint = Color.Gray
-//            )
-//        }
-//
-//        Spacer(modifier = Modifier.height(8.dp))
-//        Text(text = firstName, fontWeight = FontWeight.SemiBold)
-//        Spacer(modifier = Modifier.height(8.dp))
-//    }
-//}
-
-
-
-// ============================================
-// GLOBAL STATE TO STORE TEMPORARY PROFILE IMAGE
-// ============================================
-//object TempProfileStorage {
-//    var tempProfileBitmap: Bitmap? = null
-//}
-//
-//@Composable
-//fun AccountScreen(navController: NavHostController) {
-//    val scrollState = rememberScrollState()
-//    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
-//
-//    var user by remember { mutableStateOf<User?>(null) }
-//    var emergencyContacts by remember { mutableStateOf<List<EmergencyContact>>(emptyList()) }
-//    var healthInfo by remember { mutableStateOf<HealthInformation?>(null) }
-//    var isLoading by remember { mutableStateOf(true) }
-//
-//    LaunchedEffect(userId) {
-//        isLoading = true
-//        try {
-//            withContext(Dispatchers.IO) {
-//                user = FirestoreHelper.getUser(userId)
-//                emergencyContacts = FirestoreHelper.readAllEmergencyContacts()
-//                healthInfo = FirestoreHelper.getHealthInformation()
-//            }
-//        } catch (e: Exception) {
-//            Log.e("AccountScreen", "Error fetching data: ${e.message}")
-//        } finally {
-//            isLoading = false
-//        }
-//    }
-//
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .verticalScroll(scrollState)
-//            .padding(16.dp)
-//    ) {
-//        // Top section: profile pic and first name
-//        AccountTopSection(navController = navController, user = user)
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        // Bottom section: personal info, emergency contacts, health info
-//        BottomSection(
-//            user = user,
-//            emergencyContacts = emergencyContacts,
-//            healthInfo = healthInfo,
-//            isLoading = isLoading
-//        )
-//    }
-//}
-//
-//@Composable
-//fun BottomSection(
-//    user: User?,
-//    emergencyContacts: List<EmergencyContact>,
-//    healthInfo: HealthInformation?,
-//    isLoading: Boolean
-//) {
-//    Column(modifier = Modifier.fillMaxWidth()) {
-//        if (isLoading) {
-//            Text(
-//                "Loading...",
-//                modifier = Modifier.align(Alignment.CenterHorizontally),
-//                fontWeight = FontWeight.Medium
-//            )
-//        } else {
-//            // Personal Information
-//            user?.let { u ->
-//                Text("Personal Information", fontWeight = FontWeight.Bold)
-//                Divider()
-//                Text("Full Name: ${u.firstname} ${u.lastname}")
-//                Text("Date of Birth: ${u.dateOfBirth}")
-//                Text("Gender: ${u.gender}")
-//                Text("Email: ${u.email}")
-//                Text("Phone Number: ${u.phoneNumber}")
-//                Text("Home Address: ${u.homeAddress}")
-//                Text("City: ${u.city}")
-//                Spacer(modifier = Modifier.height(16.dp))
-//            }
-//
-//            // Emergency Contacts
-//            if (emergencyContacts.isNotEmpty()) {
-//                emergencyContacts.forEach { c ->
-//                    Text("Emergency Contact", fontWeight = FontWeight.Bold)
-//                    Divider()
-//                    Text("First Name: ${c.firstname}")
-//                    Text("Last Name: ${c.lastname}")
-//                    Text("Phone: ${c.phoneNumber}")
-//                    Text("Relation: ${c.relationship}")
-//                    Spacer(modifier = Modifier.height(16.dp))
-//                }
-//            } else {
-//                Text("No emergency contacts added.", fontStyle = FontStyle.Italic)
-//                Spacer(modifier = Modifier.height(16.dp))
-//            }
-//
-//            // Health Information
-//            healthInfo?.let { h ->
-//                Text("Health Information", fontWeight = FontWeight.Bold)
-//                Divider()
-//                Text("Blood Group: ${h.bloodGroup}")
-//                Text("Allergies: ${h.allergies}")
-//                Text("Medications: ${h.medication}")
-//                Spacer(modifier = Modifier.height(16.dp))
-//            } ?: run {
-//                Text("No health information added.", fontStyle = FontStyle.Italic)
-//                Spacer(modifier = Modifier.height(16.dp))
-//            }
-//        }
-//    }
-//}
-//
-//@Composable
-//fun AccountTopSection(navController: NavHostController, user: User?) {
-//    var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
-//    val firstName = user?.firstname ?: "User"
-//
-//    // UPDATED: Check temp storage first, then Firebase
-//    LaunchedEffect(user?.profileImageUrl, TempProfileStorage.tempProfileBitmap) {
-//        // Priority 1: Check temp storage first
-//        val tempBitmap = TempProfileStorage.tempProfileBitmap
-//        if (tempBitmap != null) {
-//            profileBitmap = tempBitmap
-//            Log.d("AccountTopSection", "Using temp storage image")
-//        } else {
-//            // Priority 2: Load from Firebase if no temp image
-//            user?.profileImageUrl?.let { url ->
-//                try {
-//                    withContext(Dispatchers.IO) {
-//                        val stream = URL(url).openStream()
-//                        profileBitmap = BitmapFactory.decodeStream(stream)
-//                        Log.d("AccountTopSection", "Loaded image from Firebase")
-//                    }
-//                } catch (e: Exception) {
-//                    Log.e("AccountTopSection", "Error loading image: ${e.message}")
-//                }
-//            }
-//        }
-//    }
-//
-//    val imageBitmap = profileBitmap?.asImageBitmap()
-//
-//    Column(
-//        modifier = Modifier.fillMaxWidth(),
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        BackHeader(
-//            title = "Profile",
-//            onBack = { navController.navigate("profile") }
-//        )
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        if (imageBitmap != null) {
-//            Image(
-//                bitmap = imageBitmap,
-//                contentDescription = "Profile Picture",
-//                modifier = Modifier
-//                    .size(140.dp)
-//                    .clip(CircleShape)
-//                    .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
-//                contentScale = ContentScale.Crop
-//            )
-//        } else {
-//            Icon(
-//                imageVector = Icons.Default.AccountCircle,
-//                contentDescription = "Default Profile",
-//                modifier = Modifier.size(120.dp),
-//                tint = Color.Gray
-//            )
-//        }
-//
-//        Spacer(modifier = Modifier.height(8.dp))
-//        Text(text = firstName, fontWeight = FontWeight.SemiBold)
-//        Spacer(modifier = Modifier.height(8.dp))
-//    }
-//}
-
-//
-//
-//@Composable
-//fun AccountScreen(navController: NavHostController) {
-//    val scrollState = rememberScrollState()
-//    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
-//
-//    var user by remember { mutableStateOf<User?>(null) }
-//    var emergencyContacts by remember { mutableStateOf<List<EmergencyContact>>(emptyList()) }
-//    var healthInfo by remember { mutableStateOf<HealthInformation?>(null) }
-//    var isLoading by remember { mutableStateOf(true) }
-//
-//    LaunchedEffect(userId) {
-//        isLoading = true
-//        try {
-//            withContext(Dispatchers.IO) {
-//                user = FirestoreHelper.getUser(userId)
-//                emergencyContacts = FirestoreHelper.readAllEmergencyContacts()
-//                healthInfo = FirestoreHelper.getHealthInformation()
-//            }
-//        } catch (e: Exception) {
-//            Log.e("AccountScreen", "Error fetching data: ${e.message}")
-//        } finally {
-//            isLoading = false
-//        }
-//    }
-//
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .verticalScroll(scrollState)
-//            .padding(16.dp)
-//    ) {
-//        // Top section: profile pic and first name
-//        AccountTopSection(navController = navController, user = user)
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        // Bottom section: personal info, emergency contacts, health info
-//        BottomSection(
-//            user = user,
-//            emergencyContacts = emergencyContacts,
-//            healthInfo = healthInfo,
-//            isLoading = isLoading
-//        )
-//    }
-//}
-//
-//@Composable
-//fun BottomSection(
-//    user: User?,
-//    emergencyContacts: List<EmergencyContact>,
-//    healthInfo: HealthInformation?,
-//    isLoading: Boolean
-//) {
-//    Column(modifier = Modifier.fillMaxWidth()) {
-//        if (isLoading) {
-//            Text(
-//                "Loading...",
-//                modifier = Modifier.align(Alignment.CenterHorizontally),
-//                fontWeight = FontWeight.Medium
-//            )
-//        } else {
-//            // Personal Information
-//            user?.let { u ->
-//                Text("Personal Information", fontWeight = FontWeight.Bold)
-//                Divider()
-//                Text("Full Name: ${u.firstname} ${u.lastname}")
-//                Text("Date of Birth: ${u.dateOfBirth}")
-//                Text("Gender: ${u.gender}")
-//                Text("Email: ${u.email}")
-//                Text("Phone Number: ${u.phoneNumber}")
-//                Text("Home Address: ${u.homeAddress}")
-//                Text("City: ${u.city}")
-//                Spacer(modifier = Modifier.height(16.dp))
-//            }
-//
-//            // Emergency Contacts - FIXED: Header outside loop
-//            if (emergencyContacts.isNotEmpty()) {
-//                Text("Emergency Contacts", fontWeight = FontWeight.Bold)
-//                Divider()
-//                Spacer(modifier = Modifier.height(8.dp))
-//
-//                emergencyContacts.forEach { c ->
-//                    Text("First Name: ${c.firstname}")
-//                    Text("Last Name: ${c.lastname}")
-//                    Text("Phone: ${c.phoneNumber}")
-//                    Text("Relation: ${c.relationship}")
-//                    Spacer(modifier = Modifier.height(12.dp))
-//                }
-//                Spacer(modifier = Modifier.height(4.dp))
-//            } else {
-//                Text("Emergency Contacts", fontWeight = FontWeight.Bold)
-//                Divider()
-//                Text("No emergency contacts added.", fontStyle = FontStyle.Italic)
-//                Spacer(modifier = Modifier.height(16.dp))
-//            }
-//
-//            // Health Information
-//            healthInfo?.let { h ->
-//                Text("Health Information", fontWeight = FontWeight.Bold)
-//                Divider()
-//                Text("Blood Group: ${h.bloodGroup}")
-//                Text("Allergies: ${h.allergies}")
-//                Text("Medications: ${h.medication}")
-//                Spacer(modifier = Modifier.height(16.dp))
-//            } ?: run {
-//                Text("Health Information", fontWeight = FontWeight.Bold)
-//                Divider()
-//                Text("No health information added.", fontStyle = FontStyle.Italic)
-//                Spacer(modifier = Modifier.height(16.dp))
-//            }
-//        }
-//    }
-//}
-//
-//@Composable
-//fun AccountTopSection(navController: NavHostController, user: User?) {
-//    var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
-//    val firstName = user?.firstname ?: "User"
-//
-//    // UPDATED: Check temp storage first, then Firebase
-//    LaunchedEffect(user?.profileImageUrl, TempProfileStorage.tempProfileBitmap) {
-//        // Priority 1: Check temp storage first
-//        val tempBitmap = TempProfileStorage.tempProfileBitmap
-//        if (tempBitmap != null) {
-//            profileBitmap = tempBitmap
-//            Log.d("AccountTopSection", "Using temp storage image")
-//        } else {
-//            // Priority 2: Load from Firebase if no temp image
-//            user?.profileImageUrl?.let { url ->
-//                try {
-//                    withContext(Dispatchers.IO) {
-//                        val stream = URL(url).openStream()
-//                        profileBitmap = BitmapFactory.decodeStream(stream)
-//                        Log.d("AccountTopSection", "Loaded image from Firebase")
-//                    }
-//                } catch (e: Exception) {
-//                    Log.e("AccountTopSection", "Error loading image: ${e.message}")
-//                }
-//            }
-//        }
-//    }
-//
-//    val imageBitmap = profileBitmap?.asImageBitmap()
-//
-//    Column(
-//        modifier = Modifier.fillMaxWidth(),
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        BackHeader(
-//            title = "Profile",
-//            onBack = { navController.navigate("profile") }
-//        )
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        if (imageBitmap != null) {
-//            Image(
-//                bitmap = imageBitmap,
-//                contentDescription = "Profile Picture",
-//                modifier = Modifier
-//                    .size(140.dp)
-//                    .clip(CircleShape)
-//                    .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
-//                contentScale = ContentScale.Crop
-//            )
-//        } else {
-//            Icon(
-//                imageVector = Icons.Default.AccountCircle,
-//                contentDescription = "Default Profile",
-//                modifier = Modifier.size(120.dp),
-//                tint = Color.Gray
-//            )
-//        }
-//
-//        Spacer(modifier = Modifier.height(8.dp))
-//        Text(text = firstName, fontWeight = FontWeight.SemiBold)
-//        Spacer(modifier = Modifier.height(8.dp))
-//    }
-//}
-
-
-
-
-//@Composable
-//fun AccountScreen(navController: NavHostController) {
-//    val scrollState = rememberScrollState()
-//    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
-//
-//    var user by remember { mutableStateOf<User?>(null) }
-//    var emergencyContacts by remember { mutableStateOf<List<EmergencyContact>>(emptyList()) }
-//    var healthInfo by remember { mutableStateOf<HealthInformation?>(null) }
-//    var isLoading by remember { mutableStateOf(true) }
-//
-//    LaunchedEffect(userId) {
-//        isLoading = true
-//        try {
-//            withContext(Dispatchers.IO) {
-//                user = FirestoreHelper.getUser(userId)
-//                emergencyContacts = FirestoreHelper.readAllEmergencyContacts()
-//                healthInfo = FirestoreHelper.getHealthInformation()
-//            }
-//        } catch (e: Exception) {
-//            Log.e("AccountScreen", "Error fetching data: ${e.message}")
-//        } finally {
-//            isLoading = false
-//        }
-//    }
-//
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .verticalScroll(scrollState)
-//            .padding(16.dp)
-//    ) {
-//        // Top section: profile pic and first name
-//        AccountTopSection(navController = navController, user = user)
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        // Bottom section: personal info, emergency contacts, health info
-//        BottomSection(
-//            user = user,
-//            emergencyContacts = emergencyContacts,
-//            healthInfo = healthInfo,
-//            isLoading = isLoading
-//        )
-//
-//        // Extra space at bottom for better scrolling experience
-//        Spacer(modifier = Modifier.height(32.dp))
-//    }
-//}
-//
-//@Composable
-//fun BottomSection(
-//    user: User?,
-//    emergencyContacts: List<EmergencyContact>,
-//    healthInfo: HealthInformation?,
-//    isLoading: Boolean
-//) {
-//    Column(modifier = Modifier.fillMaxWidth()) {
-//        if (isLoading) {
-//            Box(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(32.dp),
-//                contentAlignment = Alignment.Center
-//            ) {
-//                CircularProgressIndicator()
-//            }
-//        } else {
-//            // Personal Information Card
-//            user?.let { u ->
-//                Card(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-//                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
-//                ) {
-//                    Column(modifier = Modifier.padding(16.dp)) {
-//                        Text(
-//                            "Personal Information",
-//                            fontWeight = FontWeight.Bold,
-//                            style = MaterialTheme.typography.titleMedium,
-//                            color = MaterialTheme.colorScheme.primary
-//                        )
-//                        Divider(modifier = Modifier.padding(vertical = 8.dp))
-//                        InfoRow("Full Name", "${u.firstname} ${u.lastname}")
-//                        InfoRow("Date of Birth", u.dateOfBirth)
-//                        InfoRow("Gender", u.gender.toString())
-//                        InfoRow("Email", u.email)
-//                        InfoRow("Phone Number", u.phoneNumber)
-//                        InfoRow("Home Address", u.homeAddress)
-//                        InfoRow("City", u.city)
-//                    }
-//                }
-//                Spacer(modifier = Modifier.height(16.dp))
-//            }
-//
-//            // Emergency Contacts Card
-//            Card(
-//                modifier = Modifier.fillMaxWidth(),
-//                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-//                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
-//            ) {
-//                Column(modifier = Modifier.padding(16.dp)) {
-//                    Text(
-//                        "Emergency Contacts",
-//                        fontWeight = FontWeight.Bold,
-//                        style = MaterialTheme.typography.titleMedium,
-//                        color = MaterialTheme.colorScheme.primary
-//                    )
-//                    Divider(modifier = Modifier.padding(vertical = 8.dp))
-//
-//                    if (emergencyContacts.isNotEmpty()) {
-//                        emergencyContacts.forEachIndexed { index, c ->
-//                            if (index > 0) {
-//                                Spacer(modifier = Modifier.height(12.dp))
-//                                Divider(thickness = 0.5.dp, color = Color.LightGray)
-//                                Spacer(modifier = Modifier.height(12.dp))
-//                            }
-//                            InfoRow("First Name", c.firstname)
-//                            InfoRow("Last Name", c.lastname)
-//                            InfoRow("Phone", c.phoneNumber)
-//                            InfoRow("Relationship", c.relationship)
-//                        }
-//                    } else {
-//                        Text(
-//                            "No emergency contacts added.",
-//                            fontStyle = FontStyle.Italic,
-//                            color = Color.Gray
-//                        )
-//                    }
-//                }
-//            }
-//            Spacer(modifier = Modifier.height(16.dp))
-//
-//            // Health Information Card
-//            Card(
-//                modifier = Modifier.fillMaxWidth(),
-//                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-//                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
-//            ) {
-//                Column(modifier = Modifier.padding(16.dp)) {
-//                    Text(
-//                        "Health Information",
-//                        fontWeight = FontWeight.Bold,
-//                        style = MaterialTheme.typography.titleMedium,
-//                        color = MaterialTheme.colorScheme.primary
-//                    )
-//                    Divider(modifier = Modifier.padding(vertical = 8.dp))
-//
-//                    healthInfo?.let { h ->
-//                        InfoRow("Blood Group", h.bloodGroup)
-//                        InfoRow("Allergies", h.allergies)
-//                        InfoRow("Medications", h.medication)
-//                    } ?: run {
-//                        Text(
-//                            "No health information added.",
-//                            fontStyle = FontStyle.Italic,
-//                            color = Color.Gray
-//                        )
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-//
-//@Composable
-//fun InfoRow(label: String, value: String) {
-//    Row(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(vertical = 4.dp),
-//        horizontalArrangement = Arrangement.SpaceBetween
-//    ) {
-//        Text(
-//            text = label,
-//            fontWeight = FontWeight.Medium,
-//            color = Color.DarkGray,
-//            modifier = Modifier.weight(0.4f)
-//        )
-//        Text(
-//            text = value,
-//            fontWeight = FontWeight.Normal,
-//            modifier = Modifier.weight(0.6f)
-//        )
-//    }
-//}
-//
-//@Composable
-//fun AccountTopSection(navController: NavHostController, user: User?) {
-//    var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
-//    val firstName = user?.firstname ?: "User"
-//
-//    // UPDATED: Check temp storage first, then Firebase
-//    LaunchedEffect(user?.profileImageUrl, TempProfileStorage.tempProfileBitmap) {
-//        // Priority 1: Check temp storage first
-//        val tempBitmap = TempProfileStorage.tempProfileBitmap
-//        if (tempBitmap != null) {
-//            profileBitmap = tempBitmap
-//            Log.d("AccountTopSection", "Using temp storage image")
-//        } else {
-//            // Priority 2: Load from Firebase if no temp image
-//            user?.profileImageUrl?.let { url ->
-//                try {
-//                    withContext(Dispatchers.IO) {
-//                        val stream = URL(url).openStream()
-//                        profileBitmap = BitmapFactory.decodeStream(stream)
-//                        Log.d("AccountTopSection", "Loaded image from Firebase")
-//                    }
-//                } catch (e: Exception) {
-//                    Log.e("AccountTopSection", "Error loading image: ${e.message}")
-//                }
-//            }
-//        }
-//    }
-//
-//    val imageBitmap = profileBitmap?.asImageBitmap()
-//
-//    Column(
-//        modifier = Modifier.fillMaxWidth(),
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        BackHeader(
-//            title = "Profile",
-//            onBack = { navController.navigate("profile") }
-//        )
-//
-//        Spacer(modifier = Modifier.height(16.dp))
-//
-//        if (imageBitmap != null) {
-//            Image(
-//                bitmap = imageBitmap,
-//                contentDescription = "Profile Picture",
-//                modifier = Modifier
-//                    .size(140.dp)
-//                    .clip(CircleShape)
-//                    .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
-//                contentScale = ContentScale.Crop
-//            )
-//        } else {
-//            Icon(
-//                imageVector = Icons.Default.AccountCircle,
-//                contentDescription = "Default Profile",
-//                modifier = Modifier.size(120.dp),
-//                tint = Color.Gray
-//            )
-//        }
-//
-//        Spacer(modifier = Modifier.height(8.dp))
-//        Text(text = firstName, fontWeight = FontWeight.SemiBold)
-//        Spacer(modifier = Modifier.height(8.dp))
-//    }
-//}
-
-
 
 @Composable
 fun AccountScreen(navController: NavHostController) {
@@ -842,6 +59,9 @@ fun AccountScreen(navController: NavHostController) {
     var passwordInput by remember { mutableStateOf("") }
     var isDeleting by remember { mutableStateOf(false) }
     var deleteError by remember { mutableStateOf<String?>(null) }
+
+    // Dropdown menu state
+    var expandedDropdown by remember { mutableStateOf(false) }
 
     LaunchedEffect(userId) {
         isLoading = true
@@ -951,17 +171,30 @@ fun AccountScreen(navController: NavHostController) {
                     onClick = {
                         if (passwordInput.isNotBlank() && !isDeleting) {
                             isDeleting = true
-                            val email = user?.email ?: ""
+                            val email = user?.email ?: FirebaseAuth.getInstance().currentUser?.email ?: ""
 
                             CoroutineScope(Dispatchers.IO).launch {
                                 try {
-                                    val success = FirestoreHelper.deleteUserAccountWithReauth(
-                                        email = email,
-                                        password = passwordInput
-                                    )
+                                    // Get current user
+                                    val currentUser = FirebaseAuth.getInstance().currentUser
 
-                                    withContext(Dispatchers.Main) {
-                                        if (success) {
+                                    if (currentUser != null) {
+                                        // Re-authenticate
+                                        val credential = EmailAuthProvider.getCredential(email, passwordInput)
+                                        currentUser.reauthenticate(credential).await()
+
+                                        // Delete all user data (ignore errors if collections don't exist)
+                                        try {
+                                            FirestoreHelper.deleteAllUserData(currentUser.uid)
+                                        } catch (e: Exception) {
+                                            Log.e("AccountScreen", "Error deleting data: ${e.message}")
+                                            // Continue with account deletion even if data deletion fails
+                                        }
+
+                                        // Delete Firebase Auth account
+                                        currentUser.delete().await()
+
+                                        withContext(Dispatchers.Main) {
                                             Toast.makeText(
                                                 context,
                                                 "Account deleted successfully",
@@ -975,17 +208,19 @@ fun AccountScreen(navController: NavHostController) {
                                             navController.navigate("welcome") {
                                                 popUpTo(0) { inclusive = true }
                                             }
-                                        } else {
-                                            deleteError = "Failed to delete account. Please try again."
+                                        }
+                                    } else {
+                                        withContext(Dispatchers.Main) {
+                                            deleteError = "No user found. Please try again."
                                             isDeleting = false
                                         }
                                     }
                                 } catch (e: Exception) {
                                     withContext(Dispatchers.Main) {
                                         deleteError = when {
-                                            e.message?.contains("password") == true ->
+                                            e.message?.contains("password", ignoreCase = true) == true ->
                                                 "Incorrect password. Please try again."
-                                            e.message?.contains("network") == true ->
+                                            e.message?.contains("network", ignoreCase = true) == true ->
                                                 "Network error. Please check your connection."
                                             else -> "Error: ${e.message}"
                                         }
@@ -1026,49 +261,84 @@ fun AccountScreen(navController: NavHostController) {
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp)
-    ) {
-        // Top section: profile pic and first name
-        AccountTopSection(navController = navController, user = user)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Bottom section: personal info, emergency contacts, health info
-        BottomSection(
-            user = user,
-            emergencyContacts = emergencyContacts,
-            healthInfo = healthInfo,
-            isLoading = isLoading
-        )
-
-        // Delete Account Button
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = { showDeleteDialog = true },
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Red,
-                contentColor = Color.White
-            ),
-            enabled = !isLoading
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(16.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = "Delete Account",
-                modifier = Modifier.size(20.dp)
+            // Top section: profile pic and first name
+            AccountTopSection(
+                navController = navController,
+                user = user,
+                onOptionsClick = { expandedDropdown = true }
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Delete Account")
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Bottom section: personal info, emergency contacts, health info
+            BottomSection(
+                user = user,
+                emergencyContacts = emergencyContacts,
+                healthInfo = healthInfo,
+                isLoading = isLoading
+            )
+
+            // Extra space at bottom for better scrolling experience
+            Spacer(modifier = Modifier.height(32.dp))
         }
 
-        // Extra space at bottom for better scrolling experience
-        Spacer(modifier = Modifier.height(32.dp))
+        // Options Dropdown Menu (positioned at top right)
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 16.dp, end = 16.dp)
+        ) {
+            DropdownMenu(
+                expanded = expandedDropdown,
+                onDismissRequest = { expandedDropdown = false }
+            ) {
+                DropdownMenuItem(
+                    text = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit Account",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text("Edit Account")
+                        }
+                    },
+                    onClick = {
+                        expandedDropdown = false
+                        navController.navigate("account-form")
+                    }
+                )
+                Divider()
+                DropdownMenuItem(
+                    text = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete",
+                                tint = Color.Red
+                            )
+                            Text("Delete Account", color = Color.Red)
+                        }
+                    },
+                    onClick = {
+                        expandedDropdown = false
+                        showDeleteDialog = true
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -1210,7 +480,11 @@ fun InfoRow(label: String, value: String) {
 }
 
 @Composable
-fun AccountTopSection(navController: NavHostController, user: User?) {
+fun AccountTopSection(
+    navController: NavHostController,
+    user: User?,
+    onOptionsClick: () -> Unit
+) {
     var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
     val firstName = user?.firstname ?: "User"
 
@@ -1239,41 +513,68 @@ fun AccountTopSection(navController: NavHostController, user: User?) {
 
     val imageBitmap = profileBitmap?.asImageBitmap()
 
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
 
-        BackHeader(
-            title = "Profile",
-            onBack = { navController.navigate("profile") }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (imageBitmap != null) {
-            Image(
-                bitmap = imageBitmap,
-                contentDescription = "Profile Picture",
-                modifier = Modifier
-                    .size(140.dp)
-                    .clip(CircleShape)
-                    .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
-                contentScale = ContentScale.Crop
+            BackHeader(
+                title = "Profile",
+                onBack = { navController.navigate("profile") }
             )
-        } else {
-            Icon(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = "Default Profile",
-                modifier = Modifier.size(120.dp),
-                tint = Color.Gray
-            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (imageBitmap != null) {
+                Image(
+                    bitmap = imageBitmap,
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .size(140.dp)
+                        .clip(CircleShape)
+                        .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = "Default Profile",
+                    modifier = Modifier.size(120.dp),
+                    tint = Color.Gray
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = firstName, fontWeight = FontWeight.SemiBold)
+            Spacer(modifier = Modifier.height(8.dp))
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = firstName, fontWeight = FontWeight.SemiBold)
-        Spacer(modifier = Modifier.height(8.dp))
+        // Options button positioned at top right
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 8.dp, end = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            IconButton(
+                onClick = onOptionsClick,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = "Options Menu",
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+            Text(
+                text = "Options",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.Gray,
+                fontSize = 10.sp
+            )
+        }
     }
 }
 
