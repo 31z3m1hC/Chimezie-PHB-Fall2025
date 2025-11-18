@@ -624,7 +624,6 @@ fun EmergencyContactCard(
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEmergencyContactDialog(
@@ -639,6 +638,11 @@ fun AddEmergencyContactDialog(
     var isSaving by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
+    // Error states
+    var firstnameError by remember { mutableStateOf(false) }
+    var lastnameError by remember { mutableStateOf(false) }
+    var phoneError by remember { mutableStateOf(false) }
+
     // Create FocusRequesters for each field
     val firstnameFocus = remember { FocusRequester() }
     val lastnameFocus = remember { FocusRequester() }
@@ -646,6 +650,15 @@ fun AddEmergencyContactDialog(
     val relationshipFocus = remember { FocusRequester() }
 
     val relationships = listOf("Parent", "Sibling", "Friend", "Others")
+
+    // Validation functions
+    fun isValidName(name: String): Boolean {
+        return name.isNotBlank() && name.all { it.isLetter() || it.isWhitespace() }
+    }
+
+    fun isValidPhone(phone: String): Boolean {
+        return phone.length <= 10 && phone.all { it.isDigit() }
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -671,7 +684,12 @@ fun AddEmergencyContactDialog(
                 // FIRST NAME
                 OutlinedTextField(
                     value = firstname,
-                    onValueChange = { firstname = it },
+                    onValueChange = {
+                        if (it.all { char -> char.isLetter() || char.isWhitespace() }) {
+                            firstname = it
+                            firstnameError = false
+                        }
+                    },
                     label = { Text("First Name") },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text,
@@ -681,6 +699,7 @@ fun AddEmergencyContactDialog(
                         onNext = { lastnameFocus.requestFocus() }
                     ),
                     singleLine = true,
+                    isError = firstnameError,
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(firstnameFocus)
@@ -696,13 +715,26 @@ fun AddEmergencyContactDialog(
                         RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
                     }
                 )
+                if (firstnameError) {
+                    Text(
+                        text = "First name must contain only letters",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // LAST NAME
                 OutlinedTextField(
                     value = lastname,
-                    onValueChange = { lastname = it },
+                    onValueChange = {
+                        if (it.all { char -> char.isLetter() || char.isWhitespace() }) {
+                            lastname = it
+                            lastnameError = false
+                        }
+                    },
                     label = { Text("Last Name") },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text,
@@ -712,6 +744,7 @@ fun AddEmergencyContactDialog(
                         onNext = { phoneFocus.requestFocus() }
                     ),
                     singleLine = true,
+                    isError = lastnameError,
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(lastnameFocus)
@@ -727,13 +760,26 @@ fun AddEmergencyContactDialog(
                         RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
                     }
                 )
+                if (lastnameError) {
+                    Text(
+                        text = "Last name must contain only letters",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // PHONE NUMBER
                 OutlinedTextField(
                     value = phoneNumber,
-                    onValueChange = { phoneNumber = it },
+                    onValueChange = {
+                        if (it.length <= 10 && it.all { char -> char.isDigit() }) {
+                            phoneNumber = it
+                            phoneError = false
+                        }
+                    },
                     label = { Text("Phone Number") },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Phone,
@@ -743,6 +789,7 @@ fun AddEmergencyContactDialog(
                         onNext = { relationshipFocus.requestFocus() }
                     ),
                     singleLine = true,
+                    isError = phoneError,
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(phoneFocus)
@@ -756,8 +803,22 @@ fun AddEmergencyContactDialog(
                         },
                     leadingIcon = {
                         RoundedIcon(Icons.Default.Phone, Color(0xFF87CEEB), Color(0xFFEF6C00))
+                    },
+                    supportingText = {
+                        Text(
+                            text = "${phoneNumber.length}/10",
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
                 )
+                if (phoneError) {
+                    Text(
+                        text = "Phone number must be 10 digits",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -833,9 +894,12 @@ fun AddEmergencyContactDialog(
                     // SAVE BUTTON
                     Button(
                         onClick = {
-                            if (firstname.isNotBlank() && lastname.isNotBlank() &&
-                                phoneNumber.isNotBlank() && relationship.isNotBlank()) {
+                            // Validate all fields
+                            firstnameError = !isValidName(firstname)
+                            lastnameError = !isValidName(lastname)
+                            phoneError = phoneNumber.length != 10
 
+                            if (!firstnameError && !lastnameError && !phoneError && relationship.isNotBlank()) {
                                 isSaving = true
                                 val newContact = EmergencyContact(
                                     contactId = "",
@@ -864,7 +928,7 @@ fun AddEmergencyContactDialog(
                         enabled = !isSaving &&
                                 firstname.isNotBlank() &&
                                 lastname.isNotBlank() &&
-                                phoneNumber.isNotBlank() &&
+                                phoneNumber.length == 10 &&
                                 relationship.isNotBlank(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = colorResource(id = R.color.purple_500),
@@ -892,7 +956,6 @@ fun AddEmergencyContactDialog(
         firstnameFocus.requestFocus()
     }
 }
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

@@ -9,7 +9,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageException
 import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.storageMetadata
 import com.unh.personal_health_buddy.database.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
@@ -1337,6 +1339,473 @@ import java.util.UUID
 //        }
 //    }
 //}
+//
+//object FirestoreHelper {
+//    @SuppressLint("StaticFieldLeak")
+//    private val db = Firebase.firestore
+//    private val auth = Firebase.auth
+//    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
+//    private val storageRef: StorageReference = storage.reference
+//
+//    fun getVerifiedUser(): Pair<String, String> {
+//        val user = FirebaseAuth.getInstance().currentUser
+//        requireNotNull(user?.uid) { "No authenticated user UID found." }
+//        requireNotNull(user.email) { "Authenticated user has no email." }
+//        return user.uid to user.email!!
+//    }
+//
+//    // Get current user ID
+//    private fun getCurrentUserId(): String {
+//        return auth.currentUser?.uid ?: throw Exception("No authenticated user")
+//    }
+//
+//    // ==================== EMERGENCY CONTACTS ====================
+//
+//    /**
+//     * Writes a new emergency contact to the user's emergencyContacts subcollection
+//     * Each contact is stored as a separate document in the subcollection
+//     */
+//    suspend fun writeEmergencyContact(contact: EmergencyContact) {
+//        return withContext(Dispatchers.IO) {
+//            val userId = getCurrentUserId()
+//            val contactRef = db.collection("users")
+//                .document(userId)
+//                .collection("emergencyContacts")
+//                .document() // Auto-generate document ID
+//
+//            val contactWithId = contact.copy(contactId = contactRef.id)
+//            contactRef.set(contactWithId).await()
+//
+//            Log.d("FirestoreHelper", "Emergency contact saved: ${contactRef.id}")
+//        }
+//    }
+//
+//    /**
+//     * Reads all emergency contacts for the current user
+//     * Returns a list of all contacts from the emergencyContacts subcollection
+//     */
+//    suspend fun readAllEmergencyContacts(): List<EmergencyContact> {
+//        return withContext(Dispatchers.IO) {
+//            val userId = getCurrentUserId()
+//            val snapshot = db.collection("users")
+//                .document(userId)
+//                .collection("emergencyContacts")
+//                .get()
+//                .await()
+//
+//            val contacts = snapshot.documents.mapNotNull { doc ->
+//                doc.toObject(EmergencyContact::class.java)
+//            }
+//
+//            Log.d("FirestoreHelper", "Found ${contacts.size} emergency contacts")
+//            contacts
+//        }
+//    }
+//
+//    /**
+//     * Deletes a specific emergency contact by ID
+//     */
+//    suspend fun deleteEmergencyContact(contactId: String) {
+//        return withContext(Dispatchers.IO) {
+//            val userId = getCurrentUserId()
+//            db.collection("users")
+//                .document(userId)
+//                .collection("emergencyContacts")
+//                .document(contactId)
+//                .delete()
+//                .await()
+//
+//            Log.d("FirestoreHelper", "Emergency contact deleted: $contactId")
+//        }
+//    }
+//
+//    /**
+//     * Updates an existing emergency contact
+//     */
+//    suspend fun updateEmergencyContact(contact: EmergencyContact) {
+//        return withContext(Dispatchers.IO) {
+//            val userId = getCurrentUserId()
+//            db.collection("users")
+//                .document(userId)
+//                .collection("emergencyContacts")
+//                .document(contact.contactId)
+//                .set(contact)
+//                .await()
+//
+//            Log.d("FirestoreHelper", "Emergency contact updated: ${contact.contactId}")
+//        }
+//    }
+//
+//    /**
+//     * Gets the first emergency contact (for backward compatibility)
+//     */
+//    suspend fun getEmergencyContact(): EmergencyContact? {
+//        return withContext(Dispatchers.IO) {
+//            try {
+//                val userId = getCurrentUserId()
+//                val snapshot = db.collection("users")
+//                    .document(userId)
+//                    .collection("emergencyContacts")
+//                    .limit(1)
+//                    .get()
+//                    .await()
+//                snapshot.documents.firstOrNull()?.toObject(EmergencyContact::class.java)
+//            } catch (e: Exception) {
+//                Log.e("FirestoreHelper", "Error getting emergency contact: ${e.message}")
+//                null
+//            }
+//        }
+//    }
+//
+//    // ==================== USER OPERATIONS ====================
+//
+//    suspend fun getUser(userId: String): User? {
+//        return withContext(Dispatchers.IO) {
+//            try {
+//                val snapshot = db.collection("users")
+//                    .document(userId)
+//                    .get()
+//                    .await()
+//                snapshot.toObject(User::class.java)
+//            } catch (e: Exception) {
+//                Log.e("FirestoreHelper", "Error getting user: ${e.message}")
+//                null
+//            }
+//        }
+//    }
+//
+//    /**
+//     * Writes user data with optional profile image
+//     * Uses current authenticated user - no UUID generation needed
+//     * Automatically handles old image deletion when new image is provided
+//     */
+//    suspend fun writeUser(user: User, bitmap: Bitmap?) {
+//        return withContext(Dispatchers.IO) {
+//            val userId = getCurrentUserId()
+//
+//            // Get existing user to check for old profile image
+//            val existingUser = getUser(userId)
+//            val oldImageUrl = existingUser?.profileImageUrl
+//
+//            // Upload new profile image if provided
+//            val profileImageUrl = if (bitmap != null) {
+//                // Delete old image and upload new one
+//                updateProfileImage(oldImageUrl, bitmap)
+//            } else {
+//                // Keep existing image URL if no new image provided
+//                oldImageUrl
+//            }
+//
+//            // Update user object with image URL
+//            val userWithImage = user.copy(profileImageUrl = profileImageUrl)
+//
+//            // Save to Firestore
+//            db.collection("users")
+//                .document(userId)
+//                .set(userWithImage)
+//                .await()
+//
+//            Log.d("FirestoreHelper", "User saved successfully with image URL: $profileImageUrl")
+//        }
+//    }
+//
+//    // ==================== HEALTH INFORMATION ====================
+//
+//    /**
+//     * Gets health information for current user
+//     * No need to pass userId - uses getCurrentUserId()
+//     */
+//    suspend fun getHealthInformation(): HealthInformation? {
+//        return withContext(Dispatchers.IO) {
+//            try {
+//                val userId = getCurrentUserId()
+//                val snapshot = db.collection("users")
+//                    .document(userId)
+//                    .collection("healthInformation")
+//                    .document("info")
+//                    .get()
+//                    .await()
+//                snapshot.toObject(HealthInformation::class.java)
+//            } catch (e: Exception) {
+//                Log.e("FirestoreHelper", "Error getting health info: ${e.message}")
+//                null
+//            }
+//        }
+//    }
+//
+//    suspend fun writeHealthInformation(healthInfo: HealthInformation) {
+//        return withContext(Dispatchers.IO) {
+//            val userId = getCurrentUserId()
+//            db.collection("users")
+//                .document(userId)
+//                .collection("healthInformation")
+//                .document("info")
+//                .set(healthInfo)
+//                .await()
+//        }
+//    }
+//
+//    // ==================== FIREBASE STORAGE OPERATIONS ====================
+//
+//    /**
+//     * Uploads profile image to Firebase Storage
+//     * Path: profile_images/{currentUserId}/{randomUUID}.jpg
+//     * Only generates UUID for the filename to prevent caching issues
+//     */
+//    private suspend fun uploadProfileImage(bitmap: Bitmap): String? {
+//        return try {
+//            val userId = getCurrentUserId()
+//
+//            // Use consistent path with UUID filename to avoid caching issues
+//            val imageRef = storageRef.child("profile_images/$userId/${UUID.randomUUID()}.jpg")
+//
+//            // Compress bitmap to JPEG format (85% quality for balance)
+//            val baos = ByteArrayOutputStream()
+//            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
+//            val imageData = baos.toByteArray()
+//
+//            // Upload the image
+//            imageRef.putBytes(imageData).await()
+//
+//            // Get the download URL
+//            val downloadUrl = imageRef.downloadUrl.await()
+//
+//            Log.d("FirestoreHelper", "Profile image uploaded: $downloadUrl")
+//            downloadUrl.toString()
+//
+//        } catch (e: Exception) {
+//            Log.e("FirestoreHelper", "Error uploading profile image: ${e.message}", e)
+//            null
+//        }
+//    }
+//
+//    /**
+//     * Deletes profile image from Firebase Storage
+//     */
+//    private suspend fun deleteProfileImage(imageUrl: String?): Boolean {
+//        if (imageUrl.isNullOrEmpty()) return false
+//
+//        return try {
+//            val imageRef = storage.getReferenceFromUrl(imageUrl)
+//            imageRef.delete().await()
+//            Log.d("FirestoreHelper", "Profile image deleted successfully")
+//            true
+//        } catch (e: Exception) {
+//            Log.e("FirestoreHelper", "Error deleting profile image: ${e.message}", e)
+//            false
+//        }
+//    }
+//
+//    /**
+//     * Updates profile image - deletes old and uploads new
+//     * Used internally by writeUser
+//     */
+//    private suspend fun updateProfileImage(oldImageUrl: String?, newBitmap: Bitmap): String? {
+//        // Delete old image if it exists
+//        if (!oldImageUrl.isNullOrEmpty()) {
+//            deleteProfileImage(oldImageUrl)
+//        }
+//
+//        // Upload new image
+//        return uploadProfileImage(newBitmap)
+//    }
+//
+//    /**
+//     * Deletes user's profile image and updates Firestore
+//     * Call this when user explicitly deletes their profile picture
+//     */
+//    suspend fun deleteUserProfileImage() {
+//        return withContext(Dispatchers.IO) {
+//            try {
+//                val userId = getCurrentUserId()
+//                val user = getUser(userId)
+//                val imageUrl = user?.profileImageUrl
+//
+//                if (imageUrl != null) {
+//                    // Delete from Storage
+//                    deleteProfileImage(imageUrl)
+//
+//                    // Update Firestore to remove image URL
+//                    val updatedUser = user.copy(profileImageUrl = null)
+//                    db.collection("users")
+//                        .document(userId)
+//                        .set(updatedUser)
+//                        .await()
+//
+//                    Log.d("FirestoreHelper", "User profile image deleted")
+//                }
+//            } catch (e: Exception) {
+//                Log.e("FirestoreHelper", "Error deleting user profile image: ${e.message}", e)
+//                throw e
+//            }
+//        }
+//    }
+//
+//    // Add these functions to your FirestoreHelper object
+//
+//    /**
+//     * Deletes all user data including subcollections and storage files
+//     * This is a complete cleanup of user data from Firebase
+//     */
+//    suspend fun deleteAllUserData(userId: String) {
+//        return withContext(Dispatchers.IO) {
+//            try {
+//                // 1. Delete all emergency contacts
+//                val emergencyContactsSnapshot = db.collection("users")
+//                    .document(userId)
+//                    .collection("emergencyContacts")
+//                    .get()
+//                    .await()
+//
+//                emergencyContactsSnapshot.documents.forEach { doc ->
+//                    doc.reference.delete().await()
+//                }
+//                Log.d("FirestoreHelper", "Deleted emergency contacts")
+//
+//                // 2. Delete health information
+//                db.collection("users")
+//                    .document(userId)
+//                    .collection("healthInformation")
+//                    .document("info")
+//                    .delete()
+//                    .await()
+//                Log.d("FirestoreHelper", "Deleted health information")
+//
+//                // 3. Delete profile image from storage
+//                val user = getUser(userId)
+//                user?.profileImageUrl?.let { imageUrl ->
+//                    deleteProfileImage(imageUrl)
+//                }
+//                Log.d("FirestoreHelper", "Deleted profile image")
+//
+//                // 4. Delete all files in user's storage folder
+//                try {
+//                    val userStorageRef = storageRef.child("profile_images/$userId")
+//                    val listResult = userStorageRef.listAll().await()
+//                    listResult.items.forEach { item ->
+//                        item.delete().await()
+//                    }
+//                    Log.d("FirestoreHelper", "Deleted all storage files")
+//                } catch (e: Exception) {
+//                    Log.e("FirestoreHelper", "Error deleting storage files: ${e.message}")
+//                }
+//
+//                // 5. Finally, delete the user document
+//                db.collection("users")
+//                    .document(userId)
+//                    .delete()
+//                    .await()
+//                Log.d("FirestoreHelper", "Deleted user document")
+//
+//            } catch (e: Exception) {
+//                Log.e("FirestoreHelper", "Error deleting user data: ${e.message}", e)
+//                throw e
+//            }
+//        }
+//    }
+//
+//    /**
+//     * Sends account deletion confirmation email and deletes user account
+//     * This function:
+//     * 1. Sends a verification email to the user
+//     * 2. Waits for user to verify
+//     * 3. Deletes all Firestore data
+//     * 4. Deletes the Firebase Auth account
+//     */
+//    suspend fun deleteUserAccount(): Boolean {
+//        return withContext(Dispatchers.IO) {
+//            try {
+//                val user = auth.currentUser ?: throw Exception("No authenticated user")
+//                val userId = user.uid
+//
+//                // Send verification email before deletion
+//                user.sendEmailVerification().await()
+//                Log.d("FirestoreHelper", "Verification email sent")
+//
+//                // Note: In a real-world scenario, you'd want to wait for email verification
+//                // For now, we'll proceed with deletion after a delay
+//                // In production, implement a cloud function that triggers on email verification
+//
+//                // Delete all Firestore data
+//                deleteAllUserData(userId)
+//
+//                // Delete Firebase Auth account
+//                user.delete().await()
+//                Log.d("FirestoreHelper", "User account deleted from Firebase Auth")
+//
+//                true
+//            } catch (e: Exception) {
+//                Log.e("FirestoreHelper", "Error deleting user account: ${e.message}", e)
+//                false
+//            }
+//        }
+//    }
+//
+//    /**
+//     * Initiates account deletion process with re-authentication
+//     * Firebase requires recent authentication before account deletion
+//     */
+////    suspend fun deleteUserAccountWithReauth(email: String, password: String): Boolean {
+////        return withContext(Dispatchers.IO) {
+////            try {
+////                val user = auth.currentUser ?: throw Exception("No authenticated user")
+////
+////                // Re-authenticate user before deletion (Firebase security requirement)
+////                val credential = EmailAuthProvider.getCredential(email, password)
+////                user.reauthenticate(credential).await()
+////                Log.d("FirestoreHelper", "User re-authenticated successfully")
+////
+////                // Now delete the account
+////                val userId = user.uid
+////                deleteAllUserData(userId)
+////                user.delete().await()
+////
+////                Log.d("FirestoreHelper", "User account deleted successfully")
+////                true
+////            } catch (e: Exception) {
+////                Log.e("FirestoreHelper", "Error deleting account with reauth: ${e.message}", e)
+////                false
+////            }
+////        }
+////    }
+//
+//
+//    suspend fun deleteUserAccountWithReauth(email: String, password: String): Boolean {
+//        return withContext(Dispatchers.IO) {
+//            try {
+//                val user = auth.currentUser ?: throw Exception("No authenticated user")
+//
+//                // Re-authenticate
+//                val credential = EmailAuthProvider.getCredential(email, password)
+//                user.reauthenticate(credential).await()
+//
+//                // Send notification email BEFORE deletion
+//                sendSimpleEmail(
+//                    toEmail = email,
+//                    subject = "Account Deleted",
+//                    body = "Your account has been successfully deleted. We're sorry to see you go!"
+//                )
+//
+//                // Delete account
+//                val userId = user.uid
+//                deleteAllUserData(userId)
+//                user.delete().await()
+//
+//                true
+//            } catch (e: Exception) {
+//                Log.e("FirestoreHelper", "Error: ${e.message}", e)
+//                false
+//            }
+//        }
+//    }
+//    // Simple email sender (requires SMTP setup)
+//    private fun sendSimpleEmail(toEmail: String, subject: String, body: String) {
+//        // This is a simplified example - you'd need proper SMTP configuration
+//        // Most apps use a backend service for sending emails
+//    }
+//
+//
+//}
 
 object FirestoreHelper {
     @SuppressLint("StaticFieldLeak")
@@ -1359,17 +1828,13 @@ object FirestoreHelper {
 
     // ==================== EMERGENCY CONTACTS ====================
 
-    /**
-     * Writes a new emergency contact to the user's emergencyContacts subcollection
-     * Each contact is stored as a separate document in the subcollection
-     */
     suspend fun writeEmergencyContact(contact: EmergencyContact) {
         return withContext(Dispatchers.IO) {
             val userId = getCurrentUserId()
             val contactRef = db.collection("users")
                 .document(userId)
                 .collection("emergencyContacts")
-                .document() // Auto-generate document ID
+                .document()
 
             val contactWithId = contact.copy(contactId = contactRef.id)
             contactRef.set(contactWithId).await()
@@ -1378,10 +1843,6 @@ object FirestoreHelper {
         }
     }
 
-    /**
-     * Reads all emergency contacts for the current user
-     * Returns a list of all contacts from the emergencyContacts subcollection
-     */
     suspend fun readAllEmergencyContacts(): List<EmergencyContact> {
         return withContext(Dispatchers.IO) {
             val userId = getCurrentUserId()
@@ -1400,9 +1861,6 @@ object FirestoreHelper {
         }
     }
 
-    /**
-     * Deletes a specific emergency contact by ID
-     */
     suspend fun deleteEmergencyContact(contactId: String) {
         return withContext(Dispatchers.IO) {
             val userId = getCurrentUserId()
@@ -1417,9 +1875,6 @@ object FirestoreHelper {
         }
     }
 
-    /**
-     * Updates an existing emergency contact
-     */
     suspend fun updateEmergencyContact(contact: EmergencyContact) {
         return withContext(Dispatchers.IO) {
             val userId = getCurrentUserId()
@@ -1434,9 +1889,6 @@ object FirestoreHelper {
         }
     }
 
-    /**
-     * Gets the first emergency contact (for backward compatibility)
-     */
     suspend fun getEmergencyContact(): EmergencyContact? {
         return withContext(Dispatchers.IO) {
             try {
@@ -1472,11 +1924,6 @@ object FirestoreHelper {
         }
     }
 
-    /**
-     * Writes user data with optional profile image
-     * Uses current authenticated user - no UUID generation needed
-     * Automatically handles old image deletion when new image is provided
-     */
     suspend fun writeUser(user: User, bitmap: Bitmap?) {
         return withContext(Dispatchers.IO) {
             val userId = getCurrentUserId()
@@ -1487,10 +1934,8 @@ object FirestoreHelper {
 
             // Upload new profile image if provided
             val profileImageUrl = if (bitmap != null) {
-                // Delete old image and upload new one
                 updateProfileImage(oldImageUrl, bitmap)
             } else {
-                // Keep existing image URL if no new image provided
                 oldImageUrl
             }
 
@@ -1509,10 +1954,6 @@ object FirestoreHelper {
 
     // ==================== HEALTH INFORMATION ====================
 
-    /**
-     * Gets health information for current user
-     * No need to pass userId - uses getCurrentUserId()
-     */
     suspend fun getHealthInformation(): HealthInformation? {
         return withContext(Dispatchers.IO) {
             try {
@@ -1545,59 +1986,69 @@ object FirestoreHelper {
 
     // ==================== FIREBASE STORAGE OPERATIONS ====================
 
-    /**
-     * Uploads profile image to Firebase Storage
-     * Path: profile_images/{currentUserId}/{randomUUID}.jpg
-     * Only generates UUID for the filename to prevent caching issues
-     */
     private suspend fun uploadProfileImage(bitmap: Bitmap): String? {
-        return try {
-            val userId = getCurrentUserId()
+        return withContext(Dispatchers.IO) {
+            try {
+                val userId = getCurrentUserId()
+                val fileName = "${System.currentTimeMillis()}.jpg"
+                val imageRef = storageRef.child("profile_images/$userId/$fileName")
 
-            // Use consistent path with UUID filename to avoid caching issues
-            val imageRef = storageRef.child("profile_images/$userId/${UUID.randomUUID()}.jpg")
+                // Compress bitmap to JPEG format
+                val baos = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
+                val imageData = baos.toByteArray()
 
-            // Compress bitmap to JPEG format (85% quality for balance)
-            val baos = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, baos)
-            val imageData = baos.toByteArray()
+                // Upload with metadata
+                val metadata = storageMetadata {
+                    contentType = "image/jpeg"
+                }
 
-            // Upload the image
-            imageRef.putBytes(imageData).await()
+                // Upload the image with proper error handling
+                val uploadTask = imageRef.putBytes(imageData, metadata)
 
-            // Get the download URL
-            val downloadUrl = imageRef.downloadUrl.await()
+                uploadTask.await()
 
-            Log.d("FirestoreHelper", "Profile image uploaded: $downloadUrl")
-            downloadUrl.toString()
+                // Get the download URL
+                val downloadUrl = imageRef.downloadUrl.await()
 
-        } catch (e: Exception) {
-            Log.e("FirestoreHelper", "Error uploading profile image: ${e.message}", e)
-            null
+                Log.d("FirestoreHelper", "Profile image uploaded: $downloadUrl")
+                downloadUrl.toString()
+
+            } catch (e: StorageException) {
+                Log.e("FirestoreHelper", "Storage error: ${e.errorCode} - ${e.message}", e)
+                null
+            } catch (e: Exception) {
+                Log.e("FirestoreHelper", "Error uploading profile image: ${e.message}", e)
+                null
+            }
         }
     }
 
-    /**
-     * Deletes profile image from Firebase Storage
-     */
     private suspend fun deleteProfileImage(imageUrl: String?): Boolean {
         if (imageUrl.isNullOrEmpty()) return false
 
-        return try {
-            val imageRef = storage.getReferenceFromUrl(imageUrl)
-            imageRef.delete().await()
-            Log.d("FirestoreHelper", "Profile image deleted successfully")
-            true
-        } catch (e: Exception) {
-            Log.e("FirestoreHelper", "Error deleting profile image: ${e.message}", e)
-            false
+        return withContext(Dispatchers.IO) {
+            try {
+                val imageRef = storage.getReferenceFromUrl(imageUrl)
+                imageRef.delete().await()
+                Log.d("FirestoreHelper", "Profile image deleted successfully")
+                true
+            } catch (e: StorageException) {
+                // Ignore 404 errors - file might already be deleted
+                if (e.errorCode == StorageException.ERROR_OBJECT_NOT_FOUND) {
+                    Log.d("FirestoreHelper", "Image already deleted or doesn't exist")
+                    true
+                } else {
+                    Log.e("FirestoreHelper", "Error deleting profile image: ${e.message}", e)
+                    false
+                }
+            } catch (e: Exception) {
+                Log.e("FirestoreHelper", "Error deleting profile image: ${e.message}", e)
+                false
+            }
         }
     }
 
-    /**
-     * Updates profile image - deletes old and uploads new
-     * Used internally by writeUser
-     */
     private suspend fun updateProfileImage(oldImageUrl: String?, newBitmap: Bitmap): String? {
         // Delete old image if it exists
         if (!oldImageUrl.isNullOrEmpty()) {
@@ -1608,10 +2059,6 @@ object FirestoreHelper {
         return uploadProfileImage(newBitmap)
     }
 
-    /**
-     * Deletes user's profile image and updates Firestore
-     * Call this when user explicitly deletes their profile picture
-     */
     suspend fun deleteUserProfileImage() {
         return withContext(Dispatchers.IO) {
             try {
@@ -1639,53 +2086,65 @@ object FirestoreHelper {
         }
     }
 
-    // Add these functions to your FirestoreHelper object
+    // ==================== DELETE ACCOUNT ====================
 
-    /**
-     * Deletes all user data including subcollections and storage files
-     * This is a complete cleanup of user data from Firebase
-     */
     suspend fun deleteAllUserData(userId: String) {
         return withContext(Dispatchers.IO) {
             try {
                 // 1. Delete all emergency contacts
-                val emergencyContactsSnapshot = db.collection("users")
-                    .document(userId)
-                    .collection("emergencyContacts")
-                    .get()
-                    .await()
+                try {
+                    val emergencyContactsSnapshot = db.collection("users")
+                        .document(userId)
+                        .collection("emergencyContacts")
+                        .get()
+                        .await()
 
-                emergencyContactsSnapshot.documents.forEach { doc ->
-                    doc.reference.delete().await()
+                    emergencyContactsSnapshot.documents.forEach { doc ->
+                        doc.reference.delete().await()
+                    }
+                    Log.d("FirestoreHelper", "Deleted emergency contacts")
+                } catch (e: Exception) {
+                    Log.e("FirestoreHelper", "Error deleting contacts: ${e.message}")
                 }
-                Log.d("FirestoreHelper", "Deleted emergency contacts")
 
                 // 2. Delete health information
-                db.collection("users")
-                    .document(userId)
-                    .collection("healthInformation")
-                    .document("info")
-                    .delete()
-                    .await()
-                Log.d("FirestoreHelper", "Deleted health information")
+                try {
+                    db.collection("users")
+                        .document(userId)
+                        .collection("healthInformation")
+                        .document("info")
+                        .delete()
+                        .await()
+                    Log.d("FirestoreHelper", "Deleted health information")
+                } catch (e: Exception) {
+                    Log.e("FirestoreHelper", "Error deleting health info: ${e.message}")
+                }
 
                 // 3. Delete profile image from storage
-                val user = getUser(userId)
-                user?.profileImageUrl?.let { imageUrl ->
-                    deleteProfileImage(imageUrl)
+                try {
+                    val user = getUser(userId)
+                    user?.profileImageUrl?.let { imageUrl ->
+                        deleteProfileImage(imageUrl)
+                    }
+                    Log.d("FirestoreHelper", "Deleted profile image")
+                } catch (e: Exception) {
+                    Log.e("FirestoreHelper", "Error deleting profile image: ${e.message}")
                 }
-                Log.d("FirestoreHelper", "Deleted profile image")
 
                 // 4. Delete all files in user's storage folder
                 try {
                     val userStorageRef = storageRef.child("profile_images/$userId")
                     val listResult = userStorageRef.listAll().await()
                     listResult.items.forEach { item ->
-                        item.delete().await()
+                        try {
+                            item.delete().await()
+                        } catch (e: Exception) {
+                            Log.e("FirestoreHelper", "Error deleting item: ${e.message}")
+                        }
                     }
                     Log.d("FirestoreHelper", "Deleted all storage files")
                 } catch (e: Exception) {
-                    Log.e("FirestoreHelper", "Error deleting storage files: ${e.message}")
+                    Log.e("FirestoreHelper", "Error deleting storage folder: ${e.message}")
                 }
 
                 // 5. Finally, delete the user document
@@ -1697,76 +2156,10 @@ object FirestoreHelper {
 
             } catch (e: Exception) {
                 Log.e("FirestoreHelper", "Error deleting user data: ${e.message}", e)
-                throw e
+                // Don't throw - continue with deletion even if some parts fail
             }
         }
     }
-
-    /**
-     * Sends account deletion confirmation email and deletes user account
-     * This function:
-     * 1. Sends a verification email to the user
-     * 2. Waits for user to verify
-     * 3. Deletes all Firestore data
-     * 4. Deletes the Firebase Auth account
-     */
-    suspend fun deleteUserAccount(): Boolean {
-        return withContext(Dispatchers.IO) {
-            try {
-                val user = auth.currentUser ?: throw Exception("No authenticated user")
-                val userId = user.uid
-
-                // Send verification email before deletion
-                user.sendEmailVerification().await()
-                Log.d("FirestoreHelper", "Verification email sent")
-
-                // Note: In a real-world scenario, you'd want to wait for email verification
-                // For now, we'll proceed with deletion after a delay
-                // In production, implement a cloud function that triggers on email verification
-
-                // Delete all Firestore data
-                deleteAllUserData(userId)
-
-                // Delete Firebase Auth account
-                user.delete().await()
-                Log.d("FirestoreHelper", "User account deleted from Firebase Auth")
-
-                true
-            } catch (e: Exception) {
-                Log.e("FirestoreHelper", "Error deleting user account: ${e.message}", e)
-                false
-            }
-        }
-    }
-
-    /**
-     * Initiates account deletion process with re-authentication
-     * Firebase requires recent authentication before account deletion
-     */
-//    suspend fun deleteUserAccountWithReauth(email: String, password: String): Boolean {
-//        return withContext(Dispatchers.IO) {
-//            try {
-//                val user = auth.currentUser ?: throw Exception("No authenticated user")
-//
-//                // Re-authenticate user before deletion (Firebase security requirement)
-//                val credential = EmailAuthProvider.getCredential(email, password)
-//                user.reauthenticate(credential).await()
-//                Log.d("FirestoreHelper", "User re-authenticated successfully")
-//
-//                // Now delete the account
-//                val userId = user.uid
-//                deleteAllUserData(userId)
-//                user.delete().await()
-//
-//                Log.d("FirestoreHelper", "User account deleted successfully")
-//                true
-//            } catch (e: Exception) {
-//                Log.e("FirestoreHelper", "Error deleting account with reauth: ${e.message}", e)
-//                false
-//            }
-//        }
-//    }
-
 
     suspend fun deleteUserAccountWithReauth(email: String, password: String): Boolean {
         return withContext(Dispatchers.IO) {
@@ -1776,31 +2169,19 @@ object FirestoreHelper {
                 // Re-authenticate
                 val credential = EmailAuthProvider.getCredential(email, password)
                 user.reauthenticate(credential).await()
-
-                // Send notification email BEFORE deletion
-                sendSimpleEmail(
-                    toEmail = email,
-                    subject = "Account Deleted",
-                    body = "Your account has been successfully deleted. We're sorry to see you go!"
-                )
+                Log.d("FirestoreHelper", "User re-authenticated successfully")
 
                 // Delete account
                 val userId = user.uid
                 deleteAllUserData(userId)
                 user.delete().await()
 
+                Log.d("FirestoreHelper", "User account deleted successfully")
                 true
             } catch (e: Exception) {
-                Log.e("FirestoreHelper", "Error: ${e.message}", e)
+                Log.e("FirestoreHelper", "Error deleting account: ${e.message}", e)
                 false
             }
         }
     }
-    // Simple email sender (requires SMTP setup)
-    private fun sendSimpleEmail(toEmail: String, subject: String, body: String) {
-        // This is a simplified example - you'd need proper SMTP configuration
-        // Most apps use a backend service for sending emails
-    }
-
-
 }
