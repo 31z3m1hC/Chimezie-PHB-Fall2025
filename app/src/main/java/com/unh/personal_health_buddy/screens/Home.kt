@@ -1,11 +1,10 @@
 package com.unh.personal_health_buddy.screens
 
-
-// IMPORTS for layout, images, and text
-// import androidx.compose.foundation.border // No longer needed
-// NEW IMPORTS for Card
-// IMPORTS for project resources and theme
 import BottomBar
+import TempProfileStorage
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -30,11 +29,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -44,6 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.ui.theme.BloodOrange
 import com.unh.personal_health_buddy.ui.theme.BmiPink
@@ -52,24 +54,55 @@ import com.unh.personal_health_buddy.ui.theme.EmergencyRed
 import com.unh.personal_health_buddy.ui.theme.LightBlueBackground
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import com.unh.personal_health_buddy.ui.theme.ReportsCyan
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.URL
 
-
-/**
- * A simple data class to hold info for our feature cards.
- *
- * IMPORTANT: Replace '''R.drawable.profile''' with your actual icon resource IDs.
- * (e.g., R.drawable.bmi_icon, R.drawable.blood_icon, etc.)
- */
 data class Feature(
     val text: String,
-    @DrawableRes val imageId: Int // This ensures we provide a valid drawable resource ID.
+    @DrawableRes val imageId: Int
 )
 
-@OptIn(ExperimentalMaterial3Api::class) // We need this to use the Material 3 Card.
-@Composable // This annotation marks the function as a piece of UI.
-
-
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun HomeScreen(navController: NavController) {
+    var firstName by remember { mutableStateOf("User") }
+    var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var profileImageUrl by remember { mutableStateOf<String?>(null) }
+
+    // Fetch firstname and profile image URL from Firestore
+    LaunchedEffect(true) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid != null) {
+            FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(uid)
+                .get()
+                .addOnSuccessListener { document ->
+                    firstName = document.getString("firstname") ?: "User"
+                    profileImageUrl = document.getString("profileImageUrl")
+                }
+        }
+    }
+
+    // Load profile image from temp storage or Firestore URL
+    LaunchedEffect(profileImageUrl, TempProfileStorage.tempProfileBitmap) {
+        val tempBitmap = TempProfileStorage.tempProfileBitmap
+        if (tempBitmap != null) {
+            profileBitmap = tempBitmap
+        } else {
+            profileImageUrl?.let { url ->
+                try {
+                    withContext(Dispatchers.IO) {
+                        val stream = URL(url).openStream()
+                        profileBitmap = BitmapFactory.decodeStream(stream)
+                    }
+                } catch (e: Exception) {
+                    Log.e("HomeScreen", "Error loading image: ${e.message}")
+                }
+            }
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -99,18 +132,29 @@ fun HomeScreen(navController: NavController) {
                         .align(Alignment.TopStart)
                         .padding(horizontal = 40.dp, vertical = 24.dp)
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.profile),
-                        contentDescription = "User Profile Picture",
-                        modifier = Modifier
-                            .size(90.dp)
-                            .clip(CircleShape)
-                    )
+                    if (profileBitmap != null) {
+                        Image(
+                            bitmap = profileBitmap!!.asImageBitmap(),
+                            contentDescription = "User Profile Picture",
+                            modifier = Modifier
+                                .size(90.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.profile),
+                            contentDescription = "User Profile Picture",
+                            modifier = Modifier
+                                .size(90.dp)
+                                .clip(CircleShape)
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Text("welcome !", style = MaterialTheme.typography.titleMedium)
-                    Text("User", style = MaterialTheme.typography.headlineSmall)
+                    Text(firstName, style = MaterialTheme.typography.headlineSmall)
                     Text("How is it going today?", style = MaterialTheme.typography.bodyMedium)
                 }
 
@@ -195,12 +239,6 @@ fun HomeScreen(navController: NavController) {
     }
 }
 
-
-
-/**
- * A composable function for the standard "clickable box" (e.g., BMI, Reports).
- * This displays an IMAGE and a title in a vertical column.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StandardFeatureCard(
@@ -219,35 +257,29 @@ fun StandardFeatureCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp), // Padding
+                .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // We use Image instead of Icon now
             Image(
                 painter = painterResource(id = feature.imageId),
                 contentDescription = "${feature.text} Illustration",
-                modifier = Modifier
-                    .size(56.dp), // Increased from 48.dp
+                modifier = Modifier.size(56.dp),
                 contentScale = ContentScale.Fit
             )
-            Spacer(modifier = Modifier.height(8.dp)) // Increased from 6.dp
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = feature.text,
                 fontWeight = FontWeight.Bold,
-                fontSize = 15.sp, // Increased from 14.sp
-                lineHeight = 17.sp, // Increased from 16.sp
+                fontSize = 15.sp,
+                lineHeight = 17.sp,
                 color = Color.White,
-                textAlign = TextAlign.Center // Center the text
+                textAlign = TextAlign.Center
             )
         }
     }
 }
 
-/**
- * A composable function for the large "Chat With AI" card.
- * This displays text on the left and an IMAGE on the right.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LargeFeatureCard(
@@ -282,8 +314,7 @@ fun LargeFeatureCard(
             Image(
                 painter = painterResource(id = feature.imageId),
                 contentDescription = "${feature.text} Illustration",
-                modifier = Modifier
-                    .size(64.dp), // Consistent size
+                modifier = Modifier.size(64.dp),
                 contentScale = ContentScale.Fit
             )
         }
@@ -294,8 +325,6 @@ fun LargeFeatureCard(
 @Composable
 fun DashboardScreenPreview() {
     PersonalHealthBuddyTheme {
-        // Since DashboardScreen now needs a NavController,
-        // we can use a placeholder for the preview.
         val navController = rememberNavController()
         HomeScreen(navController = navController)
     }

@@ -1,4 +1,5 @@
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import androidx.compose.ui.input.key.Key
@@ -6,6 +7,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -90,6 +92,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.zIndex
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 
@@ -3274,6 +3277,13 @@ fun AccountFormBottom(
                     }
             )
 
+            // Invisible clickable overlay to make entire field clickable
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable { genderExpanded = true }
+            )
+
             DropdownMenu(
                 expanded = genderExpanded,
                 onDismissRequest = { genderExpanded = false }
@@ -3468,7 +3478,6 @@ fun EmergencyContactSection(
         Text("Emergency Contact", style = MaterialTheme.typography.titleMedium)
     }
 }
-
 @Composable
 fun AccountFormTop(
     navController: NavHostController,
@@ -3491,8 +3500,15 @@ fun AccountFormTop(
 ) {
     val context = LocalContext.current
 
-    var capturedBitmap by remember { mutableStateOf(profileBitmap) }
-    var previewImage by remember { mutableStateOf(profileBitmap?.asImageBitmap()) }
+    // FIX 1: Add 'profileBitmap' as a key to remember.
+    // If the parent passes a new image, this state will now update correctly.
+    var capturedBitmap by remember(profileBitmap) { mutableStateOf(profileBitmap) }
+
+    // Initialize preview based on current capturedBitmap
+    var previewImage by remember(capturedBitmap) {
+        mutableStateOf(capturedBitmap?.asImageBitmap())
+    }
+
     var showMenu by remember { mutableStateOf(false) }
     var isValid by remember { mutableStateOf(false) }
     var isSaving by remember { mutableStateOf(false) }
@@ -3523,17 +3539,25 @@ fun AccountFormTop(
         }
     }
 
-    // ---------------- CAMERA ----------------
+    // ---------------- CAMERA LAUNCHER ----------------
     val cameraLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
             bitmap?.let {
                 capturedBitmap = it
-                previewImage = it.asImageBitmap()
-                // SAVE TO TEMP STORAGE
                 TempProfileStorage.tempProfileBitmap = it
-                Log.d("AccountFormTop", "Camera image saved to temp storage")
             }
         }
+
+    // ---------------- PERMISSION LAUNCHER ----------------
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            cameraLauncher.launch(null)
+        } else {
+            Toast.makeText(context, "Camera permission is required", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     // ---------------- GALLERY ----------------
     val galleryLauncher =
@@ -3542,10 +3566,7 @@ fun AccountFormTop(
                 val source = ImageDecoder.createSource(context.contentResolver, it)
                 val bitmap = ImageDecoder.decodeBitmap(source)
                 capturedBitmap = bitmap
-                previewImage = bitmap.asImageBitmap()
-                // SAVE TO TEMP STORAGE
                 TempProfileStorage.tempProfileBitmap = bitmap
-                Log.d("AccountFormTop", "Gallery image saved to temp storage")
             }
         }
 
@@ -3554,7 +3575,7 @@ fun AccountFormTop(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
+                .padding(top= 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             TopBarWithSave(
@@ -3562,7 +3583,6 @@ fun AccountFormTop(
                 onBack = { navController.navigate("profile") },
                 onSave = {
                     if (!isValid) return@TopBarWithSave
-
                     isSaving = true
 
                     CoroutineScope(Dispatchers.Main).launch {
@@ -3574,12 +3594,11 @@ fun AccountFormTop(
                             )
 
                             withContext(Dispatchers.IO) {
-                                // This automatically handles image upload and old image deletion
                                 FirestoreHelper.writeUser(user, capturedBitmap)
                                 FirestoreHelper.writeHealthInformation(healthInfo)
                             }
 
-                            // ---------- CLEAR FIELDS ----------
+                            // Clear fields
                             firstname.value = ""
                             lastname.value = ""
                             dateOfBirth.value = ""
@@ -3588,18 +3607,14 @@ fun AccountFormTop(
                             email.value = ""
                             phoneNumber.value = ""
                             city.value = ""
-
                             bloodGroup.value = ""
                             allergies.value = ""
                             medications.value = ""
 
-                            previewImage = null
-                            capturedBitmap = null
-
-                            // KEEP TEMP STORAGE - Don't clear it so Account screen can use it
-                            Log.d("SaveAction", "Saved successfully - temp storage preserved")
+                            capturedBitmap = null // Preview updates automatically due to state observation
+                            Toast.makeText(context, "Saved Successfully", Toast.LENGTH_SHORT).show()
                         } catch (e: Exception) {
-                            Log.e("SaveAction", "Save failed: ${e.message}")
+                            Toast.makeText(context, "Save failed: ${e.message}", Toast.LENGTH_LONG).show()
                         } finally {
                             isSaving = false
                         }
@@ -3618,7 +3633,12 @@ fun AccountFormTop(
                 onToggleMenu = { showMenu = !showMenu },
                 onTakePhoto = {
                     showMenu = false
-                    cameraLauncher.launch(null)
+                    val permission = android.Manifest.permission.CAMERA
+                    if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
+                        cameraLauncher.launch(null)
+                    } else {
+                        permissionLauncher.launch(permission)
+                    }
                 },
                 onUpload = {
                     showMenu = false
@@ -3627,27 +3647,31 @@ fun AccountFormTop(
                 onDelete = {
                     showMenu = false
 
-                    // Delete from Firebase Storage and Firestore
+                    // FIX 2: Add visual feedback and robust error handling
                     CoroutineScope(Dispatchers.Main).launch {
                         try {
+                            // 1. Delete from server
                             withContext(Dispatchers.IO) {
                                 FirestoreHelper.deleteUserProfileImage()
                             }
+
+                            // 2. Update UI only if server delete succeeded
                             capturedBitmap = null
-                            previewImage = null
-                            // CLEAR TEMP STORAGE
                             TempProfileStorage.tempProfileBitmap = null
+
+                            Toast.makeText(context, "Photo removed", Toast.LENGTH_SHORT).show()
                             Log.d("DeletePhoto", "Profile image deleted successfully")
+
                         } catch (e: Exception) {
+                            // 3. Tell the user WHY it failed
                             Log.e("DeletePhoto", "Failed to delete: ${e.message}")
+                            Toast.makeText(context, "Could not delete: ${e.message}", Toast.LENGTH_LONG).show()
                         }
                     }
                 }
             )
         }
     }
-
-    Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
 }
 
 @Composable
@@ -3723,5 +3747,3 @@ fun AccountFormScreen(navController: NavHostController) {
 fun AccountFormScreenPreview() {
     AccountFormScreen(navController = rememberNavController())
 }
-
-

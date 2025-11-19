@@ -22,7 +22,7 @@ fun AppNavigation(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "welcome",
+        startDestination = "account-form",
         // INSTANT TRANSITIONS - Navigation feels immediate with no lag
         enterTransition = { fadeIn(animationSpec = tween(0)) },
         exitTransition = { fadeOut(animationSpec = tween(0)) },

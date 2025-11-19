@@ -289,5 +289,3 @@ fun SetupAuthentication(navController: NavHostController, activity: Activity) {
     )
     Log.d("SetupAuthentication", "Authentication setup completed")
 }
-
-

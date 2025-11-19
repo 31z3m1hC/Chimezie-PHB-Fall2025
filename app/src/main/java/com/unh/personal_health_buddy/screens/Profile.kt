@@ -1,8 +1,10 @@
-
 package com.unh.personal_health_buddy.screens
 
 import BottomBar
 import LogoutConfirmationDialog
+import TempProfileStorage
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,7 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,16 +36,15 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-
 import com.unh.personal_health_buddy.R
-
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.URL
 
 // ------------------- Profile Items -------------------
 sealed class ProfileItem(val title: String, val icon: ImageVector, val route: String) {
     object Account : ProfileItem("Account", Icons.Filled.Favorite, "user-account")
     object Appointment : ProfileItem("Appointment", Icons.Filled.Event, "appointment")
-
     object FAQS : ProfileItem("FAQS", Icons.Filled.Chat, "faqs")
     object Logout : ProfileItem("Logout", Icons.AutoMirrored.Filled.ExitToApp, "logout")
 }
@@ -62,8 +65,10 @@ fun ProfileScreen(
 ) {
     var showLogoutDialog by remember { mutableStateOf(false) }
     var firstName by remember { mutableStateOf("User") }
+    var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var profileImageUrl by remember { mutableStateOf<String?>(null) }
 
-    //Fetch firstname from Firestore
+    // Fetch firstname and profile image URL from Firestore
     LaunchedEffect(true) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
         if (uid != null) {
@@ -73,7 +78,27 @@ fun ProfileScreen(
                 .get()
                 .addOnSuccessListener { document ->
                     firstName = document.getString("firstname") ?: "User"
+                    profileImageUrl = document.getString("profileImageUrl")
                 }
+        }
+    }
+
+    // Load profile image from temp storage or Firestore URL
+    LaunchedEffect(profileImageUrl, TempProfileStorage.tempProfileBitmap) {
+        val tempBitmap = TempProfileStorage.tempProfileBitmap
+        if (tempBitmap != null) {
+            profileBitmap = tempBitmap
+        } else {
+            profileImageUrl?.let { url ->
+                try {
+                    withContext(Dispatchers.IO) {
+                        val stream = URL(url).openStream()
+                        profileBitmap = BitmapFactory.decodeStream(stream)
+                    }
+                } catch (e: Exception) {
+                    Log.e("ProfileScreen", "Error loading image: ${e.message}")
+                }
+            }
         }
     }
 
@@ -112,14 +137,26 @@ fun ProfileScreen(
                             )
                             .clip(CircleShape)
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.profile_picture),
-                            contentDescription = "Profile Image",
-                            modifier = Modifier
-                                .border(0.dp, Color.White, CircleShape)
-                                .clip(CircleShape)
-                                .size(110.dp)
-                        )
+                        if (profileBitmap != null) {
+                            Image(
+                                bitmap = profileBitmap!!.asImageBitmap(),
+                                contentDescription = "Profile Image",
+                                modifier = Modifier
+                                    .border(0.dp, Color.White, CircleShape)
+                                    .clip(CircleShape)
+                                    .size(110.dp),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Image(
+                                painter = painterResource(id = R.drawable.profile_picture),
+                                contentDescription = "Profile Image",
+                                modifier = Modifier
+                                    .border(0.dp, Color.White, CircleShape)
+                                    .clip(CircleShape)
+                                    .size(110.dp)
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -131,7 +168,6 @@ fun ProfileScreen(
                     )
                 }
             }
-
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -168,7 +204,6 @@ fun ProfileScreen(
                                     }
                                 }
                             }
-
                             .padding(horizontal = 1.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -214,11 +249,7 @@ fun ProfileScreen(
     }
 }
 
-
-
-
 // ------------------- Preview -------------------
-
 @Preview(showBackground = true)
 @Composable
 fun PreviewProfileScreen() {
@@ -229,4 +260,3 @@ fun PreviewProfileScreen() {
         currentRoute = ProfileItem.Account.route
     )
 }
-
