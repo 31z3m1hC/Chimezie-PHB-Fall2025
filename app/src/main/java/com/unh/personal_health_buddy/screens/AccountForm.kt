@@ -167,7 +167,7 @@ fun TopBarWithSave(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(top = 30.dp, start = 16.dp, end = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -175,6 +175,7 @@ fun TopBarWithSave(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.clickable { onBack() }
         ) {
+
             Icon(
                 imageVector = Icons.Default.ChevronLeft,
                 contentDescription = "Back",
@@ -186,10 +187,11 @@ fun TopBarWithSave(
 
         if (isSaving) {
             CircularProgressIndicator(
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(36.dp),
                 strokeWidth = 2.dp
             )
         } else {
+
             Button(
                 onClick = onSave,
                 enabled = enabled,
@@ -3673,6 +3675,71 @@ fun AccountFormTop(
         }
     }
 }
+//
+//@Composable
+//fun AccountFormScreen(navController: NavHostController) {
+//    // User info state
+//    val firstname = remember { mutableStateOf("") }
+//    val lastname = remember { mutableStateOf("") }
+//    val dateOfBirth = remember { mutableStateOf("") }
+//    val homeAddress = remember { mutableStateOf("") }
+//    val gender = remember { mutableStateOf(Gender.OTHER) }
+//    val email = remember { mutableStateOf("") }
+//    val phoneNumber = remember { mutableStateOf("") }
+//    val city = remember { mutableStateOf("") }
+//
+//    // Health info state
+//    val bloodGroup = remember { mutableStateOf("") }
+//    val allergies = remember { mutableStateOf("") }
+//    val medications = remember { mutableStateOf("") }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .verticalScroll(rememberScrollState())
+//            .padding(vertical = 8.dp),
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        AccountFormTop(
+//            navController = navController,
+//            profileBitmap = null,
+//
+//            firstname = firstname,
+//            lastname = lastname,
+//            dateOfBirth = dateOfBirth,
+//            homeAddress = homeAddress,
+//            gender = gender,
+//            email = email,
+//            phoneNumber = phoneNumber,
+//            city = city,
+//
+//            bloodGroup = bloodGroup,
+//            allergies = allergies,
+//            medications = medications,
+//        )
+//
+//        AccountFormBottom(
+//            firstname = firstname,
+//            lastname = lastname,
+//            dateOfBirth = dateOfBirth,
+//            homeAddress = homeAddress,
+//            gender = gender,
+//            email = email,
+//            phoneNumber = phoneNumber,
+//            city = city
+//        )
+//
+//        HealthInformationSection(
+//            bloodGroup = bloodGroup,
+//            allergies = allergies,
+//            medications = medications
+//        )
+//    }
+//    Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
+//}
+
 
 @Composable
 fun AccountFormScreen(navController: NavHostController) {
@@ -3692,14 +3759,10 @@ fun AccountFormScreen(navController: NavHostController) {
     val medications = remember { mutableStateOf("") }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(vertical = 8.dp),
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
-
+        // FIXED TOP SECTION (doesn't scroll)
         AccountFormTop(
             navController = navController,
             profileBitmap = null,
@@ -3718,28 +3781,34 @@ fun AccountFormScreen(navController: NavHostController) {
             medications = medications,
         )
 
-        AccountFormBottom(
-            firstname = firstname,
-            lastname = lastname,
-            dateOfBirth = dateOfBirth,
-            homeAddress = homeAddress,
-            gender = gender,
-            email = email,
-            phoneNumber = phoneNumber,
-            city = city
-        )
+        // SCROLLABLE BOTTOM SECTION
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AccountFormBottom(
+                firstname = firstname,
+                lastname = lastname,
+                dateOfBirth = dateOfBirth,
+                homeAddress = homeAddress,
+                gender = gender,
+                email = email,
+                phoneNumber = phoneNumber,
+                city = city
+            )
 
-        HealthInformationSection(
-            bloodGroup = bloodGroup,
-            allergies = allergies,
-            medications = medications
-        )
+            HealthInformationSection(
+                bloodGroup = bloodGroup,
+                allergies = allergies,
+                medications = medications
+            )
+        }
     }
     Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
 }
-
-
-
 
 
 @Preview(showBackground = true, showSystemUi = true)
