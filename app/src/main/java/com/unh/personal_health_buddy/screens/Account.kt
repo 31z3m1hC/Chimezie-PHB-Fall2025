@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Warning
@@ -99,7 +100,7 @@ import java.net.URL
 //            editableFirstname = u.firstname
 //            editableLastname = u.lastname
 //            editableDateOfBirth = u.dateOfBirth
-//            editableGender = u.gender.name // FIX 1: Convert Gender enum to String
+//            editableGender = u.gender.name
 //            editableEmail = u.email
 //            editablePhoneNumber = u.phoneNumber
 //            editableHomeAddress = u.homeAddress
@@ -150,7 +151,6 @@ import java.net.URL
 //            isSaving = true
 //            CoroutineScope(Dispatchers.IO).launch {
 //                try {
-//                    // Helper function to safely convert String to Gender enum
 //                    val parsedGender = try {
 //                        Gender.valueOf(editableGender.uppercase())
 //                    } catch (e: IllegalArgumentException) {
@@ -158,12 +158,11 @@ import java.net.URL
 //                        Gender.OTHER
 //                    }
 //
-//                    // 1. Create updated data objects from editable states
 //                    val updatedUser = user?.copy(
 //                        firstname = editableFirstname,
 //                        lastname = editableLastname,
 //                        dateOfBirth = editableDateOfBirth,
-//                        gender = parsedGender, // FIX 2: Use the converted Gender enum
+//                        gender = parsedGender,
 //                        email = editableEmail,
 //                        phoneNumber = editablePhoneNumber,
 //                        homeAddress = editableHomeAddress,
@@ -171,7 +170,7 @@ import java.net.URL
 //                    ) ?: User(
 //                        firstname = editableFirstname,
 //                        lastname = editableLastname,
-//                        gender = parsedGender, // FIX 2: Use the converted Gender enum
+//                        gender = parsedGender,
 //                        email = editableEmail
 //                    )
 //
@@ -181,8 +180,6 @@ import java.net.URL
 //                        medication = editableMedication
 //                    ).takeIf { it.bloodGroup.isNotBlank() || it.allergies.isNotBlank() || it.medication.isNotBlank() }
 //
-//
-//                    // 2. Call the bulk update function in FirestoreHelper
 //                    FirestoreHelper.updateUserData(
 //                        userId,
 //                        updatedUser,
@@ -191,7 +188,6 @@ import java.net.URL
 //                    )
 //
 //                    withContext(Dispatchers.Main) {
-//                        // 3. Update primary states to reflect the saved data (This refreshes the UI)
 //                        user = updatedUser
 //                        emergencyContacts = editableEmergencyContacts.toList()
 //                        healthInfo = updatedHealth
@@ -210,7 +206,6 @@ import java.net.URL
 //            }
 //        }
 //    }
-//    // *********************************
 //
 //    // --- Delete Confirmation Dialog ---
 //    if (showDeleteDialog) {
@@ -220,7 +215,8 @@ import java.net.URL
 //                Icon(
 //                    Icons.Default.Warning,
 //                    contentDescription = "Warning",
-//                    tint = Color(0xFFFF9800)) },
+//                    tint = Color(0xFFFF9800))
+//            },
 //            title = { Text(text = "Delete Account?") },
 //            text = {
 //                Column {
@@ -244,10 +240,7 @@ import java.net.URL
 //                }
 //            },
 //            dismissButton = {
-//                TextButton(onClick = {
-//                    showDeleteDialog = false
-//                }
-//                ) {
+//                TextButton(onClick = { showDeleteDialog = false }) {
 //                    Text("Cancel")
 //                }
 //            }
@@ -261,21 +254,28 @@ import java.net.URL
 //            title = { Text(text = "Confirm Password") },
 //            text = {
 //                Column {
-//                Text("Please enter your password to confirm account deletion:")
-//                Spacer(modifier = Modifier.height(12.dp))
-//                OutlinedTextField(
-//                    value = passwordInput, onValueChange = { passwordInput = it; deleteError = null },
-//                    label = { Text("Password") }, visualTransformation = PasswordVisualTransformation(),
-//                    singleLine = true, enabled = !isDeleting, isError = deleteError != null, modifier = Modifier.fillMaxWidth()
-//                )
-//                if (deleteError != null) { Spacer(modifier = Modifier.height(4.dp));
-//                    Text(
-//                        text = deleteError!!,
-//                        color = MaterialTheme.colorScheme.error,
-//                        style = MaterialTheme.typography.bodySmall
+//                    Text("Please enter your password to confirm account deletion:")
+//                    Spacer(modifier = Modifier.height(12.dp))
+//                    OutlinedTextField(
+//                        value = passwordInput,
+//                        onValueChange = { passwordInput = it; deleteError = null },
+//                        label = { Text("Password") },
+//                        visualTransformation = PasswordVisualTransformation(),
+//                        singleLine = true,
+//                        enabled = !isDeleting,
+//                        isError = deleteError != null,
+//                        modifier = Modifier.fillMaxWidth()
 //                    )
+//                    if (deleteError != null) {
+//                        Spacer(modifier = Modifier.height(4.dp))
+//                        Text(
+//                            text = deleteError!!,
+//                            color = MaterialTheme.colorScheme.error,
+//                            style = MaterialTheme.typography.bodySmall
+//                        )
+//                    }
 //                }
-//            }},
+//            },
 //            confirmButton = {
 //                Button(
 //                    onClick = {
@@ -292,7 +292,6 @@ import java.net.URL
 //                                            if (success) {
 //                                                Toast.makeText(context, "Account deleted successfully", Toast.LENGTH_LONG).show()
 //                                                TempProfileStorage.tempProfileBitmap = null
-//                                                // Assuming "welcome" is the destination after sign out/delete
 //                                                navController.navigate("welcome") { popUpTo(0) { inclusive = true } }
 //                                            } else {
 //                                                deleteError = "Authentication failed or data deletion error."
@@ -301,14 +300,18 @@ import java.net.URL
 //                                        }
 //                                    } else {
 //                                        withContext(Dispatchers.Main) {
-//                                            deleteError = "No user found. Please try again."; isDeleting = false } }
+//                                            deleteError = "No user found. Please try again."
+//                                            isDeleting = false
+//                                        }
+//                                    }
 //                                } catch (e: Exception) {
 //                                    withContext(Dispatchers.Main) {
 //                                        deleteError = when {
-//                                        e.message?.contains("password", ignoreCase = true) == true -> "Incorrect password. Please try again."
-//                                        e.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your connection."
-//                                        else -> "Error: ${e.message}"
-//                                    }; isDeleting = false
+//                                            e.message?.contains("password", ignoreCase = true) == true -> "Incorrect password. Please try again."
+//                                            e.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your connection."
+//                                            else -> "Error: ${e.message}"
+//                                        }
+//                                        isDeleting = false
 //                                    }
 //                                }
 //                            }
@@ -319,15 +322,20 @@ import java.net.URL
 //                ) {
 //                    if (isDeleting) {
 //                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
-//                    } else { Text("Delete Account")
+//                    } else {
+//                        Text("Delete Account")
 //                    }
 //                }
 //            },
 //            dismissButton = {
 //                TextButton(
 //                    onClick = {
-//                    showPasswordDialog = false; passwordInput = "";
-//                    deleteError = null }, enabled = !isDeleting) {
+//                        showPasswordDialog = false
+//                        passwordInput = ""
+//                        deleteError = null
+//                    },
+//                    enabled = !isDeleting
+//                ) {
 //                    Text("Cancel")
 //                }
 //            }
@@ -336,12 +344,8 @@ import java.net.URL
 //
 //    // --- Main UI Structure ---
 //    Box(modifier = Modifier.fillMaxSize()) {
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .verticalScroll(scrollState)
-//                .padding(16.dp)
-//        ) {
+//        Column(modifier = Modifier.fillMaxSize()) {
+//            // FIXED TOP SECTION (doesn't scroll)
 //            AccountTopSection(
 //                navController = navController,
 //                user = user,
@@ -350,54 +354,63 @@ import java.net.URL
 //                onDismissDropdown = { expandedDropdown = false },
 //                onDeleteClick = { showDeleteDialog = true }
 //            )
-//            Spacer(modifier = Modifier.height(16.dp))
 //
-//            BottomActionSection(
-//                isEditing = isEditing,
-//                onEditClick = {
-//                    initializeEditableStates(user, emergencyContacts, healthInfo)
-//                    isEditing = true
-//                },
-//                onSaveClick = onSaveClick,
-//                isLoading = isSaving
-//            )
+//            // SCROLLABLE BOTTOM SECTION
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .verticalScroll(scrollState)
+//                    .padding(16.dp)
+//            ) {
+//                Spacer(modifier = Modifier.height(16.dp))
 //
-//            Spacer(modifier = Modifier.height(16.dp))
+//                BottomActionSection(
+//                    isEditing = isEditing,
+//                    onEditClick = {
+//                        initializeEditableStates(user, emergencyContacts, healthInfo)
+//                        isEditing = true
+//                    },
+//                    onSaveClick = onSaveClick,
+//                    isLoading = isSaving
+//                )
 //
-//            BottomSection(
-//                user = user,
-//                emergencyContacts = emergencyContacts,
-//                healthInfo = healthInfo,
-//                isLoading = isLoading,
-//                isEditing = isEditing,
+//                Spacer(modifier = Modifier.height(16.dp))
 //
-//                editableFirstname = editableFirstname,
-//                editableLastname = editableLastname,
-//                editableDateOfBirth = editableDateOfBirth,
-//                editableGender = editableGender,
-//                editableEmail = editableEmail,
-//                editablePhoneNumber = editablePhoneNumber,
-//                editableHomeAddress = editableHomeAddress,
-//                editableCity = editableCity,
-//                editableEmergencyContacts = editableEmergencyContacts,
-//                editableBloodGroup = editableBloodGroup,
-//                editableAllergies = editableAllergies,
-//                editableMedication = editableMedication,
+//                BottomSection(
+//                    user = user,
+//                    emergencyContacts = emergencyContacts,
+//                    healthInfo = healthInfo,
+//                    isLoading = isLoading,
+//                    isEditing = isEditing,
 //
-//                onFirstnameChange = { editableFirstname = it },
-//                onLastnameChange = { editableLastname = it },
-//                onDateOfBirthChange = { editableDateOfBirth = it },
-//                onGenderChange = { editableGender = it },
-//                onEmailChange = { editableEmail = it },
-//                onPhoneNumberChange = { editablePhoneNumber = it },
-//                onHomeAddressChange = { editableHomeAddress = it },
-//                onCityChange = { editableCity = it },
-//                onBloodGroupChange = { editableBloodGroup = it },
-//                onAllergiesChange = { editableAllergies = it },
-//                onMedicationChange = { editableMedication = it }
-//            )
+//                    editableFirstname = editableFirstname,
+//                    editableLastname = editableLastname,
+//                    editableDateOfBirth = editableDateOfBirth,
+//                    editableGender = editableGender,
+//                    editableEmail = editableEmail,
+//                    editablePhoneNumber = editablePhoneNumber,
+//                    editableHomeAddress = editableHomeAddress,
+//                    editableCity = editableCity,
+//                    editableEmergencyContacts = editableEmergencyContacts,
+//                    editableBloodGroup = editableBloodGroup,
+//                    editableAllergies = editableAllergies,
+//                    editableMedication = editableMedication,
 //
-//            Spacer(modifier = Modifier.height(32.dp))
+//                    onFirstnameChange = { editableFirstname = it },
+//                    onLastnameChange = { editableLastname = it },
+//                    onDateOfBirthChange = { editableDateOfBirth = it },
+//                    onGenderChange = { editableGender = it },
+//                    onEmailChange = { editableEmail = it },
+//                    onPhoneNumberChange = { editablePhoneNumber = it },
+//                    onHomeAddressChange = { editableHomeAddress = it },
+//                    onCityChange = { editableCity = it },
+//                    onBloodGroupChange = { editableBloodGroup = it },
+//                    onAllergiesChange = { editableAllergies = it },
+//                    onMedicationChange = { editableMedication = it }
+//                )
+//
+//                Spacer(modifier = Modifier.height(32.dp))
+//            }
 //        }
 //
 //        // Loading overlay when saving or initially loading
@@ -414,8 +427,6 @@ import java.net.URL
 //        }
 //    }
 //}
-
-
 
 
 @Composable
@@ -760,17 +771,34 @@ fun AccountScreen(navController: NavHostController) {
                     editableAllergies = editableAllergies,
                     editableMedication = editableMedication,
 
-                    onFirstnameChange = { editableFirstname = it },
-                    onLastnameChange = { editableLastname = it },
+                    // --- INPUT FILTERING START ---
+                    onFirstnameChange = { newValue ->
+                        // Accept the change only if it's not purely numeric or empty
+                        if (newValue.isEmpty() || !newValue.all { it.isDigit() }) {
+                            editableFirstname = newValue
+                        }
+                    },
+                    onLastnameChange = { newValue ->
+                        // Accept the change only if it's not purely numeric or empty
+                        if (newValue.isEmpty() || !newValue.all { it.isDigit() }) {
+                            editableLastname = newValue
+                        }
+                    },
                     onDateOfBirthChange = { editableDateOfBirth = it },
                     onGenderChange = { editableGender = it },
                     onEmailChange = { editableEmail = it },
-                    onPhoneNumberChange = { editablePhoneNumber = it },
+                    onPhoneNumberChange = { newValue ->
+                        // Only allow digits and max 10 characters
+                        if (newValue.length <= 10 && newValue.all { it.isDigit() }) {
+                            editablePhoneNumber = newValue
+                        }
+                    },
                     onHomeAddressChange = { editableHomeAddress = it },
                     onCityChange = { editableCity = it },
                     onBloodGroupChange = { editableBloodGroup = it },
                     onAllergiesChange = { editableAllergies = it },
                     onMedicationChange = { editableMedication = it }
+                    // --- INPUT FILTERING END ---
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
