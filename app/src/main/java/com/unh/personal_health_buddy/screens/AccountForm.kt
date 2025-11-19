@@ -1,6 +1,7 @@
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -95,6 +96,7 @@ import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 
 import com.unh.personal_health_buddy.database.Gender
 import com.unh.personal_health_buddy.database.HealthInformation
@@ -104,6 +106,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
 import kotlinx.coroutines.withContext
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -3045,19 +3048,22 @@ fun PhotoOptionsMenu(
     onDelete: () -> Unit
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clickable(onClick = onToggleMenu)
+                .padding(16.dp)
+        ) {
             Text(
                 modifier = Modifier.offset(x = (20).dp),
                 text = "Photo Options",
                 style = MaterialTheme.typography.bodyMedium
             )
-            IconButton(onClick = onToggleMenu) {
-                Icon(
-                    modifier = Modifier.offset(10.dp),
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Show photo options"
-                )
-            }
+            Icon(
+                modifier = Modifier.offset(20.dp),
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = "Show photo options"
+            )
         }
 
         DropdownMenu(
@@ -3741,6 +3747,77 @@ fun AccountFormTop(
 //}
 
 
+//@Composable
+//fun AccountFormScreen(navController: NavHostController) {
+//    // User info state
+//    val firstname = remember { mutableStateOf("") }
+//    val lastname = remember { mutableStateOf("") }
+//    val dateOfBirth = remember { mutableStateOf("") }
+//    val homeAddress = remember { mutableStateOf("") }
+//    val gender = remember { mutableStateOf(Gender.OTHER) }
+//    val email = remember { mutableStateOf("") }
+//    val phoneNumber = remember { mutableStateOf("") }
+//    val city = remember { mutableStateOf("") }
+//
+//    // Health info state
+//    val bloodGroup = remember { mutableStateOf("") }
+//    val allergies = remember { mutableStateOf("") }
+//    val medications = remember { mutableStateOf("") }
+//
+//    Column(
+//        modifier = Modifier.fillMaxSize(),
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        // FIXED TOP SECTION (doesn't scroll)
+//        AccountFormTop(
+//            navController = navController,
+//            profileBitmap = null,
+//
+//            firstname = firstname,
+//            lastname = lastname,
+//            dateOfBirth = dateOfBirth,
+//            homeAddress = homeAddress,
+//            gender = gender,
+//            email = email,
+//            phoneNumber = phoneNumber,
+//            city = city,
+//
+//            bloodGroup = bloodGroup,
+//            allergies = allergies,
+//            medications = medications,
+//        )
+//
+//        // SCROLLABLE BOTTOM SECTION
+//        Column(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .verticalScroll(rememberScrollState())
+//                .padding(vertical = 8.dp),
+//            horizontalAlignment = Alignment.CenterHorizontally
+//        ) {
+//            AccountFormBottom(
+//                firstname = firstname,
+//                lastname = lastname,
+//                dateOfBirth = dateOfBirth,
+//                homeAddress = homeAddress,
+//                gender = gender,
+//                email = email,
+//                phoneNumber = phoneNumber,
+//                city = city
+//            )
+//
+//            HealthInformationSection(
+//                bloodGroup = bloodGroup,
+//                allergies = allergies,
+//                medications = medications
+//            )
+//        }
+//    }
+//    Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
+//}
+
+
+
 @Composable
 fun AccountFormScreen(navController: NavHostController) {
     // User info state
@@ -3758,6 +3835,41 @@ fun AccountFormScreen(navController: NavHostController) {
     val allergies = remember { mutableStateOf("") }
     val medications = remember { mutableStateOf("") }
 
+    // Profile bitmap state
+    var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    // Load profile image from Firestore on launch
+    LaunchedEffect(Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid != null) {
+            try {
+                val user = withContext(Dispatchers.IO) {
+                    FirestoreHelper.getUser(uid)
+                }
+
+                // Check temp storage first
+                val tempBitmap = TempProfileStorage.tempProfileBitmap
+                if (tempBitmap != null) {
+                    profileBitmap = tempBitmap
+                } else {
+                    // Load from Firestore URL if temp storage is empty
+                    user?.profileImageUrl?.let { url ->
+                        withContext(Dispatchers.IO) {
+                            try {
+                                val stream = URL(url).openStream()
+                                profileBitmap = BitmapFactory.decodeStream(stream)
+                            } catch (e: Exception) {
+                                Log.e("AccountFormScreen", "Error loading image: ${e.message}")
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("AccountFormScreen", "Error loading user data: ${e.message}")
+            }
+        }
+    }
+
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -3765,7 +3877,7 @@ fun AccountFormScreen(navController: NavHostController) {
         // FIXED TOP SECTION (doesn't scroll)
         AccountFormTop(
             navController = navController,
-            profileBitmap = null,
+            profileBitmap = profileBitmap,  // Pass the loaded bitmap
 
             firstname = firstname,
             lastname = lastname,
@@ -3809,7 +3921,6 @@ fun AccountFormScreen(navController: NavHostController) {
     }
     Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
 }
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
