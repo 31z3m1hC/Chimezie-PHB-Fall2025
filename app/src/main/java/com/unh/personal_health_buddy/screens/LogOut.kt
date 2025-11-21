@@ -16,6 +16,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.unh.personal_health_buddy.R
+import com.unh.personal_health_buddy.ui.theme.ButtonBlue
+import com.unh.personal_health_buddy.ui.theme.White
 
 
 // ------------------- Logout Dialog -------------------
@@ -45,9 +47,9 @@ fun LogoutConfirmationDialog(
                         .fillMaxWidth()
                         .height(50.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colorResource(id = R.color.purple_500),
-                        contentColor = Color.White
-                    )
+                        containerColor = ButtonBlue,
+                        contentColor = White
+                    ),
                 ) {
                     Text("Logout")
                 }
@@ -58,9 +60,9 @@ fun LogoutConfirmationDialog(
                         .fillMaxWidth()
                         .height(50.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colorResource(id = R.color.purple_500),
-                        contentColor = Color.White
-                    )
+                        containerColor = ButtonBlue,
+                        contentColor = White
+                    ),
 
                 ) {
                     Text("Cancel")

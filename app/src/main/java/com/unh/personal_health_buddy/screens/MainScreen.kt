@@ -1,156 +1,111 @@
-package com.unh.personal_health_buddy.screens
-import AccountFormScreen
-import AccountFormScreen
-import AccountScreen
-import BottomBar
-import androidx.compose.foundation.layout.*
+import android.net.http.SslCertificate.restoreState
+import android.net.http.SslCertificate.saveState
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource.Companion.SideEffect
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.unh.personal_health_buddy.FAQScreen
+import androidx.wear.compose.material3.Icon
+import androidx.wear.compose.material3.Text
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+//import com.unh.personal_health_buddy.screens.GoogleMapScreen
+import com.unh.personal_health_buddy.screens.HomeScreen
+import com.unh.personal_health_buddy.screens.NotificationScreen
 import com.unh.personal_health_buddy.screens.ProfileScreen
-
 import com.unh.personal_health_buddy.screens.profileItems
 
+import com.unh.personal_health_buddy.ui.theme.LightBlueBackground
+import com.unh.personal_health_buddy.ui.theme.ReportsCyan
+
+
+// -------------------- DATA CLASS + ITEMS --------------------
+data class BottomNavItem(
+    val route: String,
+    val icon: ImageVector,
+    val label: String
+)
+
+val bottomNavItems = listOf(
+    BottomNavItem("home", Icons.Default.Home, "Home"),
+    BottomNavItem("map", Icons.Default.LocationOn, "Map"),
+    BottomNavItem("notifications", Icons.Default.Notifications, "Notifications"),
+    BottomNavItem("profile", Icons.Default.Person, "Profile"),
+)
 
 @Composable
 fun MainScreen(navController: NavHostController) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val innerNavController = rememberNavController()
+    val navBackStackEntry by innerNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
     Scaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(listOf(ReportsCyan, LightBlueBackground))
+            ),
         bottomBar = {
-            // Show BottomBar only on home or profile
-            if (currentRoute == "profile" || currentRoute == "home") {
-                BottomBar(navController = navController)
+            NavigationBar(
+                containerColor = Color.White,
+                modifier = Modifier.clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            ) {
+                bottomNavItems.forEach { item ->
+                    NavigationBarItem(
+                        icon = { Icon(item.icon, contentDescription = item.label) },
+                        label = { Text(item.label) },
+                        selected = currentRoute == item.route,
+                        onClick = {
+                            innerNavController.navigate(item.route) {
+                                popUpTo(item.route) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    )
+                }
             }
         }
-    ) { innerPadding ->
-        Box(
+    ) { paddingValues ->
+        NavHost(
+            navController = innerNavController,
+            startDestination = "home",
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(paddingValues) // respect bottom nav height
         ) {
-            when (currentRoute) {
-                "profile" -> ProfileScreen(
-                    navController = navController,
-                    items = profileItems,
-                    currentRoute = currentRoute
-                )
+            composable("home") { HomeScreen(navController) }
+            composable("map") { GoogleMapScreen(navController) }
+            composable("notifications") { NotificationScreen(navController) }
+            composable("profile") { ProfileScreen(navController, profileItems, "profile") }
+            composable("account") { AccountScreen(navController) }
+            composable("account-form") { AccountFormScreen(navController) }
 
-                "account-form" -> AccountFormScreen(navController)
-
-                //"chats" -> MessageListScreen(navController = navController, cid = "preview_cid")
-                "notification" -> NotificationScreen(navController)
-                "logout" -> LogoutScreen(navController)
-                "appointment" -> AppointmentScreen(navController)
-                "faqs" -> FAQScreen(navController)
-                "home" -> HomeScreen(navController)
-                "map" -> MapScreen(navController)
-                "account" -> AccountScreen(navController = navController)
-               // "emergency-contacts" -> EmergencyContactScreen(navController)
-                else -> WelcomeScreen(navController)
-            }
         }
     }
-}
-
-@Composable
-fun LogoutScreen(navController: NavController) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "You have logged out successfully.", style = MaterialTheme.typography.headlineSmall)
-    }
-
-    BackButton(navController = navController, returnRoute = "profile")
-}
-
-@Composable
-fun AppointmentScreen(navController: NavController) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "Appointment Screen", style = MaterialTheme.typography.headlineSmall)
-    }
-    BackButton(navController = navController, returnRoute = "profile")
-}
-
-
-
-
-
-
-@Composable
-fun NotificationScreen(navController: NavController) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "Notification Screen", style = MaterialTheme.typography.headlineSmall)
-    }
-    BackButton(navController = navController, returnRoute = "home")
-}
-
-@Composable
-fun MapScreen(navController: NavController) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "Map Screen", style = MaterialTheme.typography.headlineSmall)
-    }
-    BackButton(navController = navController, returnRoute = "home")
-}
-
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun HomeScreen(navController: NavController) {
-//    Scaffold(
-//        floatingActionButton = {
-//            FloatingActionButton(
-//                onClick = { /* your FAB action */ },
-//                containerColor = MaterialTheme.colorScheme.tertiary,
-//                contentColor = Color.White,
-//                modifier = Modifier.offset(y = (-10).dp),
-//                shape = RoundedCornerShape(50)
-//            ) {
-//                Icon(Icons.Filled.Add, contentDescription = "Add")
-//            }
-//        },
-//        bottomBar = { BottomBar(navController = navController) }
-//    ) { padding ->
-//        Box(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(padding),
-//            contentAlignment = Alignment.Center
-//        ) {
-//            Text("Home Screen", style = MaterialTheme.typography.headlineSmall)
-//        }
-//    }
-//}
-
-@Composable
-fun BackButton(navController: NavController, returnRoute: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, top = 32.dp),
-        contentAlignment = Alignment.TopStart
-    ) {
-        IconButton(onClick = { navController.navigate(returnRoute) }) {
-            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
-        }
-    }
-}
-
-@Composable
-@Preview(showBackground = true, showSystemUi = true)
-fun PreviewMainScreen() {
-    val navController = rememberNavController()
-    MainScreen(navController = navController)
 }

@@ -1,6 +1,5 @@
 package com.unh.personal_health_buddy.screens
 
-import BottomBar
 import TempProfileStorage
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -21,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -57,20 +57,34 @@ import com.unh.personal_health_buddy.ui.theme.ReportsCyan
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URL
+import java.util.Calendar   // <-- added for greeting
 
 data class Feature(
     val text: String,
     @DrawableRes val imageId: Int
 )
 
+// Helper function for time-based greeting
+fun getGreeting(): String {
+    val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+    return when (hour) {
+        in 5..11 -> "Good Morning,"
+        in 12..16 -> "Good Afternoon,"
+        in 17..20 -> "Good Evening,"
+        else -> "Welcome,"
+    }
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(
+    navController: NavController,
+) {
     var firstName by remember { mutableStateOf("User") }
     var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var profileImageUrl by remember { mutableStateOf<String?>(null) }
 
-    // Fetch firstname and profile image URL from Firestore
+    val greeting by remember { mutableStateOf(getGreeting()) }
+
     LaunchedEffect(true) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
         if (uid != null) {
@@ -85,7 +99,6 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
-    // Load profile image from temp storage or Firestore URL
     LaunchedEffect(profileImageUrl, TempProfileStorage.tempProfileBitmap) {
         val tempBitmap = TempProfileStorage.tempProfileBitmap
         if (tempBitmap != null) {
@@ -104,140 +117,156 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
-    Scaffold(
-        bottomBar = {
-            BottomBar(navController = navController)
-        }
-    ) { innerPadding ->
-        Column(
+    // Features for cards
+    val feature1 = Feature("BMI\nStatus", R.drawable.bmical)
+    val feature2 = Feature("Blood Group\nInfo", R.drawable.blood)
+    val feature3 = Feature("Medicates", R.drawable.med)
+    val feature4 = Feature("Emergency\nContact", R.drawable.call)
+    val feature5 = Feature("Chat\nWith AI", R.drawable.chatai)
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(LightBlueBackground)
+    ) {
+        // ---------- TOP USER SECTION ----------
+        Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .offset(y = (-50).dp)
                 .background(LightBlueBackground)
-                .padding(innerPadding)
         ) {
-            val feature1 = Feature("BMI\nStatus", R.drawable.bmical)
-            val feature2 = Feature("Blood Group\nInfo", R.drawable.blood)
-            val feature3 = Feature("Reports", R.drawable.reports)
-            val feature4 = Feature("Emergency\nContact", R.drawable.call)
-            val feature5 = Feature("Chat\nWith AI", R.drawable.chatai)
-
-            // TOP USER SECTION
-            Box(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(0.35f)
+                    .padding(horizontal = 40.dp, vertical = 70.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(horizontal = 40.dp, vertical = 24.dp)
-                ) {
-                    if (profileBitmap != null) {
-                        Image(
-                            bitmap = profileBitmap!!.asImageBitmap(),
-                            contentDescription = "User Profile Picture",
-                            modifier = Modifier
-                                .size(90.dp)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Image(
-                            painter = painterResource(id = R.drawable.profile),
-                            contentDescription = "User Profile Picture",
-                            modifier = Modifier
-                                .size(90.dp)
-                                .clip(CircleShape)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text("welcome !", style = MaterialTheme.typography.titleMedium)
-                    Text(firstName, style = MaterialTheme.typography.headlineSmall)
-                    Text("How is it going today?", style = MaterialTheme.typography.bodyMedium)
+                if (profileBitmap != null) {
+                    Image(
+                        bitmap = profileBitmap!!.asImageBitmap(),
+                        contentDescription = "User Profile Picture",
+                        modifier = Modifier
+                            .size(90.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.profile),
+                        contentDescription = "User Profile Picture",
+                        modifier = Modifier
+                            .size(90.dp)
+                            .padding(top = 32.dp)
+                            .clip(CircleShape)
+                    )
                 }
 
-                Image(
-                    painter = painterResource(id = R.drawable.doctor),
-                    contentDescription = "Doctor Illustration",
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .offset(x = (-20).dp, y = 10.dp)
-                        .size(180.dp)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    greeting,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    firstName,
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                Text(
+                    "How is it going today?",
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
 
-            // BOTTOM WHITE AREA WITH CARDS
+            Image(
+                painter = painterResource(id = R.drawable.doctor),
+                contentDescription = "Doctor Illustration",
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .offset(x = (-20).dp, y = 90.dp)
+                    .size(180.dp)
+            )
+        }
+
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+
+        // ---------- BOTTOM WHITE AREA WITH CARDS ----------
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
+                .background(Color.White)
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .offset(y = (10).dp)
-                    .weight(0.65f)
-                    .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
-                    .background(Color.White)
+                    .fillMaxSize()
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 60.dp,
+                        bottom = 16.dp
+                    ),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(
-                            PaddingValues(
-                                start = 16.dp,
-                                end = 16.dp,
-                                top = 60.dp,
-                                bottom = 16.dp
-                            )
-                        ),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        StandardFeatureCard(
-                            feature = feature1,
-                            onClick = { navController.navigate("bmi_screen") },
-                            backgroundColor = BmiPink,
-                            modifier = Modifier.weight(1f).aspectRatio(1f)
-                        )
-                        StandardFeatureCard(
-                            feature = feature2,
-                            onClick = { navController.navigate("blood_group_screen") },
-                            backgroundColor = BloodOrange,
-                            modifier = Modifier.weight(1f).aspectRatio(1f)
-                        )
-                        StandardFeatureCard(
-                            feature = feature3,
-                            onClick = { navController.navigate("reports_screen") },
-                            backgroundColor = ReportsCyan,
-                            modifier = Modifier.weight(1f).aspectRatio(1f)
-                        )
-                    }
+                    StandardFeatureCard(
+                        feature = feature1,
+                        onClick = { navController.navigate("bmi_screen") },
+                        backgroundColor = BmiPink,
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                    )
+                    StandardFeatureCard(
+                        feature = feature2,
+                        onClick = { navController.navigate("blood_group_screen") },
+                        backgroundColor = BloodOrange,
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                    )
+                    StandardFeatureCard(
+                        feature = feature3,
+                        onClick = { navController.navigate("medicates_screen") },
+                        backgroundColor = ReportsCyan,
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                    )
+                }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        StandardFeatureCard(
-                            feature = feature4,
-                            onClick = { navController.navigate("emergency-contacts") },
-                            backgroundColor = EmergencyRed,
-                            modifier = Modifier.weight(1f).aspectRatio(1f)
-                        )
-                        LargeFeatureCard(
-                            feature = feature5,
-                            onClick = { navController.navigate("chat_ai_screen") },
-                            backgroundColor = ChatGreen,
-                            modifier = Modifier.weight(2f).aspectRatio(2f)
-                        )
-                    }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    StandardFeatureCard(
+                        feature = feature4,
+                        onClick = { navController.navigate("emergency-contacts") },
+                        backgroundColor = EmergencyRed,
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                    )
+                    LargeFeatureCard(
+                        feature = feature5,
+                        onClick = { navController.navigate("chat_ai_screen") },
+                        backgroundColor = ChatGreen,
+                        modifier = Modifier
+                            .weight(2f)
+                            .aspectRatio(2f)
+                    )
                 }
             }
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

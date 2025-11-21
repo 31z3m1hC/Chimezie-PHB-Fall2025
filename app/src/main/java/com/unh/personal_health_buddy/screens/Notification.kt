@@ -1,103 +1,162 @@
 package com.unh.personal_health_buddy.screens
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material3.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.unh.personal_health_buddy.R
+import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
+
+
+
+import androidx.navigation.compose.currentBackStackEntryAsState
+
+// --- Navigation Definitions ---
+
+sealed class NavigationItem(val route: String, val icon: ImageVector, val title: String) {
+    object Home : NavigationItem("home", Icons.Filled.Home, "Home")
+    object Map : NavigationItem("map", Icons.Filled.Place, "Map")
+    object Notification : NavigationItem("notification", Icons.Filled.Notifications, "Notification")
+    object Profile : NavigationItem("profile", Icons.Filled.Person, "Profile")
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationScreen(navController: NavHostController) {
+fun NotificationScreen(navController: NavController) {
+    // --- STYLING ---
+    val newGradientStart = Color(0xFFF0F8F8) // Very Light Mint/Teal
+    val newGradientEnd = Color(0xFFFFFFFF)   // White
+    val vibrantGradient = Brush.verticalGradient(colors = listOf(newGradientStart, newGradientEnd))
+    val activeColor = Color(0xFF378680) // A dark mint/teal for text
+
     Scaffold(
         topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 12.dp, top = 12.dp, bottom = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Icon(
-                    imageVector = Icons.Default.ArrowBackIosNew,
-                    contentDescription = "Back to Profile",
-                    tint = Color.Black,
-                    modifier = Modifier
-                        .padding(top = 32.dp)
-                        .size(24.dp)
-                        .clickable {
-                            if (!navController.popBackStack()) {
-                                navController.navigate("profile") {
-                                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        }
-                )
-
-                Spacer(modifier = Modifier.width(25.dp))
-
-                Text(
-                    modifier = Modifier.padding(top = 15.dp),
-                    text = "Notification Page",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Notifications",
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigate("home") }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    // Invisible button to balance the title
+                    IconButton(onClick = { }, enabled = false) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color.Transparent)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    titleContentColor = activeColor,
+                    navigationIconContentColor = activeColor
                 )
-            }
-        }
-    ) { innerPadding ->
+            )
+        },
+
+        containerColor = Color.Transparent
+    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
-            contentAlignment = Alignment.Center
+                .offset(y = (-paddingValues.calculateBottomPadding()))
+                .padding(top = paddingValues.calculateTopPadding())
         ) {
+        }
+
             Column(
+                modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.notification),
-                    contentDescription = "No Notifications",
-                    modifier = Modifier
-                        .size(220.dp)
-                        .padding(bottom = 16.dp),
-                    contentScale = ContentScale.Fit
-                )
-                Text(
-                    text = "No Data",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    ),
-                    textAlign = TextAlign.Center
-                )
+                EmptyState(color = activeColor)
             }
         }
     }
+
+
+
+// --- NEW COMPOSABLE ---
+@Composable
+private fun EmptyState(color: Color) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.padding(horizontal = 32.dp) // Add some side padding
+    ) {
+        Icon(
+            imageVector = Icons.Default.Notifications,
+            contentDescription = "No Notifications",
+            tint = color.copy(alpha = 0.6f),
+            modifier = Modifier.size(80.dp)
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            text = "No Notifications Yet",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = color
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "You'll be notified here once there's something new.",
+            fontSize = 16.sp,
+            color = Color.Gray,
+            textAlign = TextAlign.Center
+        )
+    }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
+@Preview(showBackground = true)
 @Composable
 fun NotificationScreenPreview() {
-    NotificationScreen(rememberNavController())
+    PersonalHealthBuddyTheme {
+        NotificationScreen(navController = rememberNavController())
+    }
 }

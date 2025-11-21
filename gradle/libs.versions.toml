@@ -30,6 +30,8 @@ foundationLayout = "1.9.4"
 uiGraphics = "1.9.4"
 uiText = "1.9.4"
 composeMaterial3 = "1.5.5"
+uiTextVersion = "1.9.5"
+foundationLayoutVersion = "1.9.5"
 
 
 [libraries]
@@ -71,6 +73,8 @@ androidx-foundation-layout = { group = "androidx.compose.foundation", name = "fo
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics", version.ref = "uiGraphics" }
 androidx-ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiText" }
 compose-material3 = { group = "androidx.wear.compose", name = "compose-material3", version.ref = "composeMaterial3" }
+ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiTextVersion" }
+foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayoutVersion" }
 
 
 [plugins]

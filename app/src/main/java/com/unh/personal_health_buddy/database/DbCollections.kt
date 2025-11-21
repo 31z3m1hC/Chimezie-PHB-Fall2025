@@ -1,6 +1,8 @@
 package com.unh.personal_health_buddy.database
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.google.firebase.Timestamp
+import java.util.UUID
 
 
 data class User(
@@ -21,7 +23,6 @@ data class HealthInformation(
     val allergies: String = "",
     val bloodGroup: String = ""
 )
-
 
 enum class Gender {
     MALE,
@@ -45,6 +46,19 @@ data class Chats(
     val chatTime: Timestamp = Timestamp.now(),
     val senderName: String = "",
     val message: String = ""
+)
+
+
+
+data class Prescription(
+    val id: String = "",
+    val name: String = "",
+    val dosage: String = "",
+    val frequency: String = "",
+    val form: String = "",
+    val timeOfDay: String = "",
+    val withFood: String = "",
+    val notes: String = ""
 )
 
 
@@ -91,3 +105,8 @@ data class EmergencyContact(
 )
 
 
+data class BottomNavItem(
+    val route: String,
+    val icon: ImageVector,
+    val title: String   // <-- renamed from label
+)

@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.PersonalHealthBuddy" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.PersonalHealthBuddy" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- REMOVE white status bar -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+
+        <!-- REMOVE white navigation bar -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+
+        <!-- Allow drawing behind system bars -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+
+        <!-- Prevent system from inserting its own padding -->
+        <item name="android:fitsSystemWindows">false</item>
+
+        <!-- Optional: if you want dark icons on a light gradient -->
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
 </resources>

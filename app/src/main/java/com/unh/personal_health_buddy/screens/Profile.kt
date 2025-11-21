@@ -1,10 +1,10 @@
 package com.unh.personal_health_buddy.screens
 
-import BottomBar
 import LogoutConfirmationDialog
 import TempProfileStorage
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.http.SslCertificate.restoreState
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -41,9 +42,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URL
 
+
 // ------------------- Profile Items -------------------
 sealed class ProfileItem(val title: String, val icon: ImageVector, val route: String) {
-    object Account : ProfileItem("Account", Icons.Filled.Favorite, "user-account")
+    object Account : ProfileItem("Account", Icons.Filled.Favorite, "account")
     object Appointment : ProfileItem("Appointment", Icons.Filled.Event, "appointment")
     object FAQS : ProfileItem("FAQS", Icons.Filled.Chat, "faqs")
     object Logout : ProfileItem("Logout", Icons.AutoMirrored.Filled.ExitToApp, "logout")
@@ -59,7 +61,7 @@ val profileItems = listOf(
 // ------------------- Profile Screen -------------------
 @Composable
 fun ProfileScreen(
-    navController: NavController,
+    navController: NavHostController,
     items: List<ProfileItem>,
     currentRoute: String
 ) {
@@ -102,20 +104,15 @@ fun ProfileScreen(
         }
     }
 
-    Scaffold(
-        bottomBar = { BottomBar(navController = navController) }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .consumeWindowInsets(innerPadding)
-                .safeDrawingPadding()
-        ) {
-            // ---------- Top Profile Card ----------
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+
+            // ---------- Top Profile Card (UI untouched) ----------
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(250.dp)
+                    .offset(y = (-50).dp)
+                    .height(300.dp)
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(Color(0xFF5AA9E6), Color(0xFFD6EFFF))
@@ -123,10 +120,10 @@ fun ProfileScreen(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
-                    Spacer(modifier = Modifier.height(100.dp))
-
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(top = 60.dp)
+                ) {
                     Box(
                         modifier = Modifier
                             .background(
@@ -159,7 +156,7 @@ fun ProfileScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
                         text = firstName,
@@ -169,9 +166,11 @@ fun ProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
                 items.forEach { item ->
                     Row(
                         modifier = Modifier
@@ -182,29 +181,29 @@ fun ProfileScreen(
                             .clickable {
                                 when (item) {
                                     is ProfileItem.Account -> {
-                                        if (currentRoute != "account") {
-                                            navController.navigate("account") {
-                                                launchSingleTop = true
-                                                restoreState = true
-                                            }
+                                        navController.navigate("account") {
+                                            launchSingleTop = true
+                                        }
+                                    }
+
+                                    is ProfileItem.Appointment -> {
+                                        navController.navigate("appointment") {
+                                            launchSingleTop = true
+                                        }
+                                    }
+
+                                    is ProfileItem.FAQS -> {
+                                        navController.navigate("faqs") {
+                                            launchSingleTop = true
                                         }
                                     }
 
                                     is ProfileItem.Logout -> {
                                         showLogoutDialog = true
                                     }
-
-                                    else -> {
-                                        if (currentRoute != item.route) {
-                                            navController.navigate(item.route) {
-                                                launchSingleTop = true
-                                                restoreState = true
-                                            }
-                                        }
-                                    }
                                 }
                             }
-                            .padding(horizontal = 1.dp, vertical = 12.dp),
+                            .padding(horizontal = 1.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
@@ -217,7 +216,7 @@ fun ProfileScreen(
                             Icon(item.icon, contentDescription = item.title, tint = Color(0xFF5AA9E6))
                         }
 
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
 
                         Text(
                             text = item.title,
@@ -254,9 +253,4 @@ fun ProfileScreen(
 @Composable
 fun PreviewProfileScreen() {
     val navController = rememberNavController()
-    ProfileScreen(
-        navController = navController,
-        items = profileItems,
-        currentRoute = ProfileItem.Account.route
-    )
 }

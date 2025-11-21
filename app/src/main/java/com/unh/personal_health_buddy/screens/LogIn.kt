@@ -54,7 +54,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.firebase.performSignIn
-
+import com.unh.personal_health_buddy.ui.theme.ButtonBlue
+import com.unh.personal_health_buddy.ui.theme.White
 
 
 @Composable
@@ -292,9 +293,9 @@ fun SignInScreen(
                 .fillMaxWidth(0.9f)
                 .height(50.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorResource(id = R.color.purple_500),
-                contentColor = Color.White
-            )
+                containerColor = ButtonBlue,
+                contentColor = White
+            ),
         ) {
             Text("Sign In")
         }

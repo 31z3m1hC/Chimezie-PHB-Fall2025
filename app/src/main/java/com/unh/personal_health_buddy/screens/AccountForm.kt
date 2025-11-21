@@ -6,6 +6,14 @@ import android.graphics.ImageDecoder
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -33,12 +41,15 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Bloodtype
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Face2
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationCity
@@ -47,6 +58,7 @@ import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
@@ -107,6 +119,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
+import com.unh.personal_health_buddy.ui.theme.ButtonBlue
+import com.unh.personal_health_buddy.ui.theme.White
 import kotlinx.coroutines.withContext
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -204,9 +218,9 @@ fun TopBarWithSave(
                 enabled = enabled,
                 modifier = Modifier.height(36.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = colorResource(id = R.color.purple_500),
-                    contentColor = Color.White
-                )
+                    containerColor = ButtonBlue,
+                    contentColor = White
+                ),
             ) {
                 Text("Save")
             }
@@ -218,28 +232,35 @@ fun TopBarWithSave(
 
 
 
+
+
+// Define your custom colors
+val ButtonBlue = Color(0xFF1976D2)
+val White = Color(0xFFFFFFFF)
+
 @Composable
 fun RoundedIcon(
     imageVector: ImageVector,
-    backgroundColor: Color = Color(0xFFE0F7FA),
-    iconTint: Color = Color(0xFF00796B),
+    containerColor: Color = ButtonBlue,
+    contentColor: Color = White,
     size: Dp = 36.dp,
     padding: Dp = 8.dp
 ) {
     Box(
         modifier = Modifier
             .size(size)
-            .background(backgroundColor, shape = CircleShape),
+            .background(containerColor, shape = CircleShape),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = imageVector,
             contentDescription = null,
-            tint = iconTint,
+            tint = contentColor,
             modifier = Modifier.padding(padding)
         )
     }
 }
+
 
 
 fun isValidImageType(context: Context, uri: Uri): Boolean {
@@ -247,8 +268,41 @@ fun isValidImageType(context: Context, uri: Uri): Boolean {
     return mimeType == "image/jpeg" || mimeType == "image/png"
 }
 
+//@Composable
+//fun BackHeader(
+//    title: String,
+//    onBack: () -> Unit,
+//    titleColor: Color = Color(0xFF1976D2)
+//
+//) {
+//    Row(
+//        verticalAlignment = Alignment.CenterVertically,
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(vertical = 8.dp)
+//    ) {
+//        Row(
+//            verticalAlignment = Alignment.CenterVertically,
+//            modifier = Modifier.clickable { onBack() }
+//        ) {
+//            Icon(
+//                imageVector = Icons.Default.ChevronLeft,
+//                contentDescription = "Back",
+//                modifier = Modifier.size(30.dp)
+//            )
+//            Spacer(modifier = Modifier.width(4.dp)) // Tight spacing
+//            Text(title, style = MaterialTheme.typography.bodyMedium)
+//        }
+//    }
+//    Log.d("BackHeader", "Title: $title")
+//}
+
 @Composable
-fun BackHeader(title: String, onBack: () -> Unit) {
+fun BackHeader(
+    title: String,
+    onBack: () -> Unit,
+    color: Color = Color.Black // Default to black if no color provided
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -262,14 +316,21 @@ fun BackHeader(title: String, onBack: () -> Unit) {
             Icon(
                 imageVector = Icons.Default.ChevronLeft,
                 contentDescription = "Back",
+                tint = color,
                 modifier = Modifier.size(30.dp)
             )
-            Spacer(modifier = Modifier.width(4.dp)) // Tight spacing
-            Text(title, style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = color
+            )
         }
     }
     Log.d("BackHeader", "Title: $title")
 }
+
+
 
 // ============================================
 // GLOBAL STATE TO STORE TEMPORARY PROFILE IMAGE
@@ -363,7 +424,7 @@ fun AccountFormBottom(
     val focusManager = LocalFocusManager.current
     val datePickerState = rememberDatePickerState()
 
-    // Date Picker Dialog
+    // Date Picker
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -391,54 +452,44 @@ fun AccountFormBottom(
     }
 
     Column(modifier = Modifier.padding(16.dp)) {
+
+        // FIRST NAME
         OutlinedTextField(
             value = firstname.value,
             onValueChange = { firstname.value = it },
             label = { Text("First Name") },
             leadingIcon = {
-                RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
+                RoundedIcon(Icons.Default.Person, ButtonBlue, White)
             },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(
                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
             ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .onPreviewKeyEvent { keyEvent ->
-                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
-                        focusManager.moveFocus(FocusDirection.Down)
-                        true
-                    } else {
-                        false
-                    }
-                }
+            modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(8.dp))
+
+        Spacer(Modifier.height(8.dp))
+
+        // LAST NAME
         OutlinedTextField(
             value = lastname.value,
             onValueChange = { lastname.value = it },
             label = { Text("Last Name") },
             leadingIcon = {
-                RoundedIcon(Icons.Default.Person, Color(0xFF87CEEB), Color(0xFFEF6C00))
+                RoundedIcon(Icons.Default.Person, ButtonBlue, White)
             },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(
                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
             ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .onPreviewKeyEvent { keyEvent ->
-                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
-                        focusManager.moveFocus(FocusDirection.Down)
-                        true
-                    } else {
-                        false
-                    }
-                }
+            modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(8.dp))
+
+        Spacer(Modifier.height(8.dp))
+
+        // DATE OF BIRTH
         Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
                 value = dateOfBirth.value,
@@ -447,83 +498,62 @@ fun AccountFormBottom(
                 label = { Text("Date of Birth") },
                 placeholder = { Text("DD/MM/YYYY") },
                 leadingIcon = {
-                    RoundedIcon(Icons.Default.DateRange, Color(0xFF87CEEB), Color(0xFFEF6C00))
+                    RoundedIcon(Icons.Default.DateRange, ButtonBlue, White)
                 },
                 trailingIcon = {
                     IconButton(onClick = { showDatePicker = true }) {
                         Icon(Icons.Default.CalendarToday, contentDescription = "Select Date")
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onPreviewKeyEvent { keyEvent ->
-                        if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
-                            focusManager.moveFocus(FocusDirection.Down)
-                            true
-                        } else if (keyEvent.key == Key.Enter && keyEvent.type == KeyEventType.KeyDown) {
-                            showDatePicker = true
-                            true
-                        } else {
-                            false
-                        }
-                    }
+                modifier = Modifier.fillMaxWidth()
             )
-            // Invisible clickable layer to trigger date picker
+
             Box(
                 modifier = Modifier
                     .matchParentSize()
                     .clickable { showDatePicker = true }
             )
         }
-        Spacer(modifier = Modifier.height(8.dp))
+
+        Spacer(Modifier.height(8.dp))
+
+        // HOME ADDRESS
         OutlinedTextField(
             value = homeAddress.value,
             onValueChange = { homeAddress.value = it },
             label = { Text("Home Address") },
             leadingIcon = {
-                RoundedIcon(Icons.Default.Home, Color(0xFF87CEEB), Color(0xFFEF6C00))
+                RoundedIcon(Icons.Default.Home, ButtonBlue, White)
             },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(
                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
             ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .onPreviewKeyEvent { keyEvent ->
-                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
-                        focusManager.moveFocus(FocusDirection.Down)
-                        true
-                    } else {
-                        false
-                    }
-                }
+            modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(8.dp))
+
+        Spacer(Modifier.height(8.dp))
+
+        // CITY
         OutlinedTextField(
             value = city.value,
             onValueChange = { city.value = it },
             label = { Text("City") },
             leadingIcon = {
-                RoundedIcon(Icons.Default.LocationCity, Color(0xFF87CEEB), Color(0xFFEF6C00))
+                RoundedIcon(Icons.Default.LocationCity, ButtonBlue, White)
             },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(
                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
             ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .onPreviewKeyEvent { keyEvent ->
-                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
-                        focusManager.moveFocus(FocusDirection.Down)
-                        true
-                    } else {
-                        false
-                    }
-                }
+            modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(8.dp))
+
+        Spacer(Modifier.height(8.dp))
+
+        // GENDER
         Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
                 value = gender.value.name,
@@ -531,29 +561,16 @@ fun AccountFormBottom(
                 readOnly = true,
                 label = { Text("Gender") },
                 leadingIcon = {
-                    RoundedIcon(Icons.Default.Face2, Color(0xFF87CEEB), Color(0xFFEF6C00))
+                    RoundedIcon(Icons.Default.Face, ButtonBlue, White)
                 },
                 trailingIcon = {
                     IconButton(onClick = { genderExpanded = true }) {
                         Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Gender")
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onPreviewKeyEvent { keyEvent ->
-                        if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
-                            focusManager.moveFocus(FocusDirection.Down)
-                            true
-                        } else if (keyEvent.key == Key.Enter && keyEvent.type == KeyEventType.KeyDown) {
-                            genderExpanded = true
-                            true
-                        } else {
-                            false
-                        }
-                    }
+                modifier = Modifier.fillMaxWidth()
             )
 
-            // Invisible clickable overlay to make entire field clickable
             Box(
                 modifier = Modifier
                     .matchParentSize()
@@ -576,13 +593,16 @@ fun AccountFormBottom(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
+
+        Spacer(Modifier.height(8.dp))
+
+        // EMAIL
         OutlinedTextField(
             value = email.value,
             onValueChange = { email.value = it },
             label = { Text("Email") },
             leadingIcon = {
-                RoundedIcon(Icons.Default.Email, Color(0xFF87CEEB), Color(0xFFEF6C00))
+                RoundedIcon(Icons.Default.Email, ButtonBlue, White)
             },
             singleLine = true,
             keyboardOptions = KeyboardOptions(
@@ -592,174 +612,158 @@ fun AccountFormBottom(
             keyboardActions = KeyboardActions(
                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
             ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .onPreviewKeyEvent { keyEvent ->
-                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
-                        focusManager.moveFocus(FocusDirection.Down)
-                        true
-                    } else {
-                        false
-                    }
-                }
+            modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(8.dp))
 
-        // --- PHONE NUMBER SECTION START ---
-        // Validate strictly based on 10 digits (no characters)
+        Spacer(Modifier.height(8.dp))
+
+        // PHONE
         val isPhoneValid = phoneNumber.value.length == 10 && phoneNumber.value.all { it.isDigit() }
 
         OutlinedTextField(
             value = phoneNumber.value,
             onValueChange = { newValue ->
-                // Input Filter: Only digits allowed, Max 10 characters
                 if (newValue.length <= 10 && newValue.all { it.isDigit() }) {
                     phoneNumber.value = newValue
                 }
             },
             label = { Text("Phone Number") },
             leadingIcon = {
-                RoundedIcon(Icons.Default.Phone, Color(0xFF87CEEB), Color(0xFFEF6C00))
+                RoundedIcon(Icons.Default.Phone, ButtonBlue, White)
             },
             singleLine = true,
-            // Show error state if not empty but also not valid (e.g. 9 digits)
             isError = phoneNumber.value.isNotEmpty() && !isPhoneValid,
             supportingText = {
                 if (phoneNumber.value.isNotEmpty() && !isPhoneValid) {
                     Text(
-                        text = "Must be exactly 10 digits",
+                        "Must be exactly 10 digits",
                         color = MaterialTheme.colorScheme.error
                     )
                 }
             },
             keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number, // Changed to Number to enforce digits on most keyboards
+                keyboardType = KeyboardType.Number,
                 imeAction = ImeAction.Done
             ),
             keyboardActions = KeyboardActions(
                 onDone = { focusManager.clearFocus() }
             ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .onPreviewKeyEvent { keyEvent ->
-                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
-                        focusManager.clearFocus()
-                        true
-                    } else {
-                        false
-                    }
-                }
+            modifier = Modifier.fillMaxWidth()
         )
-        // --- PHONE NUMBER SECTION END ---
     }
 }
 
-@Composable
-fun HealthInformationSection(
-    bloodGroup: MutableState<String>,
-    allergies: MutableState<String>,
-    medications: MutableState<String>
-) {
-    var bloodGroupExpanded by remember { mutableStateOf(false) }
-    val bloodGroups = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
-    val focusManager = LocalFocusManager.current
-
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("Health Information", style = MaterialTheme.typography.titleMedium)
-
-        OutlinedTextField(
-            value = medications.value,
-            onValueChange = { medications.value = it },
-            label = { Text("Medication") },
-            leadingIcon = {
-                RoundedIcon(Icons.Default.Medication, Color(0xFF87CEEB), Color(0xFFEF6C00))
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxWidth()
-                .onPreviewKeyEvent { keyEvent ->
-                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
-                        focusManager.moveFocus(FocusDirection.Down)
-                        true
-                    } else {
-                        false
-                    }
-                }
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-
-
-        OutlinedTextField(
-            value = allergies.value,
-            onValueChange = { allergies.value = it },
-            label = { Text("Allergies") },
-            leadingIcon = {
-                RoundedIcon(Icons.Default.MedicalInformation, Color(0xFF87CEEB), Color(0xFFEF6C00))
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .onPreviewKeyEvent { keyEvent ->
-                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
-                        focusManager.moveFocus(FocusDirection.Down)
-                        true
-                    } else {
-                        false
-                    }
-                }
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        //val focusManager = LocalFocusManager.current
-
-        Box(modifier = Modifier.fillMaxWidth().zIndex(1f)) {
-            OutlinedTextField(
-                value = bloodGroup.value,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Blood Group") },
-                leadingIcon = {
-                    RoundedIcon(Icons.Default.Bloodtype, Color(0xFF87CEEB), Color(0xFFEF6C00))
-                },
-                trailingIcon = {
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Blood Group")
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onPreviewKeyEvent { keyEvent ->
-                        if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
-                            focusManager.moveFocus(FocusDirection.Down)
-                            true
-                        } else {
-                            false
-                        }
-                    }
-            )
-
-            Spacer(
-                modifier = Modifier
-                    .matchParentSize()
-                    .clickable { bloodGroupExpanded = true }
-            )
-
-            DropdownMenu(
-                expanded = bloodGroupExpanded,
-                onDismissRequest = { bloodGroupExpanded = false },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                bloodGroups.forEach { group ->
-                    DropdownMenuItem(
-                        text = { Text(group) },
-                        onClick = {
-                            bloodGroup.value = group
-                            bloodGroupExpanded = false
-                        }
-                    )
-                }
-            }
-        }
-    }
-    Log.d("HealthInformationSection", "Blood Group: ${bloodGroup.value}")
-}
+//@Composable
+//fun HealthInformationSection(
+//    bloodGroup: MutableState<String>,
+//    allergies: MutableState<String>,
+//    medications: MutableState<String>
+//) {
+//    var bloodGroupExpanded by remember { mutableStateOf(false) }
+//    val bloodGroups = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
+//    val focusManager = LocalFocusManager.current
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//        Text("Health Information", style = MaterialTheme.typography.titleMedium)
+//
+//        // MEDICATIONS
+//        OutlinedTextField(
+//            value = medications.value,
+//            onValueChange = { medications.value = it },
+//            label = { Text("Medication") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Medication, ButtonBlue, White)
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .onPreviewKeyEvent { keyEvent ->
+//                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+//                        focusManager.moveFocus(FocusDirection.Down)
+//                        true
+//                    } else false
+//                }
+//        )
+//
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        // ALLERGIES
+//        OutlinedTextField(
+//            value = allergies.value,
+//            onValueChange = { allergies.value = it },
+//            label = { Text("Allergies") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.MedicalInformation, ButtonBlue, White)
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .onPreviewKeyEvent { keyEvent ->
+//                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+//                        focusManager.moveFocus(FocusDirection.Down)
+//                        true
+//                    } else false
+//                }
+//        )
+//
+//        Spacer(modifier = Modifier.height(8.dp))
+//
+//        // BLOOD GROUP
+//        Box(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .zIndex(1f)
+//        ) {
+//            OutlinedTextField(
+//                value = bloodGroup.value,
+//                onValueChange = {},
+//                readOnly = true,
+//                label = { Text("Blood Group") },
+//                leadingIcon = {
+//                    RoundedIcon(Icons.Default.Bloodtype, ButtonBlue, White)
+//                },
+//                trailingIcon = {
+//                    Icon(
+//                        Icons.Default.ArrowDropDown,
+//                        contentDescription = "Select Blood Group"
+//                    )
+//                },
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .onPreviewKeyEvent { keyEvent ->
+//                        if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+//                            focusManager.moveFocus(FocusDirection.Down)
+//                            true
+//                        } else false
+//                    }
+//            )
+//
+//            // Clickable overlay
+//            Spacer(
+//                modifier = Modifier
+//                    .matchParentSize()
+//                    .clickable { bloodGroupExpanded = true }
+//            )
+//
+//            DropdownMenu(
+//                expanded = bloodGroupExpanded,
+//                onDismissRequest = { bloodGroupExpanded = false },
+//                modifier = Modifier.fillMaxWidth()
+//            ) {
+//                bloodGroups.forEach { group ->
+//                    DropdownMenuItem(
+//                        text = { Text(group) },
+//                        onClick = {
+//                            bloodGroup.value = group
+//                            bloodGroupExpanded = false
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//    }
+//
+//    Log.d("HealthInformationSection", "Blood Group: ${bloodGroup.value}")
+//}
+//
 
 @Composable
 fun EmergencyContactSection(
@@ -1064,11 +1068,11 @@ fun AccountFormScreen(navController: NavHostController) {
                 city = city
             )
 
-            HealthInformationSection(
-                bloodGroup = bloodGroup,
-                allergies = allergies,
-                medications = medications
-            )
+//            HealthInformationSection(
+//                bloodGroup = bloodGroup,
+//                allergies = allergies,
+//                medications = medications
+//            )
         }
     }
     Log.d("AccountFormScreen", "Recomposing AccountFormScreen")

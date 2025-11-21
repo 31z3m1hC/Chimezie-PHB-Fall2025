@@ -2,6 +2,7 @@ package com.unh.personal_health_buddy.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+// Material Design default colors
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)
@@ -10,21 +11,23 @@ val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
-/* This Color are for my application
-* We are Declaring color names here to use it again and again
-* */
+/* Application Colors
+ * Declaring color names here to use throughout the app
+ * */
 val PrimaryDarkBlue = Color(0xFF223A6A)
-val ButtonBlue = Color(0xFF4285F4) // A standard blue for buttons
+val ButtonBlue = Color(0xFF4285F4) // Standard blue for buttons
 val White = Color(0xFFFFFFFF)
 val MediumGray = Color(0xFFB0BEC5)    // For borders, dividers, disabled states
 
 val LightBlueBackground = Color(0xFFC8E4EE) // Dashboard Screen Background
+
 // Dashboard Accent Colors
 val AccentPink = Color(0xFFF5AAB9)
 val AccentOrange = Color(0xFFFABE9B)
 val AccentCyan = Color(0xFF82E2E6)
 val AccentRed = Color(0xFFF19E9E)
 val AccentGreen = Color(0xFFA5D6A7)
+
 val BmiPink = Color(0xFFF88FD5)
 val BmiPinkDark = Color(0xFFE58FA0)
 val BloodOrange = Color(0xFFF0A779)
@@ -34,3 +37,9 @@ val ReportsCyanDark = Color(0xFF6DCABA)
 val EmergencyRed = Color(0xFFE3867F)
 val EmergencyRedDark = Color(0xFFD3665F)
 val ChatGreen = Color(0xFF8EEA91)
+
+// Universal Background Colors for all screens
+val AppBackgroundLight = Color(0xFFF5F8FA)      // Soft light gray-blue for light mode
+val AppBackgroundDark = Color(0xFF1C2834)       // Dark blue-gray for dark mode
+val AppSurfaceLight = Color(0xFFFFFFFF)         // White cards/surfaces
+val AppSurfaceDark = Color(0xFF2A3642)          // Dark cards/surfaces

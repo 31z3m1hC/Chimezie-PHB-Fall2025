@@ -1,19 +1,106 @@
+package com.unh.personal_health_buddy.navigation
+
+import AccountFormScreen
+import AccountScreen
+import GoogleMapScreen
+import LogoutConfirmationDialog
 import android.content.Intent
 import androidx.activity.result.ActivityResultLauncher
-import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.unh.personal_health_buddy.FAQScreen
+import com.unh.personal_health_buddy.features.BloodGroupScreen
 import com.unh.personal_health_buddy.screens.*
 
-/**
- * Main navigation graph for the app
- * Optimized for performance with instant transitions and proper structure
- */
+import com.unh.personal_health_buddy.ui.theme.ButtonBlue
+import com.unh.personal_health_buddy.ui.theme.MediumGray
+
+// -------------------- DATA CLASS --------------------
+data class BottomNavItem(
+    val route: String,
+    val icon: ImageVector,
+    val label: String
+)
+
+// -------------------- BOTTOM NAV ITEMS --------------------
+val bottomNavItems = listOf(
+    BottomNavItem("home", Icons.Filled.Home, "Home"),
+    BottomNavItem("map", Icons.Filled.LocationOn, "Map"),
+    BottomNavItem("notifications", Icons.Filled.Notifications, "Notification"),
+    BottomNavItem("profile", Icons.Filled.Person, "Profile")
+)
+
+// -------------------- BOTTOM NAV BAR --------------------
+@Composable
+fun BottomNavBar(
+    currentRoute: String?,
+    onItemClick: (String) -> Unit
+) {
+    NavigationBar(
+        containerColor = Color.White
+    ) {
+        bottomNavItems.forEach { item ->
+            val selected = currentRoute == item.route
+            NavigationBarItem(
+                selected = selected,
+                onClick = { onItemClick(item.route) },
+                icon = { Icon(imageVector = item.icon, contentDescription = item.label) },
+                label = { Text(text = item.label) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = ButtonBlue,
+                    selectedTextColor = ButtonBlue,
+                    unselectedIconColor = MediumGray,
+                    unselectedTextColor = MediumGray
+                )
+            )
+        }
+    }
+}
+
+// -------------------- WRAPPER --------------------
+@Composable
+fun ScreenWithBottomNav(
+    navController: NavHostController,
+    content: @Composable (NavHostController) -> Unit
+) {
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+
+    Scaffold(
+        bottomBar = {
+            BottomNavBar(
+                currentRoute = currentRoute,
+                onItemClick = { route ->
+                    navController.navigate(route) {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        Box(modifier = Modifier.padding(paddingValues)) {
+            content(navController)
+        }
+    }
+}
+
+// -------------------- APP NAVIGATION --------------------
 @Composable
 fun AppNavigation(
     navController: NavHostController,
@@ -22,155 +109,61 @@ fun AppNavigation(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "account-form",
-        // INSTANT TRANSITIONS - Navigation feels immediate with no lag
-        enterTransition = { fadeIn(animationSpec = tween(0)) },
-        exitTransition = { fadeOut(animationSpec = tween(0)) },
-        popEnterTransition = { fadeIn(animationSpec = tween(0)) },
-        popExitTransition = { fadeOut(animationSpec = tween(0)) }
+        startDestination = "welcome"
     ) {
-        // ==================== AUTH SCREENS ====================
-        composable("welcome") {
-            WelcomeScreen(navController)
-        }
-
-        composable("sign-in") {
-            SignInScreen(navController, googleSignInClient, launcher)
-        }
-
-        composable("sign-up") {
-            SignUpScreen(navController, googleSignInClient, launcher)
-        }
-
+        // Auth screens (no bottom nav)
+        composable("welcome") { WelcomeScreen(navController) }
+        composable("sign-in") { SignInScreen(navController, googleSignInClient, launcher) }
+        composable("sign-up") { SignUpScreen(navController, googleSignInClient, launcher) }
         composable("reset-password") {
-            ResetPasswordDialog(navController, onDismiss = {
-                navController.popBackStack()
-            })
+            ResetPasswordDialog(navController, onDismiss = { navController.popBackStack() })
         }
 
-        // ==================== MAIN APP SCREENS ====================
+        // Screens WITH bottom nav
         composable("home") {
-            HomeScreen(navController)
+            ScreenWithBottomNav(navController) { innerNav ->
+                HomeScreen(innerNav)
+            }
         }
-
-        composable("main") {
-            MainScreen(navController)
-        }
-
         composable("map") {
-            GoogleMapScreen(navController)
+            ScreenWithBottomNav(navController) { innerNav ->
+                GoogleMapScreen(innerNav)
+            }
         }
-
         composable("notifications") {
-            NotificationScreen(navController)
+            ScreenWithBottomNav(navController) { innerNav ->
+                NotificationScreen(innerNav)
+            }
         }
-
-        // ==================== PROFILE & ACCOUNT ====================
         composable("profile") {
-            ProfileScreen(
-                navController = navController,
-                items = profileItems,
-                currentRoute = "profile"
-            )
+            ScreenWithBottomNav(navController) { innerNav ->
+                ProfileScreen(innerNav, profileItems, "profile")
+            }
         }
-
-        composable("account") {
-            AccountScreen(navController)
+        composable("blood_group_screen") {
+            ScreenWithBottomNav(navController) { innerNav ->
+                BloodGroupScreen(innerNav)
+            }
         }
-
-        composable("account-form") {
-            AccountFormScreen(navController)
+        composable("medicates_screen") {
+            ScreenWithBottomNav(navController) { innerNav ->
+                MedicateScreen(innerNav)
+            }
         }
-
-        // ==================== ADDITIONAL FEATURES ====================
-        composable("appointment") {
-            AppointmentScreen(navController)
-        }
-
         composable("emergency-contacts") {
-            EmergencyContactScreen(navController)
+            ScreenWithBottomNav(navController) { innerNav ->
+                EmergencyContactScreen(innerNav)
+            }
         }
+        composable("account") { AccountScreen(navController) }
+        composable("account-form") { AccountFormScreen(navController) }
 
-        composable("chats") {
-            MessageScreen(navController)
-        }
 
-        composable("faqs") {
-            FAQScreen(navController)
-        }
 
-        composable("logout") {
-            LogoutScreen(navController)
-        }
+        // Other feature screens (no bottom nav)
+        //composable("chat_ai_screen") { ChatAIScreen(navController) }
+        //composable("faqs") { FaqsScreen(navController) }
+        composable("logout") { LogoutConfirmationDialog(onConfirm = { navController.popBackStack() }, onCancel = {}) }
+        composable("notifications") { NotificationScreen(navController) }
     }
-}
-
-// ==================== NAVIGATION ROUTES (Optional - for type safety) ====================
-/**
- * Sealed class for type-safe navigation routes
- * Usage: navController.navigate(Routes.Home.route)
- */
-sealed class Routes(val route: String) {
-    // Auth
-    object Welcome : Routes("welcome")
-    object SignIn : Routes("sign-in")
-    object SignUp : Routes("sign-up")
-    object ResetPassword : Routes("reset-password")
-
-    // Main
-    object Home : Routes("home")
-    object Main : Routes("main")
-    object Map : Routes("map")
-    object Notifications : Routes("notifications")
-
-    // Profile
-    object Profile : Routes("profile")
-    object Account : Routes("account")
-    object AccountForm : Routes("account-form")
-
-    // Features
-    object Appointment : Routes("appointment")
-    object EmergencyContacts : Routes("emergency-contacts")
-    object Chats : Routes("chats")
-    object FAQs : Routes("faqs")
-    object Logout : Routes("logout")
-}
-
-// ==================== NAVIGATION EXTENSIONS (Optional) ====================
-/**
- * Extension functions for cleaner navigation
- */
-fun NavHostController.navigateToHome() {
-    navigate("home") {
-        popUpTo("welcome") { inclusive = true }
-        launchSingleTop = true
-    }
-}
-
-fun NavHostController.navigateToSignIn() {
-    navigate("sign-in") {
-        popUpTo("welcome") { inclusive = false }
-        launchSingleTop = true
-    }
-}
-
-fun NavHostController.navigateToSignUp() {
-    navigate("sign-up") {
-        popUpTo("welcome") { inclusive = false }
-        launchSingleTop = true
-    }
-}
-
-fun NavHostController.logout() {
-    navigate("welcome") {
-        popUpTo(0) { inclusive = true }
-        launchSingleTop = true
-    }
-}
-
-
-
-@Composable
-fun MessageScreen(x0: NavHostController) {
-    TODO("Not yet implemented")
 }

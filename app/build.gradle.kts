@@ -1,4 +1,5 @@
 import org.gradle.internal.impldep.com.amazonaws.auth.policy.Principal
+import org.gradle.kotlin.dsl.implementation
 
 plugins {
     alias(libs.plugins.android.application)
@@ -101,6 +102,8 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.text)
     implementation(libs.compose.material3)
+    implementation(libs.ui.text)
+    implementation(libs.foundation.layout)
 
 
     // Optional: debugging / tooling
@@ -154,6 +157,9 @@ dependencies {
 
     implementation("com.sun.mail:android-mail:1.6.7")
     implementation("com.sun.mail:android-activation:1.6.7")
+
+    implementation("androidx.compose.ui:ui-test-junit4")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
 
 
 

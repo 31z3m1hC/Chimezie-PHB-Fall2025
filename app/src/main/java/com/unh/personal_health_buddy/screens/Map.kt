@@ -1,9 +1,6 @@
-package com.unh.personal_health_buddy.screens
-
-import BottomBar
 import android.Manifest
 import android.app.Activity
-import android.content.Context
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.util.Log
@@ -23,198 +20,215 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.api.Context
 import com.google.maps.android.compose.*
-//import com.unh.personal_health_buddy.BottomBar
-import com.unh.personal_health_buddy.R
+import com.unh.personal_health_buddy.ui.theme.ButtonBlue
+import com.unh.personal_health_buddy.ui.theme.LightBlueBackground
+import com.unh.personal_health_buddy.ui.theme.MediumGray
+import com.unh.personal_health_buddy.ui.theme.PrimaryDarkBlue
+import com.unh.personal_health_buddy.ui.theme.ReportsCyan
+import com.unh.personal_health_buddy.ui.theme.White
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
+@SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
 fun GoogleMapScreen(navController: NavController) {
     val context = LocalContext.current
-    val activity = context as Activity
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(41.2900, -72.9615), 15f)
+        position = CameraPosition.fromLatLngZoom(LatLng(41.29, -72.9615), 15f)
     }
 
     var searchQuery by remember { mutableStateOf("") }
     var searchedLocation by remember { mutableStateOf<LatLng?>(null) }
     val coroutineScope = rememberCoroutineScope()
-    val locationPermissionGranted by rememberLocationPermissionStatus()
 
-    Scaffold(
-        bottomBar = { BottomBar(navController = navController) },
-        containerColor = Color.Transparent,
+
+
+    // Root background fills entire screen including behind system bars
+    Box(
         modifier = Modifier
             .fillMaxSize()
+            .offset(y = -(50).dp)
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFF5AA9E6), Color(0xFFD6EFFF))
+                    colors = listOf(ReportsCyan, LightBlueBackground)
                 )
             )
-    ) { paddingValues ->
+            .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
+    ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(8.dp)
+            modifier = Modifier.fillMaxSize()
         ) {
-
-            Icon(
-                imageVector = Icons.Default.ArrowBackIosNew,
-                contentDescription = "Back to Profile",
-                tint = Color.Black,
-                modifier = Modifier
-                    .size(24.dp)
-                    .clickable {
-                        if (!navController.popBackStack()) {
-                            navController.navigate("profile") {
-                                popUpTo(navController.graph.startDestinationId) { saveState = true }
+            // Back button and Search Section with horizontal padding
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp)
+            ) {
+                // Back button
+                Icon(
+                    imageVector = Icons.Default.ArrowBackIosNew,
+                    contentDescription = "Back to Profile",
+                    tint = PrimaryDarkBlue,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable {
+                            navController.navigate("home") {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
                                 launchSingleTop = true
                                 restoreState = true
                             }
                         }
-                    }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search location...") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                        .background(Color.White),
-                    textStyle = LocalTextStyle.current.copy(
-                        color = Color.Black,
-                        textAlign = TextAlign.Start
-                    ),
-                    singleLine = true
                 )
 
-                Button(
+                Spacer(modifier = Modifier.height(30.dp))
+
+                // Search Section
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp)
-                        .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colorResource(id = R.color.purple_500),
-                        contentColor = Color.White
-                    ),
-                    onClick = {
-                        coroutineScope.launch {
-                            val latLng = try {
-                                geocodeLocation(context, searchQuery)
-                            } catch (e: Exception) {
-                                Log.e("Geocode", "Error geocoding location: ${e.message}")
-                                null
-                            }
+                        .offset(y = 30.dp)
+                        .padding(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Search location...", color = MediumGray) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White, RoundedCornerShape(4.dp)),
+                        textStyle = LocalTextStyle.current.copy(
+                            color = PrimaryDarkBlue,
+                            textAlign = TextAlign.Start
+                        ),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = ButtonBlue,
+                            unfocusedBorderColor = MediumGray,
+                            cursorColor = ButtonBlue,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent
+                        ),
+                        singleLine = true
+                    )
 
-                            latLng?.let {
-                                searchedLocation = it
-                                cameraPositionState.animate(
-                                    update = CameraUpdateFactory.newLatLngZoom(it, 15f),
-                                    durationMs = 1000
-                                )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .padding(top = 8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ButtonBlue,
+                            contentColor = White
+                        ),
+                        onClick = {
+                            coroutineScope.launch {
+                                val latLng = geocodeLocation(context, searchQuery)
+                                latLng?.let {
+                                    searchedLocation = it
+                                    cameraPositionState.animate(
+                                        update = CameraUpdateFactory.newLatLngZoom(it, 15f),
+                                        durationMs = 1000
+                                    )
+                                }
                             }
                         }
+                    ) {
+                        Text("Search")
                     }
-                ) {
-                    Text("Search")
                 }
             }
+
+            // Map - fills remaining space with NO horizontal padding
+            val hasLocationPermission = RequestLocationPermission()
 
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(8.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .border(1.dp, Color.Transparent, RoundedCornerShape(8.dp))
+                    .fillMaxWidth()
+                    .offset(y = 50.dp)
             ) {
-                if (locationPermissionGranted) {
-                    GoogleMap(
-                        modifier = Modifier.fillMaxSize(),
-                        cameraPositionState = cameraPositionState,
-                        properties = MapProperties(isMyLocationEnabled = true),
-                        uiSettings = MapUiSettings(
-                            zoomControlsEnabled = true,
-                            compassEnabled = true,
-                            myLocationButtonEnabled = true
-                        )
-                    ) {
-                        searchedLocation?.let { location ->
-                            Circle(
-                                center = location,
-                                radius = 500.0,
-                                fillColor = Color(0x5500BFFF),
-                                strokeColor = Color.Blue,
-                                strokeWidth = 4f
-                            )
-                            Marker(
-                                state = MarkerState(position = location),
-                                title = "Searched Location",
-                                snippet = searchQuery
-                            )
-                        }
-                    }
-                } else {
-                    Text(
-                        text = "Location permission not granted",
-                        modifier = Modifier.align(Alignment.Center),
-                        color = Color.Red
+                GoogleMap(
+                    modifier = Modifier.fillMaxSize(),
+                    cameraPositionState = cameraPositionState,
+                    properties = MapProperties(
+                        isMyLocationEnabled = hasLocationPermission
+                    ),
+                    uiSettings = MapUiSettings(
+                        zoomControlsEnabled = true,
+                        compassEnabled = true,
+                        myLocationButtonEnabled = true
                     )
+                ) {
+                    searchedLocation?.let { location ->
+                        Circle(
+                            center = location,
+                            radius = 500.0,
+                            fillColor = Color(0x5543D8F3),
+                            strokeColor = ButtonBlue,
+                            strokeWidth = 4f
+                        )
+                        Marker(
+                            state = MarkerState(position = location),
+                            title = "Searched Location",
+                            snippet = searchQuery
+                        )
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 
     Log.d("GoogleMapScreen", "Google Map screen displayed")
 }
-
+/**
+ * Requests location permission and returns true when either fine or coarse location is granted.
+ * Behavior unchanged from your original implementation.
+ */
 @Composable
-fun rememberLocationPermissionStatus(): State<Boolean> {
+fun RequestLocationPermission(): Boolean {
     val context = LocalContext.current
-    val activity = context as Activity
-    val permissionGranted = remember { mutableStateOf(false) }
+    var permissionGranted by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { permissions ->
-            permissionGranted.value =
-                permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-                        permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            permissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                    permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+            if (permissionGranted) Log.d("Permissions", "Location permission granted")
+            else Log.e("Permissions", "Location permission denied")
         }
     )
 
     LaunchedEffect(Unit) {
-        val fineGranted = ActivityCompat.checkSelfPermission(
+        val fineGranted = ContextCompat.checkSelfPermission(
             context, Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
-        val coarseGranted = ActivityCompat.checkSelfPermission(
+        val coarseGranted = ContextCompat.checkSelfPermission(
             context, Manifest.permission.ACCESS_COARSE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
 
         if (fineGranted || coarseGranted) {
-            permissionGranted.value = true
+            permissionGranted = true
         } else {
             permissionLauncher.launch(
                 arrayOf(
@@ -228,7 +242,10 @@ fun rememberLocationPermissionStatus(): State<Boolean> {
     return permissionGranted
 }
 
-suspend fun geocodeLocation(context: Context, locationName: String): LatLng? {
+/**
+ * Geocode helper (kept same as your original)
+ */
+suspend fun geocodeLocation(context: android.content.Context, locationName: String): LatLng? {
     return withContext(Dispatchers.IO) {
         try {
             val geocoder = Geocoder(context, Locale.getDefault())
@@ -241,4 +258,14 @@ suspend fun geocodeLocation(context: Context, locationName: String): LatLng? {
             null
         }
     }
+}
+
+
+
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun PreviewGoogleMapScreen() {
+    val navController = rememberNavController()
+    GoogleMapScreen(navController = navController)
 }

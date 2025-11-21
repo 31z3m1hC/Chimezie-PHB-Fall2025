@@ -1,6 +1,6 @@
 package com.unh.personal_health_buddy.firebase
 
-import AppNavigation
+
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -22,6 +22,7 @@ import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.unh.personal_health_buddy.R
+import com.unh.personal_health_buddy.navigation.AppNavigation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -289,3 +290,5 @@ fun SetupAuthentication(navController: NavHostController, activity: Activity) {
     )
     Log.d("SetupAuthentication", "Authentication setup completed")
 }
+
+

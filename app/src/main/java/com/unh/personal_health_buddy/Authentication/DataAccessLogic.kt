@@ -2262,6 +2262,95 @@ object FirestoreHelper {
     private val storageRef: StorageReference = storage.reference
 
 
+
+
+
+    // ==================== PRESCRIPTION OPERATIONS ====================
+
+    suspend fun writePrescription(prescription: Prescription) {
+        return withContext(Dispatchers.IO) {
+            try {
+                val userId = getCurrentUserId()
+                val prescriptionRef = db.collection("users")
+                    .document(userId)
+                    .collection("prescriptions")
+                    .document()
+
+                val prescriptionWithId = prescription.copy(id = prescriptionRef.id)
+                prescriptionRef.set(prescriptionWithId).await()
+
+                Log.d("FirestoreHelper", "Prescription saved: ${prescriptionRef.id} for user: $userId")
+            } catch (e: Exception) {
+                Log.e("FirestoreHelper", "Error saving prescription: ${e.message}", e)
+                throw e
+            }
+        }
+    }
+
+    suspend fun readAllPrescriptions(): List<Prescription> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val userId = getCurrentUserId()
+                val snapshot = db.collection("users")
+                    .document(userId)
+                    .collection("prescriptions")
+                    .get()
+                    .await()
+
+                val prescriptions = snapshot.documents.mapNotNull { doc ->
+                    doc.toObject(Prescription::class.java)
+                }
+
+                Log.d("FirestoreHelper", "Found ${prescriptions.size} prescriptions for user: $userId")
+                prescriptions
+            } catch (e: Exception) {
+                Log.e("FirestoreHelper", "Error getting prescriptions: ${e.message}", e)
+                emptyList()
+            }
+        }
+    }
+
+    suspend fun deletePrescription(prescriptionId: String) {
+        return withContext(Dispatchers.IO) {
+            try {
+                val userId = getCurrentUserId()
+                db.collection("users")
+                    .document(userId)
+                    .collection("prescriptions")
+                    .document(prescriptionId)
+                    .delete()
+                    .await()
+
+                Log.d("FirestoreHelper", "Prescription deleted: $prescriptionId for user: $userId")
+            } catch (e: Exception) {
+                Log.e("FirestoreHelper", "Error deleting prescription: ${e.message}", e)
+                throw e
+            }
+        }
+    }
+
+    suspend fun deleteAllPrescriptions() {
+        return withContext(Dispatchers.IO) {
+            try {
+                val userId = getCurrentUserId()
+                val prescriptionsSnapshot = db.collection("users")
+                    .document(userId)
+                    .collection("prescriptions")
+                    .get()
+                    .await()
+
+                prescriptionsSnapshot.documents.forEach { doc ->
+                    doc.reference.delete().await()
+                }
+
+                Log.d("FirestoreHelper", "All prescriptions deleted for user: $userId")
+            } catch (e: Exception) {
+                Log.e("FirestoreHelper", "Error deleting all prescriptions: ${e.message}", e)
+                throw e
+            }
+        }
+    }
+
     // ==================== NEW: BULK UPDATE FUNCTION ====================
 
     suspend fun updateUserData(

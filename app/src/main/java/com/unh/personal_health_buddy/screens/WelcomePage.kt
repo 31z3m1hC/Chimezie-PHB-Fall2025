@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.R
+import com.unh.personal_health_buddy.ui.theme.ButtonBlue
+import com.unh.personal_health_buddy.ui.theme.White
 
 
 @Composable
@@ -77,11 +79,10 @@ fun WelcomeScreen(navController: NavHostController) {
                 .fillMaxWidth(0.9f)
                 .padding()
                 .height(50.dp),
-            border = BorderStroke(2.dp, colorResource(id = R.color.purple_500)),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorResource(id = R.color.purple_500),
-                contentColor = Color.White
-            )
+                containerColor = ButtonBlue,
+                contentColor = White
+            ),
         ) {
             Text(text = "Sign In")
         }
@@ -95,10 +96,9 @@ fun WelcomeScreen(navController: NavHostController) {
                 .height(50.dp),
             //border = BorderStroke(2.dp, colorResource(id = R.color.teal_700)),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorResource(id = R.color.purple_500),
-                contentColor = Color.White
-
-            )
+                containerColor = ButtonBlue,
+                contentColor = White
+            ),
         ) {
             Text(text = "Sign Up")
         }
