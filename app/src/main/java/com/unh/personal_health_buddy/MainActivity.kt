@@ -38,15 +38,16 @@ class MainActivity : ComponentActivity() {
             PersonalHealthBuddyTheme {
                 LaunchedEffect(Unit) {
                     FirebaseApp.initializeApp(context)
+                }
 
-                    // Fetch data once when app starts
+                // ✅ Optional: Fetch data if user is already logged in (app restart case)
+                LaunchedEffect(Unit) {
                     val uid = FirebaseAuth.getInstance().currentUser?.uid
                     if (uid != null && !UserDataCache.isDataLoaded) {
                         withContext(Dispatchers.IO) {
                             try {
-                                Log.d("MainActivity", "Fetching user data...")
+                                Log.d("MainActivity", "User already logged in, fetching data...")
 
-                                // Fetch all data once
                                 UserDataCache.user = FirestoreHelper.getUser(uid)
                                 UserDataCache.emergencyContacts = FirestoreHelper.readAllEmergencyContacts()
                                 UserDataCache.healthInfo = FirestoreHelper.getHealthInformation()

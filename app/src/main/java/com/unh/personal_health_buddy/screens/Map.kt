@@ -79,23 +79,24 @@ fun GoogleMapScreen(navController: NavController) {
             Column(
                 modifier = Modifier.padding(horizontal = 16.dp)
             ) {
-                // Back button
-                Icon(
-                    imageVector = Icons.Default.ArrowBackIosNew,
-                    contentDescription = "Back to Profile",
-                    tint = Color(0xFF1976D2),
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clickable {
-                            navController.navigate("home") {
-                                popUpTo(navController.graph.startDestinationId) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
+                // Back button with IconButton (better UX)
+                IconButton(
+                    onClick = {
+                        navController.navigate("home") {
+                            popUpTo("home") {
+                                inclusive = false
                             }
+                            launchSingleTop = true
                         }
-                )
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBackIosNew,
+                        contentDescription = "Back to Home",
+                        tint = Color(0xFF1976D2),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(30.dp))
 

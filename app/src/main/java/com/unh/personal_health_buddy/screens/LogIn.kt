@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.util.Log
 import android.util.Patterns
 import android.widget.Toast
@@ -13,6 +14,7 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -52,16 +54,23 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.unh.personal_health_buddy.Authentication.FirestoreHelper
 import com.unh.personal_health_buddy.R
+import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.firebase.performSignIn
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.White
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.URL
 
 
 @Composable
 fun SignInScreen(
     navController: NavHostController,
-    googleSignInClient: GoogleSignInClient?, // Can be null if not used
+    googleSignInClient: GoogleSignInClient?,
     launcher: ActivityResultLauncher<Intent>
 ) {
     val context = LocalContext.current
@@ -73,10 +82,40 @@ fun SignInScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
 
-    // State for showing the account selection dialog
     var showAccountDialog by remember { mutableStateOf(false) }
     var existingUserEmail by remember { mutableStateOf<String?>(null) }
+
+    // ✅ Helper function to fetch user data after successful login
+    suspend fun fetchUserDataAfterLogin() {
+        try {
+            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+            Log.d("SignIn", "Fetching user data for: $uid")
+
+            UserDataCache.clear() // Clear old cache first
+
+            UserDataCache.user = FirestoreHelper.getUser(uid)
+            UserDataCache.emergencyContacts = FirestoreHelper.readAllEmergencyContacts()
+            UserDataCache.healthInfo = FirestoreHelper.getHealthInformation()
+
+            // Load profile image
+            UserDataCache.user?.profileImageUrl?.let { url ->
+                try {
+                    val stream = URL(url).openStream()
+                    UserDataCache.profileBitmap = BitmapFactory.decodeStream(stream)
+                } catch (e: Exception) {
+                    Log.e("SignIn", "Error loading image: ${e.message}")
+                }
+            }
+
+            UserDataCache.isDataLoaded = true
+            Log.d("SignIn", "User data cached successfully")
+        } catch (e: Exception) {
+            Log.e("SignIn", "Error fetching data: ${e.message}")
+        }
+    }
 
     // ---------------- One Tap launcher ----------------
     val oneTapLauncher = rememberLauncherForActivityResult(
@@ -89,26 +128,36 @@ fun SignInScreen(
                 val idToken = credential.googleIdToken
                 if (!idToken.isNullOrEmpty()) {
                     val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+                    isLoading = true
                     FirebaseAuth.getInstance().signInWithCredential(firebaseCredential)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
-                                navController.navigate("home") {
-                                    popUpTo("sign-in") { inclusive = true }
+                                // ✅ Fetch user data before navigating
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    withContext(Dispatchers.IO) {
+                                        fetchUserDataAfterLogin()
+                                    }
+                                    isLoading = false
+                                    navController.navigate("home") {
+                                        popUpTo("sign-in") { inclusive = true }
+                                    }
                                 }
                             } else {
+                                isLoading = false
                                 errorMessage = "You are not a valid user. Please sign up first."
                                 showErrorDialog = true
                             }
                         }
                 }
             } catch (e: Exception) {
+                isLoading = false
                 errorMessage = "You are not a valid user. Please sign up first."
                 showErrorDialog = true
             }
         }
     }
 
-    // Error Dialog for Invalid Credentials
+    // Error Dialog
     if (showErrorDialog) {
         AlertDialog(
             onDismissRequest = { showErrorDialog = false },
@@ -135,7 +184,7 @@ fun SignInScreen(
 
     // Account selection dialog
     if (showAccountDialog && existingUserEmail != null) {
-        androidx.compose.material3.AlertDialog(
+        AlertDialog(
             onDismissRequest = { showAccountDialog = false },
             title = {
                 Text(
@@ -150,8 +199,16 @@ fun SignInScreen(
                     TextButton(
                         onClick = {
                             showAccountDialog = false
-                            navController.navigate("home") {
-                                popUpTo("sign-in") { inclusive = true }
+                            isLoading = true
+                            // ✅ Fetch data before navigating
+                            CoroutineScope(Dispatchers.Main).launch {
+                                withContext(Dispatchers.IO) {
+                                    fetchUserDataAfterLogin()
+                                }
+                                isLoading = false
+                                navController.navigate("home") {
+                                    popUpTo("sign-in") { inclusive = true }
+                                }
                             }
                         },
                         modifier = Modifier.fillMaxWidth()
@@ -172,6 +229,24 @@ fun SignInScreen(
                 }
             }
         )
+    }
+
+    // ✅ Loading overlay
+    if (isLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.4f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                CircularProgressIndicator(color = ButtonBlue)
+                Text("Loading your data...", color = Color.White)
+            }
+        }
     }
 
     Column(
@@ -214,7 +289,8 @@ fun SignInScreen(
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.fillMaxWidth(0.9f)
+            modifier = Modifier.fillMaxWidth(0.9f),
+            enabled = !isLoading
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -239,7 +315,8 @@ fun SignInScreen(
             visualTransformation =
                 if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier.fillMaxWidth(0.9f)
+            modifier = Modifier.fillMaxWidth(0.9f),
+            enabled = !isLoading
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -252,14 +329,13 @@ fun SignInScreen(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .padding(top = 8.dp)
-                .clickable { navController.navigate("reset-password") }
+                .clickable(enabled = !isLoading) { navController.navigate("reset-password") }
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
         Button(
             onClick = {
-                // Validate fields before attempting sign in
                 if (email.value.isBlank() || password.value.isBlank()) {
                     emailErrorState.value = email.value.isBlank()
                     passwordErrorState.value = password.value.isBlank()
@@ -268,14 +344,22 @@ fun SignInScreen(
                     return@Button
                 }
 
-                // Perform sign in with custom error handling
+                isLoading = true
                 FirebaseAuth.getInstance().signInWithEmailAndPassword(email.value, password.value)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            navController.navigate("home") {
-                                popUpTo("sign-in") { inclusive = true }
+                            // ✅ Fetch user data before navigating
+                            CoroutineScope(Dispatchers.Main).launch {
+                                withContext(Dispatchers.IO) {
+                                    fetchUserDataAfterLogin()
+                                }
+                                isLoading = false
+                                navController.navigate("home") {
+                                    popUpTo("sign-in") { inclusive = true }
+                                }
                             }
                         } else {
+                            isLoading = false
                             emailErrorState.value = true
                             passwordErrorState.value = true
                             errorMessage = when (task.exception) {
@@ -283,7 +367,8 @@ fun SignInScreen(
                                     "No account found with this email address"
                                 is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ->
                                     "Invalid email or password. Please try again."
-                                else -> task.exception?.localizedMessage ?: "Invalid credentials. Please check your email and password."
+                                else -> task.exception?.localizedMessage
+                                    ?: "Invalid credentials. Please check your email and password."
                             }
                             showErrorDialog = true
                         }
@@ -296,8 +381,17 @@ fun SignInScreen(
                 containerColor = ButtonBlue,
                 contentColor = White
             ),
+            enabled = !isLoading
         ) {
-            Text("Sign In")
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = White,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text("Sign In")
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -306,18 +400,15 @@ fun SignInScreen(
 
         OutlinedButton(
             onClick = {
-                // ----------- SAFE Google Sign-In -----------
                 val existingUser = FirebaseAuth.getInstance().currentUser
                 val userEmail = existingUser?.email
 
                 if (!userEmail.isNullOrEmpty()) {
-                    // Show Compose dialog instead of traditional AlertDialog
                     existingUserEmail = userEmail
                     showAccountDialog = true
                     return@OutlinedButton
                 }
 
-                // Launch Google One Tap
                 val oneTapClient = Identity.getSignInClient(activity)
                 val signInRequest = BeginSignInRequest.builder()
                     .setGoogleIdTokenRequestOptions(
@@ -337,13 +428,15 @@ fun SignInScreen(
                         oneTapLauncher.launch(intentSenderRequest)
                     }
                     .addOnFailureListener { e ->
-                        errorMessage = "No Google account found. Please sign up first or use email and password to sign in."
+                        errorMessage =
+                            "No Google account found. Please sign up first or use email and password to sign in."
                         showErrorDialog = true
                     }
             },
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .height(50.dp),
+            enabled = !isLoading
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(
@@ -362,7 +455,7 @@ fun SignInScreen(
             text = "Don't have an account? Sign Up",
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.clickable { navController.navigate("sign-up") }
+            modifier = Modifier.clickable(enabled = !isLoading) { navController.navigate("sign-up") }
         )
     }
 
