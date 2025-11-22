@@ -5,8 +5,10 @@ import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
-
-
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.*
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
@@ -108,6 +110,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
@@ -119,6 +122,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
+import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.White
 import kotlinx.coroutines.withContext
@@ -126,6 +130,9 @@ import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+
+
 
 
 fun saveBitmapToCache(context: Context, bitmap: Bitmap): Uri {
@@ -176,14 +183,14 @@ fun SaveButton(
 }
 
 
-
 @Composable
 fun TopBarWithSave(
     title: String,
     onBack: () -> Unit,
     onSave: () -> Unit,
     enabled: Boolean,
-    isSaving: Boolean
+    isSaving: Boolean,
+    titleColor: Color = Color.Black
 ) {
     Row(
         modifier = Modifier
@@ -200,10 +207,18 @@ fun TopBarWithSave(
             Icon(
                 imageVector = Icons.Default.ChevronLeft,
                 contentDescription = "Back",
-                modifier = Modifier.size(30.dp)
+                modifier = Modifier.size(30.dp),
+                tint = Color(0xFF1976D2)
             )
+
             Spacer(modifier = Modifier.width(4.dp))
-            Text(title, style = MaterialTheme.typography.bodyMedium)
+
+            // ✅ FIX: Title now uses `titleColor`
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = titleColor
+            )
         }
 
         if (isSaving) {
@@ -212,7 +227,6 @@ fun TopBarWithSave(
                 strokeWidth = 2.dp
             )
         } else {
-
             Button(
                 onClick = onSave,
                 enabled = enabled,
@@ -226,6 +240,7 @@ fun TopBarWithSave(
             }
         }
     }
+
     Log.d("TopBarWithSave", "Title: $title")
 }
 
@@ -268,34 +283,7 @@ fun isValidImageType(context: Context, uri: Uri): Boolean {
     return mimeType == "image/jpeg" || mimeType == "image/png"
 }
 
-//@Composable
-//fun BackHeader(
-//    title: String,
-//    onBack: () -> Unit,
-//    titleColor: Color = Color(0xFF1976D2)
-//
-//) {
-//    Row(
-//        verticalAlignment = Alignment.CenterVertically,
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(vertical = 8.dp)
-//    ) {
-//        Row(
-//            verticalAlignment = Alignment.CenterVertically,
-//            modifier = Modifier.clickable { onBack() }
-//        ) {
-//            Icon(
-//                imageVector = Icons.Default.ChevronLeft,
-//                contentDescription = "Back",
-//                modifier = Modifier.size(30.dp)
-//            )
-//            Spacer(modifier = Modifier.width(4.dp)) // Tight spacing
-//            Text(title, style = MaterialTheme.typography.bodyMedium)
-//        }
-//    }
-//    Log.d("BackHeader", "Title: $title")
-//}
+
 
 @Composable
 fun BackHeader(
@@ -367,7 +355,6 @@ fun ProfileImage(capturedBitmap: ImageBitmap?) {
     }
     Log.d("ProfileImage", "CapturedBitmap: $capturedBitmap")
 }
-
 @Composable
 fun PhotoOptionsMenu(
     showMenu: Boolean,
@@ -381,12 +368,13 @@ fun PhotoOptionsMenu(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .clickable(onClick = onToggleMenu)
-                .padding(16.dp)
+                .padding(16.dp),
         ) {
             Text(
-                modifier = Modifier.offset(x = (20).dp),
+                modifier = Modifier.offset(x = 20.dp),
                 text = "Photo Options",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF1976D2),
             )
             Icon(
                 modifier = Modifier.offset(20.dp),
@@ -397,15 +385,33 @@ fun PhotoOptionsMenu(
 
         DropdownMenu(
             expanded = showMenu,
-            onDismissRequest = onToggleMenu
+            onDismissRequest = onToggleMenu,
         ) {
-            DropdownMenuItem(text = { Text("Take Photo") }, onClick = onTakePhoto)
-            DropdownMenuItem(text = { Text("Upload from Gallery") }, onClick = onUpload)
-            DropdownMenuItem(text = { Text("Delete Photo") }, onClick = onDelete)
+            // Take Photo
+            DropdownMenuItem(
+                text = { Text("Take Photo", color = Color.White) },
+                onClick = onTakePhoto,
+                modifier = Modifier.background(Color(0xFF1976D2))
+            )
+
+            // Upload from Gallery
+            DropdownMenuItem(
+                text = { Text("Upload from Gallery", color = Color.White) },
+                onClick = onUpload,
+                modifier = Modifier.background(Color(0xFF1976D2))
+            )
+
+            // Delete Photo
+            DropdownMenuItem(
+                text = { Text("Delete Photo", color = Color.White) },
+                onClick = onDelete,
+                modifier = Modifier.background(Color(0xFF1976D2))
+            )
         }
     }
     Log.d("PhotoOptionsMenu", "ShowMenu: $showMenu")
 }
+
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -653,117 +659,6 @@ fun AccountFormBottom(
     }
 }
 
-//@Composable
-//fun HealthInformationSection(
-//    bloodGroup: MutableState<String>,
-//    allergies: MutableState<String>,
-//    medications: MutableState<String>
-//) {
-//    var bloodGroupExpanded by remember { mutableStateOf(false) }
-//    val bloodGroups = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-")
-//    val focusManager = LocalFocusManager.current
-//
-//    Column(modifier = Modifier.padding(16.dp)) {
-//        Text("Health Information", style = MaterialTheme.typography.titleMedium)
-//
-//        // MEDICATIONS
-//        OutlinedTextField(
-//            value = medications.value,
-//            onValueChange = { medications.value = it },
-//            label = { Text("Medication") },
-//            leadingIcon = {
-//                RoundedIcon(Icons.Default.Medication, ButtonBlue, White)
-//            },
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .onPreviewKeyEvent { keyEvent ->
-//                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
-//                        focusManager.moveFocus(FocusDirection.Down)
-//                        true
-//                    } else false
-//                }
-//        )
-//
-//        Spacer(modifier = Modifier.height(8.dp))
-//
-//        // ALLERGIES
-//        OutlinedTextField(
-//            value = allergies.value,
-//            onValueChange = { allergies.value = it },
-//            label = { Text("Allergies") },
-//            leadingIcon = {
-//                RoundedIcon(Icons.Default.MedicalInformation, ButtonBlue, White)
-//            },
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .onPreviewKeyEvent { keyEvent ->
-//                    if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
-//                        focusManager.moveFocus(FocusDirection.Down)
-//                        true
-//                    } else false
-//                }
-//        )
-//
-//        Spacer(modifier = Modifier.height(8.dp))
-//
-//        // BLOOD GROUP
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .zIndex(1f)
-//        ) {
-//            OutlinedTextField(
-//                value = bloodGroup.value,
-//                onValueChange = {},
-//                readOnly = true,
-//                label = { Text("Blood Group") },
-//                leadingIcon = {
-//                    RoundedIcon(Icons.Default.Bloodtype, ButtonBlue, White)
-//                },
-//                trailingIcon = {
-//                    Icon(
-//                        Icons.Default.ArrowDropDown,
-//                        contentDescription = "Select Blood Group"
-//                    )
-//                },
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .onPreviewKeyEvent { keyEvent ->
-//                        if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
-//                            focusManager.moveFocus(FocusDirection.Down)
-//                            true
-//                        } else false
-//                    }
-//            )
-//
-//            // Clickable overlay
-//            Spacer(
-//                modifier = Modifier
-//                    .matchParentSize()
-//                    .clickable { bloodGroupExpanded = true }
-//            )
-//
-//            DropdownMenu(
-//                expanded = bloodGroupExpanded,
-//                onDismissRequest = { bloodGroupExpanded = false },
-//                modifier = Modifier.fillMaxWidth()
-//            ) {
-//                bloodGroups.forEach { group ->
-//                    DropdownMenuItem(
-//                        text = { Text(group) },
-//                        onClick = {
-//                            bloodGroup.value = group
-//                            bloodGroupExpanded = false
-//                        }
-//                    )
-//                }
-//            }
-//        }
-//    }
-//
-//    Log.d("HealthInformationSection", "Blood Group: ${bloodGroup.value}")
-//}
-//
 
 @Composable
 fun EmergencyContactSection(
@@ -922,7 +817,8 @@ fun AccountFormTop(
                     }
                 },
                 enabled = isValid,
-                isSaving = isSaving
+                isSaving = isSaving,
+                titleColor = Color(0xFF1976D2),
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -976,6 +872,9 @@ fun AccountFormTop(
 }
 @Composable
 fun AccountFormScreen(navController: NavHostController) {
+    // Use cached profile bitmap - no duplicate declaration
+    var profileBitmap by remember { mutableStateOf(UserDataCache.profileBitmap) }
+
     // User info state
     val firstname = remember { mutableStateOf("") }
     val lastname = remember { mutableStateOf("") }
@@ -991,38 +890,25 @@ fun AccountFormScreen(navController: NavHostController) {
     val allergies = remember { mutableStateOf("") }
     val medications = remember { mutableStateOf("") }
 
-    // Profile bitmap state
-    var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    // Load data from cache when screen opens
+    LaunchedEffect(UserDataCache.isDataLoaded) {
+        if (UserDataCache.isDataLoaded) {
+            // Load profile image from cache
+            profileBitmap = UserDataCache.profileBitmap
 
-    // Load profile image from Firestore on launch
-    LaunchedEffect(Unit) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid
-        if (uid != null) {
-            try {
-                val user = withContext(Dispatchers.IO) {
-                    FirestoreHelper.getUser(uid)
-                }
-
-                // Check temp storage first
-                val tempBitmap = TempProfileStorage.tempProfileBitmap
-                if (tempBitmap != null) {
-                    profileBitmap = tempBitmap
-                } else {
-                    // Load from Firestore URL if temp storage is empty
-                    user?.profileImageUrl?.let { url ->
-                        withContext(Dispatchers.IO) {
-                            try {
-                                val stream = URL(url).openStream()
-                                profileBitmap = BitmapFactory.decodeStream(stream)
-                            } catch (e: Exception) {
-                                Log.e("AccountFormScreen", "Error loading image: ${e.message}")
-                            }
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("AccountFormScreen", "Error loading user data: ${e.message}")
+            // Check temp storage first (for newly taken photos)
+            TempProfileStorage.tempProfileBitmap?.let {
+                profileBitmap = it
+                UserDataCache.profileBitmap = it  // Update cache too
             }
+        }
+    }
+
+    // Update when new photo is taken
+    LaunchedEffect(TempProfileStorage.tempProfileBitmap) {
+        TempProfileStorage.tempProfileBitmap?.let {
+            profileBitmap = it
+            UserDataCache.profileBitmap = it  // Update cache too
         }
     }
 
@@ -1067,12 +953,6 @@ fun AccountFormScreen(navController: NavHostController) {
                 phoneNumber = phoneNumber,
                 city = city
             )
-
-//            HealthInformationSection(
-//                bloodGroup = bloodGroup,
-//                allergies = allergies,
-//                medications = medications
-//            )
         }
     }
     Log.d("AccountFormScreen", "Recomposing AccountFormScreen")

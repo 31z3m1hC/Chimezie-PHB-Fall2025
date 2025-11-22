@@ -8,6 +8,7 @@ import android.content.Intent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
@@ -17,8 +18,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -45,125 +48,96 @@ val bottomNavItems = listOf(
     BottomNavItem("profile", Icons.Filled.Person, "Profile")
 )
 
-// -------------------- BOTTOM NAV BAR --------------------
-@Composable
-fun BottomNavBar(
-    currentRoute: String?,
-    onItemClick: (String) -> Unit
-) {
-    NavigationBar(
-        containerColor = Color.White
-    ) {
-        bottomNavItems.forEach { item ->
-            val selected = currentRoute == item.route
-            NavigationBarItem(
-                selected = selected,
-                onClick = { onItemClick(item.route) },
-                icon = { Icon(imageVector = item.icon, contentDescription = item.label) },
-                label = { Text(text = item.label) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = ButtonBlue,
-                    selectedTextColor = ButtonBlue,
-                    unselectedIconColor = MediumGray,
-                    unselectedTextColor = MediumGray
-                )
-            )
-        }
-    }
-}
+// -------------------- SCREENS THAT SHOULD HIDE BOTTOM NAV --------------------
+val screensWithoutBottomNav = setOf(
+    "welcome",
+    "sign-in",
+    "sign-up",
+    "reset-password",
+    "account",
+    "account-form",
+    "chat_ai_screen",
+    "faqs"
+)
 
-// -------------------- WRAPPER --------------------
-@Composable
-fun ScreenWithBottomNav(
-    navController: NavHostController,
-    content: @Composable (NavHostController) -> Unit
-) {
-    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-
-    Scaffold(
-        bottomBar = {
-            BottomNavBar(
-                currentRoute = currentRoute,
-                onItemClick = { route ->
-                    navController.navigate(route) {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
-            content(navController)
-        }
-    }
-}
-
-// -------------------- APP NAVIGATION --------------------
+// -------------------- APP NAVIGATION (SIMPLIFIED) --------------------
 @Composable
 fun AppNavigation(
     navController: NavHostController,
     googleSignInClient: GoogleSignInClient,
     launcher: ActivityResultLauncher<Intent>,
 ) {
-    NavHost(
-        navController = navController,
-        startDestination = "welcome"
-    ) {
-        // Auth screens (no bottom nav)
-        composable("welcome") { WelcomeScreen(navController) }
-        composable("sign-in") { SignInScreen(navController, googleSignInClient, launcher) }
-        composable("sign-up") { SignUpScreen(navController, googleSignInClient, launcher) }
-        composable("reset-password") {
-            ResetPasswordDialog(navController, onDismiss = { navController.popBackStack() })
-        }
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
-        // Screens WITH bottom nav
-        composable("home") {
-            ScreenWithBottomNav(navController) { innerNav ->
-                HomeScreen(innerNav)
+    Scaffold(
+        bottomBar = {
+            // Show bottom nav only if current route is NOT in the exclusion list
+            if (currentRoute !in screensWithoutBottomNav) {
+                NavigationBar(
+                    containerColor = Color.White,
+                    modifier = Modifier.clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                ) {
+                    bottomNavItems.forEach { item ->
+                        NavigationBarItem(
+                            selected = currentRoute == item.route,
+                            onClick = {
+                                navController.navigate(item.route) {
+                                    // Pop up to home to avoid building large stack
+                                    popUpTo("home") {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            icon = { Icon(item.icon, contentDescription = item.label) },
+                            label = { Text(item.label) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = ButtonBlue,
+                                selectedTextColor = ButtonBlue,
+                                unselectedIconColor = MediumGray,
+                                unselectedTextColor = MediumGray
+                            )
+                        )
+                    }
+                }
             }
         }
-        composable("map") {
-            ScreenWithBottomNav(navController) { innerNav ->
-                GoogleMapScreen(innerNav)
+    ) { paddingValues ->
+        NavHost(
+            navController = navController,
+            startDestination = "welcome",
+            modifier = Modifier.padding(paddingValues)
+        ) {
+            // -------------------- AUTH SCREENS --------------------
+            composable("welcome") { WelcomeScreen(navController) }
+            composable("sign-in") { SignInScreen(navController, googleSignInClient, launcher) }
+            composable("sign-up") { SignUpScreen(navController, googleSignInClient, launcher) }
+            composable("reset-password") {
+                ResetPasswordDialog(navController, onDismiss = { navController.popBackStack() })
             }
-        }
-        composable("notifications") {
-            ScreenWithBottomNav(navController) { innerNav ->
-                NotificationScreen(innerNav)
-            }
-        }
-        composable("profile") {
-            ScreenWithBottomNav(navController) { innerNav ->
-                ProfileScreen(innerNav, profileItems, "profile")
-            }
-        }
-        composable("blood_group_screen") {
-            ScreenWithBottomNav(navController) { innerNav ->
-                BloodGroupScreen(innerNav)
-            }
-        }
-        composable("medicates_screen") {
-            ScreenWithBottomNav(navController) { innerNav ->
-                MedicateScreen(innerNav)
-            }
-        }
-        composable("emergency-contacts") {
-            ScreenWithBottomNav(navController) { innerNav ->
-                EmergencyContactScreen(innerNav)
-            }
-        }
-        composable("account") { AccountScreen(navController) }
-        composable("account-form") { AccountFormScreen(navController) }
 
+            // -------------------- MAIN SCREENS (with bottom nav) --------------------
+            composable("home") { HomeScreen(navController) }
+            composable("map") { GoogleMapScreen(navController) }
+            composable("notifications") { NotificationScreen(navController) }
+            composable("profile") { ProfileScreen(navController, profileItems, "profile") }
 
+            // -------------------- FEATURE SCREENS (with bottom nav) --------------------
+            composable("blood_group_screen") { BloodGroupScreen(navController) }
+            composable("medicates_screen") { MedicateScreen(navController) }
+            composable("emergency-contacts") { EmergencyContactScreen(navController) }
+            //composable("bmi_screen") { BMIScreen(navController) }
 
-        // Other feature screens (no bottom nav)
-        //composable("chat_ai_screen") { ChatAIScreen(navController) }
-        //composable("faqs") { FaqsScreen(navController) }
-        composable("logout") { LogoutConfirmationDialog(onConfirm = { navController.popBackStack() }, onCancel = {}) }
-        composable("notifications") { NotificationScreen(navController) }
+            // -------------------- PROFILE SUB-SCREENS (no bottom nav) --------------------
+            composable("account") { AccountScreen(navController) }
+            composable("account-form") { AccountFormScreen(navController) }
+            //composable("appointment") { AppointmentScreen(navController) }
+            //composable("faqs") { FaqsScreen(navController) }
+
+            // -------------------- OTHER SCREENS --------------------
+            //composable("chat_ai_screen") { ChatAIScreen(navController) }
+        }
     }
 }

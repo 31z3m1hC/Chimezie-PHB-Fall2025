@@ -1,5 +1,6 @@
 package com.unh.personal_health_buddy
 
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -13,17 +14,20 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
+import com.unh.personal_health_buddy.Authentication.FirestoreHelper
+import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.firebase.SetupAuthentication
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.URL
 
 
-// -------------------- MAIN ACTIVITY --------------------
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // This enables edge-to-edge drawing (status + navigation bars)
         enableEdgeToEdge()
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
 
         Log.d("MainActivity", "onCreate called")
 
@@ -34,9 +38,43 @@ class MainActivity : ComponentActivity() {
             PersonalHealthBuddyTheme {
                 LaunchedEffect(Unit) {
                     FirebaseApp.initializeApp(context)
+
+                    // Fetch data once when app starts
+                    val uid = FirebaseAuth.getInstance().currentUser?.uid
+                    if (uid != null && !UserDataCache.isDataLoaded) {
+                        withContext(Dispatchers.IO) {
+                            try {
+                                Log.d("MainActivity", "Fetching user data...")
+
+                                // Fetch all data once
+                                UserDataCache.user = FirestoreHelper.getUser(uid)
+                                UserDataCache.emergencyContacts = FirestoreHelper.readAllEmergencyContacts()
+                                UserDataCache.healthInfo = FirestoreHelper.getHealthInformation()
+
+                                // Load profile image
+                                val tempBitmap = TempProfileStorage.tempProfileBitmap
+                                if (tempBitmap != null) {
+                                    UserDataCache.profileBitmap = tempBitmap
+                                } else {
+                                    UserDataCache.user?.profileImageUrl?.let { url ->
+                                        try {
+                                            val stream = URL(url).openStream()
+                                            UserDataCache.profileBitmap = BitmapFactory.decodeStream(stream)
+                                        } catch (e: Exception) {
+                                            Log.e("MainActivity", "Error loading profile image: ${e.message}")
+                                        }
+                                    }
+                                }
+
+                                UserDataCache.isDataLoaded = true
+                                Log.d("MainActivity", "User data cached successfully")
+                            } catch (e: Exception) {
+                                Log.e("MainActivity", "Error loading user data: ${e.message}")
+                            }
+                        }
+                    }
                 }
 
-                // Your root navigation/authentication setup
                 SetupAuthentication(
                     activity = this@MainActivity,
                     navController = navController,

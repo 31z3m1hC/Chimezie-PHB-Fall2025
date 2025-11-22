@@ -39,6 +39,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.EmailAuthProvider
@@ -56,17 +57,39 @@ import kotlinx.coroutines.tasks.await
 import java.net.URL
 
 
+
+
+
+
+
+@Composable
+fun BloodGroupScreen(navController: NavController) {
+    // Use cached blood group instead of fetching
+    var userBloodType by remember {
+        mutableStateOf(UserDataCache.healthInfo?.bloodGroup?.ifBlank { "O-" } ?: "O-")
+    }
+    var isLoading by remember { mutableStateOf(!UserDataCache.isDataLoaded) }
+
+    LaunchedEffect(UserDataCache.isDataLoaded) {
+        if (UserDataCache.isDataLoaded) {
+            userBloodType = UserDataCache.healthInfo?.bloodGroup?.ifBlank { "O-" } ?: "O-"
+            isLoading = false
+        }
+    }
+
+    // ... rest of your BloodGroupScreen code
+}
 @Composable
 fun AccountScreen(navController: NavHostController) {
     val scrollState = rememberScrollState()
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
     val context = LocalContext.current
 
-    // Primary data states (reflecting stored data)
-    var user by remember { mutableStateOf<User?>(null) }
-    var emergencyContacts by remember { mutableStateOf<List<EmergencyContact>>(emptyList()) }
-    var healthInfo by remember { mutableStateOf<HealthInformation?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
+    // Use cached data instead of fetching from Firestore
+    var user by remember { mutableStateOf(UserDataCache.user) }
+    var emergencyContacts by remember { mutableStateOf(UserDataCache.emergencyContacts) }
+    var healthInfo by remember { mutableStateOf(UserDataCache.healthInfo) }
+    var isLoading by remember { mutableStateOf(!UserDataCache.isDataLoaded) }
     var isSaving by remember { mutableStateOf(false) }
 
     // State for in-screen editing
@@ -76,7 +99,7 @@ fun AccountScreen(navController: NavHostController) {
     var editableFirstname by remember { mutableStateOf("") }
     var editableLastname by remember { mutableStateOf("") }
     var editableDateOfBirth by remember { mutableStateOf("") }
-    var editableGender by remember { mutableStateOf("") } // String for UI
+    var editableGender by remember { mutableStateOf("") }
     var editableEmail by remember { mutableStateOf("") }
     var editablePhoneNumber by remember { mutableStateOf("") }
     var editableHomeAddress by remember { mutableStateOf("") }
@@ -85,7 +108,6 @@ fun AccountScreen(navController: NavHostController) {
     var editableBloodGroup by remember { mutableStateOf("") }
     var editableAllergies by remember { mutableStateOf("") }
     var editableMedication by remember { mutableStateOf("") }
-    // *****************************
 
     // Delete account dialog states
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -95,8 +117,7 @@ fun AccountScreen(navController: NavHostController) {
     var deleteError by remember { mutableStateOf<String?>(null) }
     var expandedDropdown by remember { mutableStateOf(false) }
 
-
-    // Function to initialize editable states from primary states
+    // Function to initialize editable states from cached data
     val initializeEditableStates: (User?, List<EmergencyContact>, HealthInformation?) -> Unit = { loadedUser, loadedContacts, loadedHealth ->
         loadedUser?.let { u ->
             editableFirstname = u.firstname
@@ -121,33 +142,18 @@ fun AccountScreen(navController: NavHostController) {
         }
     }
 
-    // Load data and initialize states
-    LaunchedEffect(userId) {
-        isLoading = true
-        try {
-            val loadedUser = withContext(Dispatchers.IO) {
-                FirestoreHelper.getUser(userId)
-            }
-            val loadedContacts = withContext(Dispatchers.IO) {
-                FirestoreHelper.readAllEmergencyContacts()
-            }
-            val loadedHealth = withContext(Dispatchers.IO) {
-                FirestoreHelper.getHealthInformation()
-            }
-
-            user = loadedUser
-            emergencyContacts = loadedContacts
-            healthInfo = loadedHealth
-            initializeEditableStates(loadedUser, loadedContacts, loadedHealth)
-
-        } catch (e: Exception) {
-            Log.e("AccountScreen", "Error fetching data: ${e.message}")
-        } finally {
+    // Wait for cache to load if not ready
+    LaunchedEffect(UserDataCache.isDataLoaded) {
+        if (UserDataCache.isDataLoaded) {
+            user = UserDataCache.user
+            emergencyContacts = UserDataCache.emergencyContacts
+            healthInfo = UserDataCache.healthInfo
+            initializeEditableStates(user, emergencyContacts, healthInfo)
             isLoading = false
         }
     }
 
-    // *** SAVE LOGIC IMPLEMENTATION ***
+    // *** SAVE LOGIC - Update both Firestore AND cache ***
     val onSaveClick: () -> Unit = {
         if (!isSaving) {
             isSaving = true
@@ -182,12 +188,18 @@ fun AccountScreen(navController: NavHostController) {
                         medication = editableMedication
                     ).takeIf { it.bloodGroup.isNotBlank() || it.allergies.isNotBlank() || it.medication.isNotBlank() }
 
+                    // Save to Firestore
                     FirestoreHelper.updateUserData(
                         userId,
                         updatedUser,
                         editableEmergencyContacts.toList(),
                         updatedHealth
                     )
+
+                    // Update cache
+                    UserDataCache.user = updatedUser
+                    UserDataCache.emergencyContacts = editableEmergencyContacts.toList()
+                    UserDataCache.healthInfo = updatedHealth
 
                     withContext(Dispatchers.Main) {
                         user = updatedUser
@@ -217,7 +229,8 @@ fun AccountScreen(navController: NavHostController) {
                 Icon(
                     Icons.Default.Warning,
                     contentDescription = "Warning",
-                    tint = Color(0xFFFF9800))
+                    tint = Color(0xFFFF9800)
+                )
             },
             title = { Text(text = "Delete Account?") },
             text = {
@@ -252,7 +265,13 @@ fun AccountScreen(navController: NavHostController) {
     // --- Password Re-authentication Dialog ---
     if (showPasswordDialog) {
         AlertDialog(
-            onDismissRequest = { if (!isDeleting) { showPasswordDialog = false; passwordInput = ""; deleteError = null } },
+            onDismissRequest = {
+                if (!isDeleting) {
+                    showPasswordDialog = false
+                    passwordInput = ""
+                    deleteError = null
+                }
+            },
             title = { Text(text = "Confirm Password") },
             text = {
                 Column {
@@ -293,6 +312,7 @@ fun AccountScreen(navController: NavHostController) {
                                         withContext(Dispatchers.Main) {
                                             if (success) {
                                                 Toast.makeText(context, "Account deleted successfully", Toast.LENGTH_LONG).show()
+                                                UserDataCache.clear()  // Clear cache on delete
                                                 TempProfileStorage.tempProfileBitmap = null
                                                 navController.navigate("welcome") { popUpTo(0) { inclusive = true } }
                                             } else {
@@ -398,15 +418,12 @@ fun AccountScreen(navController: NavHostController) {
                     editableAllergies = editableAllergies,
                     editableMedication = editableMedication,
 
-                    // --- INPUT FILTERING START ---
                     onFirstnameChange = { newValue ->
-                        // Accept the change only if it's not purely numeric or empty
                         if (newValue.isEmpty() || !newValue.all { it.isDigit() }) {
                             editableFirstname = newValue
                         }
                     },
                     onLastnameChange = { newValue ->
-                        // Accept the change only if it's not purely numeric or empty
                         if (newValue.isEmpty() || !newValue.all { it.isDigit() }) {
                             editableLastname = newValue
                         }
@@ -415,7 +432,6 @@ fun AccountScreen(navController: NavHostController) {
                     onGenderChange = { editableGender = it },
                     onEmailChange = { editableEmail = it },
                     onPhoneNumberChange = { newValue ->
-                        // Only allow digits and max 10 characters
                         if (newValue.length <= 10 && newValue.all { it.isDigit() }) {
                             editablePhoneNumber = newValue
                         }
@@ -425,7 +441,6 @@ fun AccountScreen(navController: NavHostController) {
                     onBloodGroupChange = { editableBloodGroup = it },
                     onAllergiesChange = { editableAllergies = it },
                     onMedicationChange = { editableMedication = it }
-                    // --- INPUT FILTERING END ---
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -446,7 +461,6 @@ fun AccountScreen(navController: NavHostController) {
         }
     }
 }
-
 
 
 
@@ -779,7 +793,7 @@ fun EditableOrInfoRow(
 
         if (isEditing && !readOnly) {
             if (isDropdown && dropdownOptions.isNotEmpty()) {
-                // Dropdown Menu Implementation
+                // ✅ FIX: Dropdown Menu Implementation with FULL clickable field
                 Box(modifier = Modifier.weight(0.6f)) {
                     OutlinedTextField(
                         value = value,
@@ -789,16 +803,21 @@ fun EditableOrInfoRow(
                         trailingIcon = {
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = "Dropdown",
-                                modifier = Modifier.clickable { expandedDropdown = !expandedDropdown }
+                                contentDescription = "Dropdown"
                             )
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp)
-                            .padding(vertical = 0.dp)
-                            .clickable { expandedDropdown = !expandedDropdown },
+                            .padding(vertical = 0.dp),
                         textStyle = MaterialTheme.typography.bodyMedium
+                    )
+
+                    // ✅ FIX: Invisible clickable Box covering entire field
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { expandedDropdown = !expandedDropdown }
                     )
 
                     DropdownMenu(
@@ -842,7 +861,7 @@ fun EditableOrInfoRow(
     }
 }
 
-// Add this constant at the top level (outside the composables)
+// Keep this constant at the top level
 val BLOOD_GROUPS = listOf("O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-")
 
 // In the BottomSection, replace the Blood Group EditableOrInfoRow with:
@@ -993,7 +1012,11 @@ fun AccountTopSection(
                                 contentDescription = "Edit User Details",
                                 tint = Color(0xFF1976D2)
                             )
-                            Text("Account Form")
+                            Text(
+                                text = "Account Form",
+                                color = Color(0xFF1976D2),
+                            )
+
                         }
                     },
                     onClick = {

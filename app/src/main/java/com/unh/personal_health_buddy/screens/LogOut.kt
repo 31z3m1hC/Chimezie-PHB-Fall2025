@@ -15,7 +15,9 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.google.firebase.auth.FirebaseAuth
 import com.unh.personal_health_buddy.R
+import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.White
 
@@ -25,8 +27,8 @@ import com.unh.personal_health_buddy.ui.theme.White
 @Composable
 fun LogoutConfirmationDialog(
     onConfirm: () -> Unit,
-    onCancel: () -> Unit)
-{
+    onCancel: () -> Unit
+) {
     AlertDialog(
         onDismissRequest = onCancel,
         title = {
@@ -42,7 +44,13 @@ fun LogoutConfirmationDialog(
                 verticalArrangement = Arrangement.Center
             ) {
                 Button(
-                    onClick = onConfirm,
+                    onClick = {
+                        // Clear cache on logout
+                        UserDataCache.clear()
+                        TempProfileStorage.tempProfileBitmap = null
+                        FirebaseAuth.getInstance().signOut()
+                        onConfirm()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -63,7 +71,6 @@ fun LogoutConfirmationDialog(
                         containerColor = ButtonBlue,
                         contentColor = White
                     ),
-
                 ) {
                     Text("Cancel")
                 }
@@ -71,7 +78,6 @@ fun LogoutConfirmationDialog(
         }
     )
 }
-
 
 @Preview(showBackground = true)
 @Composable

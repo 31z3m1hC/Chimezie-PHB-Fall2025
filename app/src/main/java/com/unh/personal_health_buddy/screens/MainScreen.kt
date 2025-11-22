@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource.Companion.SideEffect
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -54,7 +55,7 @@ data class BottomNavItem(
 val bottomNavItems = listOf(
     BottomNavItem("home", Icons.Default.Home, "Home"),
     BottomNavItem("map", Icons.Default.LocationOn, "Map"),
-    BottomNavItem("notifications", Icons.Default.Notifications, "Notifications"),
+    BottomNavItem("notifications", Icons.Default.Notifications, "Notification"),
     BottomNavItem("profile", Icons.Default.Person, "Profile"),
 )
 
@@ -81,8 +82,12 @@ fun MainScreen(navController: NavHostController) {
                         label = { Text(item.label) },
                         selected = currentRoute == item.route,
                         onClick = {
+                            // ✅ FIX: Proper navigation with correct popUpTo
                             innerNavController.navigate(item.route) {
-                                popUpTo(item.route) { saveState = true }
+                                // Pop up to the start destination (home) to avoid stack buildup
+                                popUpTo(innerNavController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
                                 launchSingleTop = true
                                 restoreState = true
                             }
@@ -97,7 +102,7 @@ fun MainScreen(navController: NavHostController) {
             startDestination = "home",
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues) // respect bottom nav height
+                .padding(paddingValues)
         ) {
             composable("home") { HomeScreen(navController) }
             composable("map") { GoogleMapScreen(navController) }
@@ -105,7 +110,6 @@ fun MainScreen(navController: NavHostController) {
             composable("profile") { ProfileScreen(navController, profileItems, "profile") }
             composable("account") { AccountScreen(navController) }
             composable("account-form") { AccountFormScreen(navController) }
-
         }
     }
 }

@@ -47,6 +47,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.unh.personal_health_buddy.R
+import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.ui.theme.BloodOrange
 import com.unh.personal_health_buddy.ui.theme.BmiPink
 import com.unh.personal_health_buddy.ui.theme.ChatGreen
@@ -74,46 +75,35 @@ fun getGreeting(): String {
         else -> "Welcome,"
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
 ) {
-    var firstName by remember { mutableStateOf("User") }
-    var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var profileImageUrl by remember { mutableStateOf<String?>(null) }
+    // Use cached data instead of fetching from Firestore
+    var firstName by remember { mutableStateOf(UserDataCache.user?.firstname ?: "User") }
+    var profileBitmap by remember { mutableStateOf(UserDataCache.profileBitmap) }
 
     val greeting by remember { mutableStateOf(getGreeting()) }
 
-    LaunchedEffect(true) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid
-        if (uid != null) {
-            FirebaseFirestore.getInstance()
-                .collection("users")
-                .document(uid)
-                .get()
-                .addOnSuccessListener { document ->
-                    firstName = document.getString("firstname") ?: "User"
-                    profileImageUrl = document.getString("profileImageUrl")
-                }
+    // Update from cache when it's loaded
+    LaunchedEffect(UserDataCache.isDataLoaded) {
+        if (UserDataCache.isDataLoaded) {
+            firstName = UserDataCache.user?.firstname ?: "User"
+            profileBitmap = UserDataCache.profileBitmap
+
+            // Check temp storage for newly taken photos
+            TempProfileStorage.tempProfileBitmap?.let {
+                profileBitmap = it
+            }
         }
     }
 
-    LaunchedEffect(profileImageUrl, TempProfileStorage.tempProfileBitmap) {
-        val tempBitmap = TempProfileStorage.tempProfileBitmap
-        if (tempBitmap != null) {
-            profileBitmap = tempBitmap
-        } else {
-            profileImageUrl?.let { url ->
-                try {
-                    withContext(Dispatchers.IO) {
-                        val stream = URL(url).openStream()
-                        profileBitmap = BitmapFactory.decodeStream(stream)
-                    }
-                } catch (e: Exception) {
-                    Log.e("HomeScreen", "Error loading image: ${e.message}")
-                }
-            }
+    // Update when new photo is taken
+    LaunchedEffect(TempProfileStorage.tempProfileBitmap) {
+        TempProfileStorage.tempProfileBitmap?.let {
+            profileBitmap = it
         }
     }
 
@@ -186,9 +176,7 @@ fun HomeScreen(
             )
         }
 
-
         Spacer(modifier = Modifier.height(32.dp))
-
 
         // ---------- BOTTOM WHITE AREA WITH CARDS ----------
         Column(
@@ -266,7 +254,6 @@ fun HomeScreen(
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -74,12 +74,14 @@ fun MedicateScreen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(backgroundGradient)
+        // ✅ FIX: Remove padding to allow background to extend into status bar
     ) {
 
         Scaffold(
             topBar = {
                 TopAppBar(
-                    modifier = Modifier.padding(top = 30.dp),
+                    // ✅ FIX: Remove the offset, use normal padding
+                    modifier = Modifier.padding(top = 16.dp),
                     title = {
                         Text(
                             "Medication",
@@ -106,11 +108,10 @@ fun MedicateScreen(navController: NavController) {
             },
 
             floatingActionButton = {
-                // 🔹 FIX: Add bottom padding here to lift FAB above BottomNavigationBar
                 Column(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(18.dp),
-                    modifier = Modifier.padding(bottom = 80.dp) // Adjust 80.dp based on your BottomBar height
+                    modifier = Modifier.padding(bottom = 80.dp)
                 ) {
 
                     AnimatedVisibility(isMenuExpanded) {
@@ -187,7 +188,6 @@ fun MedicateScreen(navController: NavController) {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.spacedBy(14.dp),
-                            // Add bottom padding to LazyColumn so last item isn't hidden by FAB/BottomBar
                             contentPadding = PaddingValues(bottom = 100.dp)
                         ) {
                             items(prescriptions) { prescription ->
@@ -254,7 +254,6 @@ fun MedicateScreen(navController: NavController) {
         }
     }
 }
-
 // Mini FAB row with label
 @Composable
 private fun MiniFabWithText(

@@ -38,10 +38,10 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.unh.personal_health_buddy.R
+import com.unh.personal_health_buddy.database.UserDataCache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URL
-
 
 // ------------------- Profile Items -------------------
 sealed class ProfileItem(val title: String, val icon: ImageVector, val route: String) {
@@ -65,10 +65,11 @@ fun ProfileScreen(
     items: List<ProfileItem>,
     currentRoute: String
 ) {
-    var showLogoutDialog by remember { mutableStateOf(false) }
-    var firstName by remember { mutableStateOf("User") }
-    var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
+
     var profileImageUrl by remember { mutableStateOf<String?>(null) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
+    var firstName by remember { mutableStateOf(UserDataCache.user?.firstname ?: "User") }
+    var profileBitmap by remember { mutableStateOf(UserDataCache.profileBitmap) }
 
     // Fetch firstname and profile image URL from Firestore
     LaunchedEffect(true) {
@@ -85,24 +86,33 @@ fun ProfileScreen(
         }
     }
 
-    // Load profile image from temp storage or Firestore URL
-    LaunchedEffect(profileImageUrl, TempProfileStorage.tempProfileBitmap) {
-        val tempBitmap = TempProfileStorage.tempProfileBitmap
-        if (tempBitmap != null) {
-            profileBitmap = tempBitmap
-        } else {
-            profileImageUrl?.let { url ->
-                try {
-                    withContext(Dispatchers.IO) {
-                        val stream = URL(url).openStream()
-                        profileBitmap = BitmapFactory.decodeStream(stream)
-                    }
-                } catch (e: Exception) {
-                    Log.e("ProfileScreen", "Error loading image: ${e.message}")
-                }
+
+        // Update UI when cache is loaded (optional - only if needed for real-time updates)
+        LaunchedEffect(UserDataCache.isDataLoaded) {
+            if (UserDataCache.isDataLoaded) {
+                firstName = UserDataCache.user?.firstname ?: "User"
+                profileBitmap = UserDataCache.profileBitmap
             }
         }
-    }
+
+//    // Load profile image from temp storage or Firestore URL
+//    LaunchedEffect(profileImageUrl, TempProfileStorage.tempProfileBitmap) {
+//        val tempBitmap = TempProfileStorage.tempProfileBitmap
+//        if (tempBitmap != null) {
+//            profileBitmap = tempBitmap
+//        } else {
+//            profileImageUrl?.let { url ->
+//                try {
+//                    withContext(Dispatchers.IO) {
+//                        val stream = URL(url).openStream()
+//                        profileBitmap = BitmapFactory.decodeStream(stream)
+//                    }
+//                } catch (e: Exception) {
+//                    Log.e("ProfileScreen", "Error loading image: ${e.message}")
+//                }
+//            }
+//        }
+//    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -161,7 +171,7 @@ fun ProfileScreen(
                     Text(
                         text = firstName,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.Black
+                        color = Color(0xFF1976D2)   // BLUE NAME
                     )
                 }
             }
@@ -213,7 +223,11 @@ fun ProfileScreen(
                                 .background(Color(0xFFE0EBFF)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(item.icon, contentDescription = item.title, tint = Color(0xFF5AA9E6))
+                            Icon(
+                                item.icon,
+                                contentDescription = item.title,
+                                tint = Color(0xFF1976D2)  // BLUE ICON
+                            )
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
@@ -221,14 +235,14 @@ fun ProfileScreen(
                         Text(
                             text = item.title,
                             style = MaterialTheme.typography.bodyLarge,
-                            color = Color.Black,
+                            color = Color(0xFF1976D2),     // BLUE TEXT
                             modifier = Modifier.weight(1f)
                         )
 
                         Icon(
                             imageVector = androidx.compose.material.icons.Icons.Default.KeyboardArrowRight,
                             contentDescription = "Go",
-                            tint = Color.Gray
+                            tint = Color(0xFF1976D2)    // BLUE ARROW
                         )
                     }
                 }

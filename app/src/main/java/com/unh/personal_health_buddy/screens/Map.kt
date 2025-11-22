@@ -83,9 +83,9 @@ fun GoogleMapScreen(navController: NavController) {
                 Icon(
                     imageVector = Icons.Default.ArrowBackIosNew,
                     contentDescription = "Back to Profile",
-                    tint = PrimaryDarkBlue,
+                    tint = Color(0xFF1976D2),
                     modifier = Modifier
-                        .size(24.dp)
+                        .size(16.dp)
                         .clickable {
                             navController.navigate("home") {
                                 popUpTo(navController.graph.startDestinationId) {
