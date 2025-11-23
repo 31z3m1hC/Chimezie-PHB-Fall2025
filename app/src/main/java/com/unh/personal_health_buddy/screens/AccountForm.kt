@@ -125,6 +125,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
 import com.unh.personal_health_buddy.database.UserDataCache
+import com.unh.personal_health_buddy.ui.theme.AccentOrange
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.White
 import kotlinx.coroutines.withContext
@@ -881,7 +882,6 @@ fun AccountFormTop(
     }
 }
 
-
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AccountFormBottom(
@@ -926,13 +926,13 @@ fun AccountFormBottom(
         }
     }
 
-    // Wrap everything in a Card
+    // Wrap everything in a Card with darker background
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFC8E4EE))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF5A9FBD)) // Darker blue
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
@@ -951,9 +951,9 @@ fun AccountFormBottom(
                 ),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFC8E4EE),
-                    unfocusedContainerColor = Color(0xFFC8E4EE),
-                    disabledContainerColor = Color(0xFFC8E4EE),
+                    focusedContainerColor = Color(0xFF5A9FBD),
+                    unfocusedContainerColor = Color(0xFF5A9FBD),
+                    disabledContainerColor = Color(0xFF5A9FBD),
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     cursorColor = Color.White,
@@ -982,9 +982,9 @@ fun AccountFormBottom(
                 ),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFC8E4EE),
-                    unfocusedContainerColor = Color(0xFFC8E4EE),
-                    disabledContainerColor = Color(0xFFC8E4EE),
+                    focusedContainerColor = Color(0xFF5A9FBD),
+                    unfocusedContainerColor = Color(0xFF5A9FBD),
+                    disabledContainerColor = Color(0xFF5A9FBD),
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     cursorColor = Color.White,
@@ -1016,9 +1016,9 @@ fun AccountFormBottom(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFFC8E4EE),
-                        unfocusedContainerColor = Color(0xFFC8E4EE),
-                        disabledContainerColor = Color(0xFFC8E4EE),
+                        focusedContainerColor = Color(0xFF5A9FBD),
+                        unfocusedContainerColor = Color(0xFF5A9FBD),
+                        disabledContainerColor = Color(0xFF5A9FBD),
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
                         disabledTextColor = Color.White,
@@ -1055,9 +1055,9 @@ fun AccountFormBottom(
                 ),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFC8E4EE),
-                    unfocusedContainerColor = Color(0xFFC8E4EE),
-                    disabledContainerColor = Color(0xFFC8E4EE),
+                    focusedContainerColor = Color(0xFF5A9FBD),
+                    unfocusedContainerColor = Color(0xFF5A9FBD),
+                    disabledContainerColor = Color(0xFF5A9FBD),
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     cursorColor = Color.White,
@@ -1086,9 +1086,9 @@ fun AccountFormBottom(
                 ),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFC8E4EE),
-                    unfocusedContainerColor = Color(0xFFC8E4EE),
-                    disabledContainerColor = Color(0xFFC8E4EE),
+                    focusedContainerColor = Color(0xFF5A9FBD),
+                    unfocusedContainerColor = Color(0xFF5A9FBD),
+                    disabledContainerColor = Color(0xFF5A9FBD),
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     cursorColor = Color.White,
@@ -1119,9 +1119,9 @@ fun AccountFormBottom(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFFC8E4EE),
-                        unfocusedContainerColor = Color(0xFFC8E4EE),
-                        disabledContainerColor = Color(0xFFC8E4EE),
+                        focusedContainerColor = Color(0xFF5A9FBD),
+                        unfocusedContainerColor = Color(0xFF5A9FBD),
+                        disabledContainerColor = Color(0xFF5A9FBD),
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
                         disabledTextColor = Color.White,
@@ -1177,9 +1177,9 @@ fun AccountFormBottom(
                 ),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFC8E4EE),
-                    unfocusedContainerColor = Color(0xFFC8E4EE),
-                    disabledContainerColor = Color(0xFFC8E4EE),
+                    focusedContainerColor = Color(0xFF5A9FBD),
+                    unfocusedContainerColor = Color(0xFF5A9FBD),
+                    disabledContainerColor = Color(0xFF5A9FBD),
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     cursorColor = Color.White,
@@ -1227,10 +1227,10 @@ fun AccountFormBottom(
                 ),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFC8E4EE),
-                    unfocusedContainerColor = Color(0xFFC8E4EE),
-                    disabledContainerColor = Color(0xFFC8E4EE),
-                    errorContainerColor = Color(0xFFC8E4EE),
+                    focusedContainerColor = Color(0xFF5A9FBD),
+                    unfocusedContainerColor = Color(0xFF5A9FBD),
+                    disabledContainerColor = Color(0xFF5A9FBD),
+                    errorContainerColor = Color(0xFF5A9FBD),
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     errorTextColor = Color.White,
@@ -1247,6 +1247,7 @@ fun AccountFormBottom(
         }
     }
 }
+
 
 
 @Composable
@@ -1292,7 +1293,9 @@ fun AccountFormScreen(navController: NavHostController) {
     }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFFABE9B)), // Light green background for entire screen
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // FIXED TOP SECTION (doesn't scroll)
@@ -1336,6 +1339,7 @@ fun AccountFormScreen(navController: NavHostController) {
     }
     Log.d("AccountFormScreen", "Recomposing AccountFormScreen")
 }
+
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

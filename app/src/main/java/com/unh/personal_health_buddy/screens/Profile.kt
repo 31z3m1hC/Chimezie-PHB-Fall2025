@@ -21,6 +21,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -40,12 +41,14 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.ui.theme.AccentOrange
+import com.unh.personal_health_buddy.ui.theme.BmiPink
 import com.unh.personal_health_buddy.ui.theme.ChatGreen
 import com.unh.personal_health_buddy.ui.theme.PrimaryDarkBlue
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URL
+
 
 // ------------------- Profile Items -------------------
 sealed class ProfileItem(val title: String, val icon: ImageVector, val route: String) {
@@ -98,168 +101,164 @@ fun ProfileScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-
-            // ---------- Top Profile Card (UI untouched) ----------
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 4.dp)
-
-                    .background(ChatGreen),
-                contentAlignment = Alignment.Center
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ChatGreen)
+    ) {
+        // ---------- Top Profile Card ----------
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(ChatGreen),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(top = 40.dp, bottom = 40.dp)
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(top = 40.dp, bottom = 40.dp)
+                Box(
+                    modifier = Modifier
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(Color(0xFF5AA9E6), Color(0xFFD6EFFF))
+                            ),
+                            CircleShape
+                        )
+                        .clip(CircleShape)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(Color(0xFF5AA9E6), Color(0xFFD6EFFF))
-                                ),
-                                CircleShape
-                            )
-                            .clip(CircleShape)
-                    ) {
-                        if (profileBitmap != null) {
-                            Image(
-                                bitmap = profileBitmap!!.asImageBitmap(),
-                                contentDescription = "Profile Image",
-                                modifier = Modifier
-                                    .border(0.dp, Color.White, CircleShape)
-                                    .clip(CircleShape)
-                                    .size(110.dp),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Image(
-                                painter = painterResource(id = R.drawable.profile_picture),
-                                contentDescription = "Profile Image",
-                                modifier = Modifier
-                                    .border(0.dp, Color.White, CircleShape)
-                                    .clip(CircleShape)
-                                    .size(110.dp)
-                            )
-                        }
+                    if (profileBitmap != null) {
+                        Image(
+                            bitmap = profileBitmap!!.asImageBitmap(),
+                            contentDescription = "Profile Image",
+                            modifier = Modifier
+                                .border(0.dp, Color.White, CircleShape)
+                                .clip(CircleShape)
+                                .size(110.dp),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.profile_picture),
+                            contentDescription = "Profile Image",
+                            modifier = Modifier
+                                .border(0.dp, Color.White, CircleShape)
+                                .clip(CircleShape)
+                                .size(110.dp)
+                        )
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = firstName,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color(0xFFFFFFFF)   // WHITE NAME
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-
                 }
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = firstName,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = Color(0xFFFFFFFF)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
             }
+        }
 
-            // ---------- Bottom Card with Profile Items ----------
-            Card(
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // ---------- Bottom Column with Profile Items ----------
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .offset(y = (50).dp)
+                .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
+                .background(Color(0xFFC8E4EE) )
+        ) {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth() // extend to bottom nav bar
-                    .padding(top = 2.dp),
-
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    .fillMaxSize()
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 60.dp,
+                        bottom = 60.dp
+                    ),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 16.dp)
-
-                ) {
-                    Spacer(modifier = Modifier.height(100.dp))
-
-                    items.forEach { item ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp)
-                                .clip(RoundedCornerShape(12.dp))
-
-                                .background(AccentOrange)
-                                .clickable {
-                                    when (item) {
-                                        is ProfileItem.Account -> {
-                                            navController.navigate("account") {
-                                                launchSingleTop = true
-                                            }
-                                        }
-                                        is ProfileItem.Appointment -> {
-                                            navController.navigate("appointment") {
-                                                launchSingleTop = true
-                                            }
-                                        }
-                                        is ProfileItem.FAQS -> {
-                                            navController.navigate("faqs") {
-                                                launchSingleTop = true
-                                            }
-                                        }
-                                        is ProfileItem.Logout -> {
-                                            showLogoutDialog = true
+                items.forEach { item ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF009688))
+                            .clickable {
+                                when (item) {
+                                    is ProfileItem.Account -> {
+                                        navController.navigate("account") {
+                                            launchSingleTop = true
                                         }
                                     }
+                                    is ProfileItem.Appointment -> {
+                                        navController.navigate("appointment") {
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                    is ProfileItem.FAQS -> {
+                                        navController.navigate("faqs") {
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                    is ProfileItem.Logout -> {
+                                        showLogoutDialog = true
+                                    }
                                 }
-                                .padding(horizontal = 1.dp, vertical = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(50.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFE0EBFF)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    item.icon,
-                                    contentDescription = item.title,
-                                    tint = Color(0xFF1976D2)  // BLUE ICON
-                                )
                             }
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            Text(
-                                text = item.title,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = Color.White,     // WHITE TEXT
-                                modifier = Modifier.weight(1f)
-                            )
-
+                            .padding(horizontal = 1.dp, vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(50.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFE0EBFF)),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Icon(
-                                imageVector = androidx.compose.material.icons.Icons.Default.KeyboardArrowRight,
-                                contentDescription = "Go",
-                                tint = Color.Black    // BLACK ARROW
+                                item.icon,
+                                contentDescription = item.title,
+                                tint = Color(0xFF1976D2)
                             )
                         }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            text = item.title,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.White,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Default.KeyboardArrowRight,
+                            contentDescription = "Go",
+                            tint = Color.Black
+                        )
                     }
                 }
-                Spacer(modifier = Modifier.height(100.dp))
             }
+        }
 
-            // ---------- Logout Dialog ----------
-            if (showLogoutDialog) {
-                LogoutConfirmationDialog(
-                    onConfirm = {
-                        showLogoutDialog = false
-                        navController.navigate("welcome") { popUpTo(0) }
-                    },
-                    onCancel = { showLogoutDialog = false }
-                )
-            }
+        // ---------- Logout Dialog ----------
+        if (showLogoutDialog) {
+            LogoutConfirmationDialog(
+                onConfirm = {
+                    showLogoutDialog = false
+                    navController.navigate("welcome") { popUpTo(0) }
+                },
+                onCancel = { showLogoutDialog = false }
+            )
         }
     }
 }
-
 
 // ------------------- Preview -------------------
 @Preview(showBackground = true)

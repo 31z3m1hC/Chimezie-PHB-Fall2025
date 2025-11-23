@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -692,6 +693,7 @@ fun AccountTopSection(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(Color(0xFF8EEA91))
                 .offset(y = (-32).dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -872,9 +874,13 @@ fun AccountTopSection(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .offset(y = (-32).dp),
+                .padding(horizontal = 16.dp, vertical = 0.dp)
+                .clip(RoundedCornerShape(10.dp))   // ← curve the edges
+                .background(Color(0xFF009688)),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Your content here
+
             Spacer(modifier = Modifier.height(32.dp))
 
             BackHeader(
@@ -934,7 +940,7 @@ fun AccountTopSection(
                 modifier = Modifier
                     .clickable(onClick = onOptionsClick)
                     .padding(top = 18.dp, start = 8.dp, end = 8.dp)
-                    .offset(y = (-32).dp)
+
             ) {
                 Text(
                     text = "Options",
@@ -1100,7 +1106,11 @@ fun BottomSection(
     onAllergiesChange: (String) -> Unit,
     onMedicationChange: (String) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+
+    ) {
         if (isLoading) {
             Box(
                 modifier = Modifier
@@ -1115,14 +1125,14 @@ fun BottomSection(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF8EEA91))
+                    colors = CardDefaults.cardColors(containerColor =  Color(0xFF009688))
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             "Personal Information",
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleMedium,
-                            color = Color(0xFF1976D2)
+                            color = Color.White
                         )
                         Divider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -1184,14 +1194,14 @@ fun BottomSection(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF8EEA91))
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF009688))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         "Emergency Contacts",
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium,
-                        color = Color(0xFF1976D2)
+                        color = Color.White
                     )
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -1265,14 +1275,14 @@ fun BottomSection(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF8EEA91))
+                colors = CardDefaults.cardColors(containerColor =  Color(0xFF009688))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         "Health Information",
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium,
-                        color = Color(0xFF1976D2)
+                        color = Color.White
                     )
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
 

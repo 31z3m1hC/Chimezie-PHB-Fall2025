@@ -6,6 +6,8 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -13,6 +15,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,11 +37,16 @@ import java.net.URL
 import androidx.core.graphics.toColorInt
 import androidx.wear.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
+import androidx.core.view.WindowInsetsCompat
+import androidx.privacysandbox.tools.core.model.Type
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Make system navigation bar transparent and handle edge-to-edge
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         Log.d("MainActivity", "onCreate called")
 

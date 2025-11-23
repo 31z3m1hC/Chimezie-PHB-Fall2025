@@ -1,8 +1,17 @@
 package com.unh.personal_health_buddy.database
 
+import android.graphics.drawable.shapes.Shape
+import android.hardware.Camera
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import com.google.firebase.Timestamp
+import okio.Path
 import java.util.UUID
+import kotlin.io.path.moveTo
 
 
 data class User(
@@ -67,6 +76,8 @@ data class Report(
     val content: String = "",
     val date: Timestamp = Timestamp.now()
 )
+
+
 
 
 data class Appointment(

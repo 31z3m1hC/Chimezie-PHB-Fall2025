@@ -68,6 +68,14 @@ android {
     }
 }
 
+
+
+configurations.all {
+    resolutionStrategy {
+        force("androidx.test.espresso:espresso-core:3.5.1")
+    }
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -104,6 +112,7 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.ui.text)
     implementation(libs.foundation.layout)
+    implementation(libs.androidx.tools.core)
 
 
     // Optional: debugging / tooling
@@ -162,6 +171,9 @@ dependencies {
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
 
     implementation("androidx.compose.material3:material3:1.2.0")
+
+
+
 
 
 
