@@ -39,6 +39,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.database.UserDataCache
+import com.unh.personal_health_buddy.ui.theme.AccentOrange
+import com.unh.personal_health_buddy.ui.theme.ChatGreen
+import com.unh.personal_health_buddy.ui.theme.PrimaryDarkBlue
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URL
@@ -86,33 +90,13 @@ fun ProfileScreen(
         }
     }
 
-
-        // Update UI when cache is loaded (optional - only if needed for real-time updates)
-        LaunchedEffect(UserDataCache.isDataLoaded) {
-            if (UserDataCache.isDataLoaded) {
-                firstName = UserDataCache.user?.firstname ?: "User"
-                profileBitmap = UserDataCache.profileBitmap
-            }
+    // Update UI when cache is loaded (optional)
+    LaunchedEffect(UserDataCache.isDataLoaded) {
+        if (UserDataCache.isDataLoaded) {
+            firstName = UserDataCache.user?.firstname ?: "User"
+            profileBitmap = UserDataCache.profileBitmap
         }
-
-//    // Load profile image from temp storage or Firestore URL
-//    LaunchedEffect(profileImageUrl, TempProfileStorage.tempProfileBitmap) {
-//        val tempBitmap = TempProfileStorage.tempProfileBitmap
-//        if (tempBitmap != null) {
-//            profileBitmap = tempBitmap
-//        } else {
-//            profileImageUrl?.let { url ->
-//                try {
-//                    withContext(Dispatchers.IO) {
-//                        val stream = URL(url).openStream()
-//                        profileBitmap = BitmapFactory.decodeStream(stream)
-//                    }
-//                } catch (e: Exception) {
-//                    Log.e("ProfileScreen", "Error loading image: ${e.message}")
-//                }
-//            }
-//        }
-//    }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -121,18 +105,14 @@ fun ProfileScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .offset(y = (-50).dp)
-                    .height(300.dp)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(Color(0xFF5AA9E6), Color(0xFFD6EFFF))
-                        )
-                    ),
+                    .padding(bottom = 4.dp)
+
+                    .background(ChatGreen),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(top = 60.dp)
+                    modifier = Modifier.padding(top = 40.dp, bottom = 40.dp)
                 ) {
                     Box(
                         modifier = Modifier
@@ -171,96 +151,115 @@ fun ProfileScreen(
                     Text(
                         text = firstName,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color(0xFF1976D2)   // BLUE NAME
+                        color = Color(0xFFFFFFFF)   // WHITE NAME
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+
                 }
+
             }
 
-            Column(
+            // ---------- Bottom Card with Profile Items ----------
+            Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .fillMaxWidth() // extend to bottom nav bar
+                    .padding(top = 2.dp),
+
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
-                items.forEach { item ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFF6F8FF))
-                            .clickable {
-                                when (item) {
-                                    is ProfileItem.Account -> {
-                                        navController.navigate("account") {
-                                            launchSingleTop = true
-                                        }
-                                    }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp)
 
-                                    is ProfileItem.Appointment -> {
-                                        navController.navigate("appointment") {
-                                            launchSingleTop = true
-                                        }
-                                    }
+                ) {
+                    Spacer(modifier = Modifier.height(100.dp))
 
-                                    is ProfileItem.FAQS -> {
-                                        navController.navigate("faqs") {
-                                            launchSingleTop = true
-                                        }
-                                    }
+                    items.forEach { item ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                                .clip(RoundedCornerShape(12.dp))
 
-                                    is ProfileItem.Logout -> {
-                                        showLogoutDialog = true
+                                .background(AccentOrange)
+                                .clickable {
+                                    when (item) {
+                                        is ProfileItem.Account -> {
+                                            navController.navigate("account") {
+                                                launchSingleTop = true
+                                            }
+                                        }
+                                        is ProfileItem.Appointment -> {
+                                            navController.navigate("appointment") {
+                                                launchSingleTop = true
+                                            }
+                                        }
+                                        is ProfileItem.FAQS -> {
+                                            navController.navigate("faqs") {
+                                                launchSingleTop = true
+                                            }
+                                        }
+                                        is ProfileItem.Logout -> {
+                                            showLogoutDialog = true
+                                        }
                                     }
                                 }
-                            }
-                            .padding(horizontal = 1.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(50.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFE0EBFF)),
-                            contentAlignment = Alignment.Center
+                                .padding(horizontal = 1.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(50.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFE0EBFF)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    item.icon,
+                                    contentDescription = item.title,
+                                    tint = Color(0xFF1976D2)  // BLUE ICON
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Text(
+                                text = item.title,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White,     // WHITE TEXT
+                                modifier = Modifier.weight(1f)
+                            )
+
                             Icon(
-                                item.icon,
-                                contentDescription = item.title,
-                                tint = Color(0xFF1976D2)  // BLUE ICON
+                                imageVector = androidx.compose.material.icons.Icons.Default.KeyboardArrowRight,
+                                contentDescription = "Go",
+                                tint = Color.Black    // BLACK ARROW
                             )
                         }
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Text(
-                            text = item.title,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color(0xFF1976D2),     // BLUE TEXT
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        Icon(
-                            imageVector = androidx.compose.material.icons.Icons.Default.KeyboardArrowRight,
-                            contentDescription = "Go",
-                            tint = Color(0xFF1976D2)    // BLUE ARROW
-                        )
                     }
                 }
+                Spacer(modifier = Modifier.height(100.dp))
+            }
+
+            // ---------- Logout Dialog ----------
+            if (showLogoutDialog) {
+                LogoutConfirmationDialog(
+                    onConfirm = {
+                        showLogoutDialog = false
+                        navController.navigate("welcome") { popUpTo(0) }
+                    },
+                    onCancel = { showLogoutDialog = false }
+                )
             }
         }
     }
-
-    // ---------- Logout Dialog ----------
-    if (showLogoutDialog) {
-        LogoutConfirmationDialog(
-            onConfirm = {
-                showLogoutDialog = false
-                navController.navigate("welcome") { popUpTo(0) }
-            },
-            onCancel = { showLogoutDialog = false }
-        )
-    }
 }
+
 
 // ------------------- Preview -------------------
 @Preview(showBackground = true)

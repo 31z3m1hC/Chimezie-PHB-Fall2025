@@ -1,5 +1,8 @@
 package com.unh.personal_health_buddy.navigations
 
+import android.net.http.SslCertificate.restoreState
+import android.net.http.SslCertificate.saveState
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,48 +26,66 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.database.BottomNavItem
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.MediumGray
+import com.unh.personal_health_buddy.database.*
 
 
+
+
+// --- Data Classes and Colors (Required for the code to run) ---
+// Define these at the top of your file or import them.
+
+data class BottomNavItem(
+    val route: String,
+    val icon: ImageVector,
+    val label: String,
+    val title: String // Not used in NavBar, but required by your data class
+)
+
+val ButtonBlue = Color(0xFF5AA9E6) // Example Color
+val MediumGray = Color.Gray         // Example Color
 
 // -------------------- BOTTOM NAV DATA --------------------
+
 val bottomNavItems = listOf(
-    BottomNavItem("home", Icons.Filled.Home, "Home"),
-    BottomNavItem("map", Icons.Filled.LocationOn, "Map"),
-    BottomNavItem("notifications", Icons.Filled.Notifications, "Notification"),
-    BottomNavItem("profile", Icons.Filled.Person, "Profile")
+    BottomNavItem("home", Icons.Filled.Home, "Home", "Home"),
+    BottomNavItem("map", Icons.Filled.LocationOn, "Map", "Map"),
+    BottomNavItem("notifications", Icons.Filled.Notifications, "Notifications", "Notifications"),
+    BottomNavItem("profile", Icons.Filled.Person, "Profile", "Profile")
 )
 
 
-// -------------------- SCREENS THAT SHOULD HIDE BOTTOM NAV --------------------
-val screensWithoutBottomNav = setOf(
-    "welcome",
-    "sign-in",
-    "sign-up",
-    "reset-password",
-)
 
-// -------------------- BOTTOM NAV BAR COMPOSABLE --------------------
 @Composable
 fun BottomNavBar(
     currentRoute: String?,
-    onItemClick: (String) -> Unit
+    innerNavController: NavHostController
 ) {
     NavigationBar(
-        modifier = Modifier.clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
-        containerColor = Color.White
+        containerColor = Color.White,
+        modifier = Modifier.clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
     ) {
         bottomNavItems.forEach { item ->
-            val selected = currentRoute == item.route
+            val selected = currentRoute?.startsWith(item.route) == true
+
             NavigationBarItem(
                 selected = selected,
-                onClick = { onItemClick(item.route) },
-                icon = { Icon(imageVector = item.icon, contentDescription = item.title) },
-                label = { Text(text = item.title) },
+                onClick = {
+                    if (!selected) {
+                        innerNavController.navigate(item.route) {
+                            popUpTo("bottom_root") { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                },
+                icon = { Icon(item.icon, contentDescription = item.label) },
+                label = { Text(item.label) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = ButtonBlue,
                     selectedTextColor = ButtonBlue,
@@ -78,8 +99,15 @@ fun BottomNavBar(
 
 
 
+
+
+// --- Preview remains the same ---
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun PreviewBottomNavBar(){
-    BottomNavBar(onItemClick = {}, currentRoute = "home")
+fun PreviewBottomNavBar() {
+    val navController = rememberNavController()
+    BottomNavBar(
+        currentRoute = "home",
+        innerNavController = navController
+    )
 }

@@ -57,13 +57,7 @@
 //}
 
 package com.unh.personal_health_buddy.ui.theme
-
-import android.app.Activity
-import android.content.Context
-import android.graphics.Color.toArgb
 import android.os.Build
-import android.view.View
-import android.view.WindowManager
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -73,13 +67,14 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
-import androidx.wear.compose.material3.MaterialTheme.typography
 
-// -------------------- COLOR SCHEMES --------------------
+
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+
+
+
+// -------------------- 1. COLOR SCHEMES (Unified and Corrected) --------------------
 private val DarkColorScheme = darkColorScheme(
     primary = ButtonBlue,
     onPrimary = White,
@@ -161,7 +156,6 @@ fun PersonalHealthBuddyTheme(
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
-    val view = LocalView.current
 
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -171,20 +165,23 @@ fun PersonalHealthBuddyTheme(
         else -> LightColorScheme
     }
 
-    if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as Activity).window
-            WindowCompat.setDecorFitsSystemWindows(window, true)
+    // 1. Get the System UI Controller
+    val systemUiController = rememberSystemUiController()
 
-            window.statusBarColor = ButtonBlue.toArgb()
-            window.navigationBarColor = ButtonBlue.toArgb()
+    SideEffect {
+        // 2. Set Status Bar color to TRANSPARENT
+        // This is the key change to allow the screen's background to show through.
+        systemUiController.setStatusBarColor(
+            color = Color.Transparent,
+            // Icons should be dark if the content underneath is light (in light theme), and vice versa.
+            darkIcons = !darkTheme
+        )
 
-            WindowCompat.getInsetsController(window, view).apply {
-                isAppearanceLightStatusBars = true
-                isAppearanceLightNavigationBars = false
-            }
-        }
-
+        // 3. Set the Navigation Bar (bottom system bar) color to match the theme's background
+        systemUiController.setNavigationBarColor(
+            color = colorScheme.background,
+            darkIcons = !darkTheme
+        )
     }
 
     MaterialTheme(
@@ -193,7 +190,3 @@ fun PersonalHealthBuddyTheme(
         content = content
     )
 }
-
-
-
-

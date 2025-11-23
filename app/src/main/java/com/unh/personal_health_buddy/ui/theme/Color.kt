@@ -14,12 +14,15 @@ val Pink40 = Color(0xFF7D5260)
 /* Application Colors
  * Declaring color names here to use throughout the app
  * */
-val PrimaryDarkBlue = Color(0xFF223A6A)
+val PrimaryDarkBlue = Color(0xFF6BCBFF)
 val ButtonBlue = Color(0xFF4285F4) // Standard blue for buttons
 val White = Color(0xFFFFFFFF)
 val MediumGray = Color(0xFFB0BEC5)    // For borders, dividers, disabled states
 
 val LightBlueBackground = Color(0xFFC8E4EE) // Dashboard Screen Background
+
+
+val LeaveGreen = Color(0xFF4CAF50)
 
 // Dashboard Accent Colors
 val AccentPink = Color(0xFFF5AAB9)
@@ -38,8 +41,11 @@ val EmergencyRed = Color(0xFFE3867F)
 val EmergencyRedDark = Color(0xFFD3665F)
 val ChatGreen = Color(0xFF8EEA91)
 
-// Universal Background Colors for all screens
-val AppBackgroundLight = Color(0xFFF5F8FA)      // Soft light gray-blue for light mode
+// ------------------- COLORS -------------------
+val AppBackgroundLight = Color(0xff00ddff)      // Soft light gray-blue for light mode
 val AppBackgroundDark = Color(0xFF1C2834)       // Dark blue-gray for dark mode
 val AppSurfaceLight = Color(0xFFFFFFFF)         // White cards/surfaces
 val AppSurfaceDark = Color(0xFF2A3642)          // Dark cards/surfaces
+
+val StatusBarColor = Color(0xFF1976D2)          // Blue for status bar
+val BottomNavBar = Color(0xFF0D47A1)       // Darker blue for bottom nav bar

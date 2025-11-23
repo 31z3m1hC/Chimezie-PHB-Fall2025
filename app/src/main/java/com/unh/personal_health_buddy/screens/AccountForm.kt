@@ -104,10 +104,12 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
@@ -208,17 +210,19 @@ fun TopBarWithSave(
                 imageVector = Icons.Default.ChevronLeft,
                 contentDescription = "Back",
                 modifier = Modifier.size(30.dp),
-                tint = Color(0xFF1976D2)
+                tint = Color.White
             )
 
             Spacer(modifier = Modifier.width(4.dp))
 
-            // ✅ FIX: Title now uses `titleColor`
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Bold
+                ),
                 color = titleColor
             )
+
         }
 
         if (isSaving) {
@@ -289,7 +293,7 @@ fun isValidImageType(context: Context, uri: Uri): Boolean {
 fun BackHeader(
     title: String,
     onBack: () -> Unit,
-    color: Color = Color.Black // Default to black if no color provided
+    color: Color = MaterialTheme.colorScheme.onBackground
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -308,15 +312,19 @@ fun BackHeader(
                 modifier = Modifier.size(30.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
+
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                color = color
+                color = color,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Bold   // ← MAKE IT BOLD HERE
+                )
             )
         }
     }
     Log.d("BackHeader", "Title: $title")
 }
+
 
 
 
@@ -374,8 +382,10 @@ fun PhotoOptionsMenu(
                 modifier = Modifier.offset(x = 20.dp),
                 text = "Photo Options",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF1976D2),
+                color = Color(0xFFFFFFFF),
+                fontWeight = FontWeight.Bold
             )
+
             Icon(
                 modifier = Modifier.offset(20.dp),
                 imageVector = Icons.Default.ArrowDropDown,
@@ -413,251 +423,251 @@ fun PhotoOptionsMenu(
 }
 
 
-@OptIn(ExperimentalComposeUiApi::class)
-@Composable
-fun AccountFormBottom(
-    firstname: MutableState<String>,
-    lastname: MutableState<String>,
-    dateOfBirth: MutableState<String>,
-    homeAddress: MutableState<String>,
-    gender: MutableState<Gender>,
-    email: MutableState<String>,
-    phoneNumber: MutableState<String>,
-    city: MutableState<String>
-) {
-    var genderExpanded by remember { mutableStateOf(false) }
-    var showDatePicker by remember { mutableStateOf(false) }
-    val focusManager = LocalFocusManager.current
-    val datePickerState = rememberDatePickerState()
-
-    // Date Picker
-    if (showDatePicker) {
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        val date = Date(millis)
-                        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                        dateOfBirth.value = formatter.format(date)
-                    }
-                    showDatePicker = false
-                    focusManager.moveFocus(FocusDirection.Down)
-                }) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancel")
-                }
-            }
-        ) {
-            DatePicker(state = datePickerState)
-        }
-    }
-
-    Column(modifier = Modifier.padding(16.dp)) {
-
-        // FIRST NAME
-        OutlinedTextField(
-            value = firstname.value,
-            onValueChange = { firstname.value = it },
-            label = { Text("First Name") },
-            leadingIcon = {
-                RoundedIcon(Icons.Default.Person, ButtonBlue, White)
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(
-                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        // LAST NAME
-        OutlinedTextField(
-            value = lastname.value,
-            onValueChange = { lastname.value = it },
-            label = { Text("Last Name") },
-            leadingIcon = {
-                RoundedIcon(Icons.Default.Person, ButtonBlue, White)
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(
-                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        // DATE OF BIRTH
-        Box(modifier = Modifier.fillMaxWidth()) {
-            OutlinedTextField(
-                value = dateOfBirth.value,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Date of Birth") },
-                placeholder = { Text("DD/MM/YYYY") },
-                leadingIcon = {
-                    RoundedIcon(Icons.Default.DateRange, ButtonBlue, White)
-                },
-                trailingIcon = {
-                    IconButton(onClick = { showDatePicker = true }) {
-                        Icon(Icons.Default.CalendarToday, contentDescription = "Select Date")
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .clickable { showDatePicker = true }
-            )
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        // HOME ADDRESS
-        OutlinedTextField(
-            value = homeAddress.value,
-            onValueChange = { homeAddress.value = it },
-            label = { Text("Home Address") },
-            leadingIcon = {
-                RoundedIcon(Icons.Default.Home, ButtonBlue, White)
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(
-                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        // CITY
-        OutlinedTextField(
-            value = city.value,
-            onValueChange = { city.value = it },
-            label = { Text("City") },
-            leadingIcon = {
-                RoundedIcon(Icons.Default.LocationCity, ButtonBlue, White)
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(
-                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        // GENDER
-        Box(modifier = Modifier.fillMaxWidth()) {
-            OutlinedTextField(
-                value = gender.value.name,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Gender") },
-                leadingIcon = {
-                    RoundedIcon(Icons.Default.Face, ButtonBlue, White)
-                },
-                trailingIcon = {
-                    IconButton(onClick = { genderExpanded = true }) {
-                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Gender")
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .clickable { genderExpanded = true }
-            )
-
-            DropdownMenu(
-                expanded = genderExpanded,
-                onDismissRequest = { genderExpanded = false }
-            ) {
-                Gender.entries.forEach { option ->
-                    DropdownMenuItem(
-                        text = { Text(option.name) },
-                        onClick = {
-                            gender.value = option
-                            genderExpanded = false
-                            focusManager.moveFocus(FocusDirection.Down)
-                        }
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        // EMAIL
-        OutlinedTextField(
-            value = email.value,
-            onValueChange = { email.value = it },
-            label = { Text("Email") },
-            leadingIcon = {
-                RoundedIcon(Icons.Default.Email, ButtonBlue, White)
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next
-            ),
-            keyboardActions = KeyboardActions(
-                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        // PHONE
-        val isPhoneValid = phoneNumber.value.length == 10 && phoneNumber.value.all { it.isDigit() }
-
-        OutlinedTextField(
-            value = phoneNumber.value,
-            onValueChange = { newValue ->
-                if (newValue.length <= 10 && newValue.all { it.isDigit() }) {
-                    phoneNumber.value = newValue
-                }
-            },
-            label = { Text("Phone Number") },
-            leadingIcon = {
-                RoundedIcon(Icons.Default.Phone, ButtonBlue, White)
-            },
-            singleLine = true,
-            isError = phoneNumber.value.isNotEmpty() && !isPhoneValid,
-            supportingText = {
-                if (phoneNumber.value.isNotEmpty() && !isPhoneValid) {
-                    Text(
-                        "Must be exactly 10 digits",
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = { focusManager.clearFocus() }
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
+//@OptIn(ExperimentalComposeUiApi::class)
+//@Composable
+//fun AccountFormBottom(
+//    firstname: MutableState<String>,
+//    lastname: MutableState<String>,
+//    dateOfBirth: MutableState<String>,
+//    homeAddress: MutableState<String>,
+//    gender: MutableState<Gender>,
+//    email: MutableState<String>,
+//    phoneNumber: MutableState<String>,
+//    city: MutableState<String>
+//) {
+//    var genderExpanded by remember { mutableStateOf(false) }
+//    var showDatePicker by remember { mutableStateOf(false) }
+//    val focusManager = LocalFocusManager.current
+//    val datePickerState = rememberDatePickerState()
+//
+//    // Date Picker
+//    if (showDatePicker) {
+//        DatePickerDialog(
+//            onDismissRequest = { showDatePicker = false },
+//            confirmButton = {
+//                TextButton(onClick = {
+//                    datePickerState.selectedDateMillis?.let { millis ->
+//                        val date = Date(millis)
+//                        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+//                        dateOfBirth.value = formatter.format(date)
+//                    }
+//                    showDatePicker = false
+//                    focusManager.moveFocus(FocusDirection.Down)
+//                }) {
+//                    Text("OK")
+//                }
+//            },
+//            dismissButton = {
+//                TextButton(onClick = { showDatePicker = false }) {
+//                    Text("Cancel")
+//                }
+//            }
+//        ) {
+//            DatePicker(state = datePickerState)
+//        }
+//    }
+//
+//    Column(modifier = Modifier.padding(16.dp)) {
+//
+//        // FIRST NAME
+//        OutlinedTextField(
+//            value = firstname.value,
+//            onValueChange = { firstname.value = it },
+//            label = { Text("First Name") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Person, ButtonBlue, White)
+//            },
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+//            keyboardActions = KeyboardActions(
+//                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+//            ),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//
+//        Spacer(Modifier.height(8.dp))
+//
+//        // LAST NAME
+//        OutlinedTextField(
+//            value = lastname.value,
+//            onValueChange = { lastname.value = it },
+//            label = { Text("Last Name") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Person, ButtonBlue, White)
+//            },
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+//            keyboardActions = KeyboardActions(
+//                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+//            ),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//
+//        Spacer(Modifier.height(8.dp))
+//
+//        // DATE OF BIRTH
+//        Box(modifier = Modifier.fillMaxWidth()) {
+//            OutlinedTextField(
+//                value = dateOfBirth.value,
+//                onValueChange = {},
+//                readOnly = true,
+//                label = { Text("Date of Birth") },
+//                placeholder = { Text("DD/MM/YYYY") },
+//                leadingIcon = {
+//                    RoundedIcon(Icons.Default.DateRange, ButtonBlue, White)
+//                },
+//                trailingIcon = {
+//                    IconButton(onClick = { showDatePicker = true }) {
+//                        Icon(Icons.Default.CalendarToday, contentDescription = "Select Date")
+//                    }
+//                },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//
+//            Box(
+//                modifier = Modifier
+//                    .matchParentSize()
+//                    .clickable { showDatePicker = true }
+//            )
+//        }
+//
+//        Spacer(Modifier.height(8.dp))
+//
+//        // HOME ADDRESS
+//        OutlinedTextField(
+//            value = homeAddress.value,
+//            onValueChange = { homeAddress.value = it },
+//            label = { Text("Home Address") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Home, ButtonBlue, White)
+//            },
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+//            keyboardActions = KeyboardActions(
+//                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+//            ),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//
+//        Spacer(Modifier.height(8.dp))
+//
+//        // CITY
+//        OutlinedTextField(
+//            value = city.value,
+//            onValueChange = { city.value = it },
+//            label = { Text("City") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.LocationCity, ButtonBlue, White)
+//            },
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+//            keyboardActions = KeyboardActions(
+//                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+//            ),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//
+//        Spacer(Modifier.height(8.dp))
+//
+//        // GENDER
+//        Box(modifier = Modifier.fillMaxWidth()) {
+//            OutlinedTextField(
+//                value = gender.value.name,
+//                onValueChange = {},
+//                readOnly = true,
+//                label = { Text("Gender") },
+//                leadingIcon = {
+//                    RoundedIcon(Icons.Default.Face, ButtonBlue, White)
+//                },
+//                trailingIcon = {
+//                    IconButton(onClick = { genderExpanded = true }) {
+//                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Gender")
+//                    }
+//                },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//
+//            Box(
+//                modifier = Modifier
+//                    .matchParentSize()
+//                    .clickable { genderExpanded = true }
+//            )
+//
+//            DropdownMenu(
+//                expanded = genderExpanded,
+//                onDismissRequest = { genderExpanded = false }
+//            ) {
+//                Gender.entries.forEach { option ->
+//                    DropdownMenuItem(
+//                        text = { Text(option.name) },
+//                        onClick = {
+//                            gender.value = option
+//                            genderExpanded = false
+//                            focusManager.moveFocus(FocusDirection.Down)
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//
+//        Spacer(Modifier.height(8.dp))
+//
+//        // EMAIL
+//        OutlinedTextField(
+//            value = email.value,
+//            onValueChange = { email.value = it },
+//            label = { Text("Email") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Email, ButtonBlue, White)
+//            },
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(
+//                keyboardType = KeyboardType.Email,
+//                imeAction = ImeAction.Next
+//            ),
+//            keyboardActions = KeyboardActions(
+//                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+//            ),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//
+//        Spacer(Modifier.height(8.dp))
+//
+//        // PHONE
+//        val isPhoneValid = phoneNumber.value.length == 10 && phoneNumber.value.all { it.isDigit() }
+//
+//        OutlinedTextField(
+//            value = phoneNumber.value,
+//            onValueChange = { newValue ->
+//                if (newValue.length <= 10 && newValue.all { it.isDigit() }) {
+//                    phoneNumber.value = newValue
+//                }
+//            },
+//            label = { Text("Phone Number") },
+//            leadingIcon = {
+//                RoundedIcon(Icons.Default.Phone, ButtonBlue, White)
+//            },
+//            singleLine = true,
+//            isError = phoneNumber.value.isNotEmpty() && !isPhoneValid,
+//            supportingText = {
+//                if (phoneNumber.value.isNotEmpty() && !isPhoneValid) {
+//                    Text(
+//                        "Must be exactly 10 digits",
+//                        color = MaterialTheme.colorScheme.error
+//                    )
+//                }
+//            },
+//            keyboardOptions = KeyboardOptions(
+//                keyboardType = KeyboardType.Number,
+//                imeAction = ImeAction.Done
+//            ),
+//            keyboardActions = KeyboardActions(
+//                onDone = { focusManager.clearFocus() }
+//            ),
+//            modifier = Modifier.fillMaxWidth()
+//        )
+//    }
+//}
 
 
 @Composable
@@ -771,7 +781,7 @@ fun AccountFormTop(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top= 24.dp),
+                .offset(y = (-30).dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             TopBarWithSave(
@@ -818,7 +828,7 @@ fun AccountFormTop(
                 },
                 enabled = isValid,
                 isSaving = isSaving,
-                titleColor = Color(0xFF1976D2),
+                titleColor = Color.White,
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -870,6 +880,375 @@ fun AccountFormTop(
         }
     }
 }
+
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun AccountFormBottom(
+    firstname: MutableState<String>,
+    lastname: MutableState<String>,
+    dateOfBirth: MutableState<String>,
+    homeAddress: MutableState<String>,
+    gender: MutableState<Gender>,
+    email: MutableState<String>,
+    phoneNumber: MutableState<String>,
+    city: MutableState<String>
+) {
+    var genderExpanded by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+    val datePickerState = rememberDatePickerState()
+
+    // Date Picker
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val date = Date(millis)
+                        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                        dateOfBirth.value = formatter.format(date)
+                    }
+                    showDatePicker = false
+                    focusManager.moveFocus(FocusDirection.Down)
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    // Wrap everything in a Card
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFC8E4EE))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+
+            // FIRST NAME
+            OutlinedTextField(
+                value = firstname.value,
+                onValueChange = { firstname.value = it },
+                label = { Text("First Name", color = Color.White, fontSize = 14.sp) },
+                leadingIcon = {
+                    RoundedIcon(Icons.Default.Person, ButtonBlue, White)
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                ),
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFFC8E4EE),
+                    unfocusedContainerColor = Color(0xFFC8E4EE),
+                    disabledContainerColor = Color(0xFFC8E4EE),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.7f),
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
+                ),
+                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            // LAST NAME
+            OutlinedTextField(
+                value = lastname.value,
+                onValueChange = { lastname.value = it },
+                label = { Text("Last Name", color = Color.White, fontSize = 14.sp) },
+                leadingIcon = {
+                    RoundedIcon(Icons.Default.Person, ButtonBlue, White)
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                ),
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFFC8E4EE),
+                    unfocusedContainerColor = Color(0xFFC8E4EE),
+                    disabledContainerColor = Color(0xFFC8E4EE),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.7f),
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
+                ),
+                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            // DATE OF BIRTH
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = dateOfBirth.value,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Date of Birth", color = Color.White, fontSize = 14.sp) },
+                    placeholder = { Text("DD/MM/YYYY", color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp) },
+                    leadingIcon = {
+                        RoundedIcon(Icons.Default.DateRange, ButtonBlue, White)
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker = true }) {
+                            Icon(Icons.Default.CalendarToday, contentDescription = "Select Date", tint = Color.White)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFFC8E4EE),
+                        unfocusedContainerColor = Color(0xFFC8E4EE),
+                        disabledContainerColor = Color(0xFFC8E4EE),
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        disabledTextColor = Color.White,
+                        cursorColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.7f),
+                        focusedLabelColor = Color.White,
+                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
+                    ),
+                    textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { showDatePicker = true }
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // HOME ADDRESS
+            OutlinedTextField(
+                value = homeAddress.value,
+                onValueChange = { homeAddress.value = it },
+                label = { Text("Home Address", color = Color.White, fontSize = 14.sp) },
+                leadingIcon = {
+                    RoundedIcon(Icons.Default.Home, ButtonBlue, White)
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                ),
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFFC8E4EE),
+                    unfocusedContainerColor = Color(0xFFC8E4EE),
+                    disabledContainerColor = Color(0xFFC8E4EE),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.7f),
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
+                ),
+                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            // CITY
+            OutlinedTextField(
+                value = city.value,
+                onValueChange = { city.value = it },
+                label = { Text("City", color = Color.White, fontSize = 14.sp) },
+                leadingIcon = {
+                    RoundedIcon(Icons.Default.LocationCity, ButtonBlue, White)
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                ),
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFFC8E4EE),
+                    unfocusedContainerColor = Color(0xFFC8E4EE),
+                    disabledContainerColor = Color(0xFFC8E4EE),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.7f),
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
+                ),
+                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            // GENDER
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = gender.value.name,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Gender", color = Color.White, fontSize = 14.sp) },
+                    leadingIcon = {
+                        RoundedIcon(Icons.Default.Face, ButtonBlue, White)
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { genderExpanded = true }) {
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Gender", tint = Color.White)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFFC8E4EE),
+                        unfocusedContainerColor = Color(0xFFC8E4EE),
+                        disabledContainerColor = Color(0xFFC8E4EE),
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        disabledTextColor = Color.White,
+                        cursorColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.7f),
+                        focusedLabelColor = Color.White,
+                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
+                    ),
+                    textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { genderExpanded = true }
+                )
+
+                DropdownMenu(
+                    expanded = genderExpanded,
+                    onDismissRequest = { genderExpanded = false }
+                ) {
+                    Gender.entries.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option.name) },
+                            onClick = {
+                                gender.value = option
+                                genderExpanded = false
+                                focusManager.moveFocus(FocusDirection.Down)
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // EMAIL
+            OutlinedTextField(
+                value = email.value,
+                onValueChange = { email.value = it },
+                label = { Text("Email", color = Color.White, fontSize = 14.sp) },
+                leadingIcon = {
+                    RoundedIcon(Icons.Default.Email, ButtonBlue, White)
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                ),
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFFC8E4EE),
+                    unfocusedContainerColor = Color(0xFFC8E4EE),
+                    disabledContainerColor = Color(0xFFC8E4EE),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.7f),
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
+                ),
+                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            // PHONE
+            val isPhoneValid = phoneNumber.value.length == 10 && phoneNumber.value.all { it.isDigit() }
+
+            OutlinedTextField(
+                value = phoneNumber.value,
+                onValueChange = { newValue ->
+                    if (newValue.length <= 10 && newValue.all { it.isDigit() }) {
+                        phoneNumber.value = newValue
+                    }
+                },
+                label = { Text("Phone Number", color = Color.White, fontSize = 14.sp) },
+                leadingIcon = {
+                    RoundedIcon(Icons.Default.Phone, ButtonBlue, White)
+                },
+                singleLine = true,
+                isError = phoneNumber.value.isNotEmpty() && !isPhoneValid,
+                supportingText = {
+                    if (phoneNumber.value.isNotEmpty() && !isPhoneValid) {
+                        Text(
+                            "Must be exactly 10 digits",
+                            color = Color.White,
+                            fontSize = 12.sp
+                        )
+                    }
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { focusManager.clearFocus() }
+                ),
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFFC8E4EE),
+                    unfocusedContainerColor = Color(0xFFC8E4EE),
+                    disabledContainerColor = Color(0xFFC8E4EE),
+                    errorContainerColor = Color(0xFFC8E4EE),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    errorTextColor = Color.White,
+                    cursorColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.7f),
+                    errorBorderColor = Color.White,
+                    focusedLabelColor = Color.White,
+                    unfocusedLabelColor = Color.White.copy(alpha = 0.7f),
+                    errorLabelColor = Color.White
+                ),
+                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp)
+            )
+        }
+    }
+}
+
+
 @Composable
 fun AccountFormScreen(navController: NavHostController) {
     // Use cached profile bitmap - no duplicate declaration

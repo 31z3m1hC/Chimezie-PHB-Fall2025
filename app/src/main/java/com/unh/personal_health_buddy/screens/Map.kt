@@ -65,11 +65,7 @@ fun GoogleMapScreen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .offset(y = -(50).dp)
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(ReportsCyan, LightBlueBackground)
-                )
-            )
+
             .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
     ) {
         Column(
@@ -77,7 +73,7 @@ fun GoogleMapScreen(navController: NavController) {
         ) {
             // Back button and Search Section with horizontal padding
             Column(
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier.padding(horizontal = 8.dp)
             ) {
                 // Back button with IconButton (better UX)
                 IconButton(
@@ -93,7 +89,7 @@ fun GoogleMapScreen(navController: NavController) {
                     Icon(
                         imageVector = Icons.Default.ArrowBackIosNew,
                         contentDescription = "Back to Home",
-                        tint = Color(0xFF1976D2),
+                        tint = Color(0xFF000000),
                         modifier = Modifier.size(16.dp)
                     )
                 }

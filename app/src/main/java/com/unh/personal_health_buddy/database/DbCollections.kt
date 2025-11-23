@@ -104,9 +104,9 @@ data class EmergencyContact(
     val relationship: String = ""
 )
 
-
 data class BottomNavItem(
     val route: String,
     val icon: ImageVector,
-    val title: String   // <-- renamed from label
+    val label: String,
+    val title: String
 )

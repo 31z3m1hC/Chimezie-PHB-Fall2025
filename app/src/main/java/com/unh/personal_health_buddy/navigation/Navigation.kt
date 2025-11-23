@@ -57,7 +57,11 @@ val screensWithoutBottomNav = setOf(
     "account",
     "account-form",
     "chat_ai_screen",
-    "faqs"
+    "faqs",
+    "blood_group_screen",
+    "medicates_screen",
+    "emergency-contacts",
+    "logout"
 )
 
 // -------------------- APP NAVIGATION (SIMPLIFIED) --------------------

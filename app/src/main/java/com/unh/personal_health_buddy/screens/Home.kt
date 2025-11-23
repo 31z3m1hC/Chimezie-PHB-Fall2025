@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,6 +36,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -117,18 +121,18 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightBlueBackground)
+            .background(ChatGreen ),
     ) {
         // ---------- TOP USER SECTION ----------
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .offset(y = (-50).dp)
-                .background(LightBlueBackground)
+
         ) {
             Column(
                 modifier = Modifier
                     .padding(horizontal = 40.dp, vertical = 70.dp)
+
             ) {
                 if (profileBitmap != null) {
                     Image(
@@ -154,15 +158,15 @@ fun HomeScreen(
 
                 Text(
                     greeting,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium.copy(color = Color.White)
                 )
                 Text(
                     firstName,
-                    style = MaterialTheme.typography.headlineSmall
+                    style = MaterialTheme.typography.headlineSmall.copy(color = Color.White)
                 )
                 Text(
                     "How is it going today?",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.White)
                 )
             }
 
@@ -176,15 +180,16 @@ fun HomeScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // ---------- BOTTOM WHITE AREA WITH CARDS ----------
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
+                .weight(2f)
+                .offset(y = (30).dp)
                 .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
-                .background(Color.White)
+                .background(Color.Magenta)
         ) {
             Column(
                 modifier = Modifier
@@ -193,12 +198,14 @@ fun HomeScreen(
                         start = 16.dp,
                         end = 16.dp,
                         top = 60.dp,
-                        bottom = 16.dp
+                        bottom = 60.dp
                     ),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -336,6 +343,9 @@ fun LargeFeatureCard(
         }
     }
 }
+
+
+
 
 @Preview(showBackground = true)
 @Composable

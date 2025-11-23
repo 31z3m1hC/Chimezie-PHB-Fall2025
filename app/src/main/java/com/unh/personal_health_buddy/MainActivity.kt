@@ -1,14 +1,24 @@
 package com.unh.personal_health_buddy
 
+import android.app.Activity
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.rememberNavController
@@ -21,13 +31,14 @@ import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URL
-
+import androidx.core.graphics.toColorInt
+import androidx.wear.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         Log.d("MainActivity", "onCreate called")
 
@@ -38,21 +49,16 @@ class MainActivity : ComponentActivity() {
             PersonalHealthBuddyTheme {
                 LaunchedEffect(Unit) {
                     FirebaseApp.initializeApp(context)
-                }
 
-                // ✅ Optional: Fetch data if user is already logged in (app restart case)
-                LaunchedEffect(Unit) {
                     val uid = FirebaseAuth.getInstance().currentUser?.uid
                     if (uid != null && !UserDataCache.isDataLoaded) {
                         withContext(Dispatchers.IO) {
                             try {
-                                Log.d("MainActivity", "User already logged in, fetching data...")
-
+                                Log.d("MainActivity", "Fetching user data...")
                                 UserDataCache.user = FirestoreHelper.getUser(uid)
                                 UserDataCache.emergencyContacts = FirestoreHelper.readAllEmergencyContacts()
                                 UserDataCache.healthInfo = FirestoreHelper.getHealthInformation()
 
-                                // Load profile image
                                 val tempBitmap = TempProfileStorage.tempProfileBitmap
                                 if (tempBitmap != null) {
                                     UserDataCache.profileBitmap = tempBitmap

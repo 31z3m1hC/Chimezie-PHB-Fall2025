@@ -161,6 +161,8 @@ dependencies {
     implementation("androidx.compose.ui:ui-test-junit4")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
 
+    implementation("androidx.compose.material3:material3:1.2.0")
+
 
 
 
