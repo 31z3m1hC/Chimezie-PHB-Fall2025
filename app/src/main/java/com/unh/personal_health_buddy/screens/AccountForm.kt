@@ -127,6 +127,7 @@ import com.unh.personal_health_buddy.Authentication.FirestoreHelper
 import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.ui.theme.AccentOrange
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
+import com.unh.personal_health_buddy.ui.theme.ChatGreen
 import com.unh.personal_health_buddy.ui.theme.White
 import kotlinx.coroutines.withContext
 import java.net.URL
@@ -402,274 +403,26 @@ fun PhotoOptionsMenu(
             DropdownMenuItem(
                 text = { Text("Take Photo", color = Color.White) },
                 onClick = onTakePhoto,
-                modifier = Modifier.background(Color(0xFF1976D2))
+                modifier = Modifier.background(ChatGreen)
             )
 
             // Upload from Gallery
             DropdownMenuItem(
                 text = { Text("Upload from Gallery", color = Color.White) },
                 onClick = onUpload,
-                modifier = Modifier.background(Color(0xFF1976D2))
+                modifier = Modifier.background(ChatGreen)
             )
 
             // Delete Photo
             DropdownMenuItem(
                 text = { Text("Delete Photo", color = Color.White) },
                 onClick = onDelete,
-                modifier = Modifier.background(Color(0xFF1976D2))
+                modifier = Modifier.background(ChatGreen)
             )
         }
     }
     Log.d("PhotoOptionsMenu", "ShowMenu: $showMenu")
 }
-
-
-//@OptIn(ExperimentalComposeUiApi::class)
-//@Composable
-//fun AccountFormBottom(
-//    firstname: MutableState<String>,
-//    lastname: MutableState<String>,
-//    dateOfBirth: MutableState<String>,
-//    homeAddress: MutableState<String>,
-//    gender: MutableState<Gender>,
-//    email: MutableState<String>,
-//    phoneNumber: MutableState<String>,
-//    city: MutableState<String>
-//) {
-//    var genderExpanded by remember { mutableStateOf(false) }
-//    var showDatePicker by remember { mutableStateOf(false) }
-//    val focusManager = LocalFocusManager.current
-//    val datePickerState = rememberDatePickerState()
-//
-//    // Date Picker
-//    if (showDatePicker) {
-//        DatePickerDialog(
-//            onDismissRequest = { showDatePicker = false },
-//            confirmButton = {
-//                TextButton(onClick = {
-//                    datePickerState.selectedDateMillis?.let { millis ->
-//                        val date = Date(millis)
-//                        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-//                        dateOfBirth.value = formatter.format(date)
-//                    }
-//                    showDatePicker = false
-//                    focusManager.moveFocus(FocusDirection.Down)
-//                }) {
-//                    Text("OK")
-//                }
-//            },
-//            dismissButton = {
-//                TextButton(onClick = { showDatePicker = false }) {
-//                    Text("Cancel")
-//                }
-//            }
-//        ) {
-//            DatePicker(state = datePickerState)
-//        }
-//    }
-//
-//    Column(modifier = Modifier.padding(16.dp)) {
-//
-//        // FIRST NAME
-//        OutlinedTextField(
-//            value = firstname.value,
-//            onValueChange = { firstname.value = it },
-//            label = { Text("First Name") },
-//            leadingIcon = {
-//                RoundedIcon(Icons.Default.Person, ButtonBlue, White)
-//            },
-//            singleLine = true,
-//            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-//            keyboardActions = KeyboardActions(
-//                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-//            ),
-//            modifier = Modifier.fillMaxWidth()
-//        )
-//
-//        Spacer(Modifier.height(8.dp))
-//
-//        // LAST NAME
-//        OutlinedTextField(
-//            value = lastname.value,
-//            onValueChange = { lastname.value = it },
-//            label = { Text("Last Name") },
-//            leadingIcon = {
-//                RoundedIcon(Icons.Default.Person, ButtonBlue, White)
-//            },
-//            singleLine = true,
-//            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-//            keyboardActions = KeyboardActions(
-//                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-//            ),
-//            modifier = Modifier.fillMaxWidth()
-//        )
-//
-//        Spacer(Modifier.height(8.dp))
-//
-//        // DATE OF BIRTH
-//        Box(modifier = Modifier.fillMaxWidth()) {
-//            OutlinedTextField(
-//                value = dateOfBirth.value,
-//                onValueChange = {},
-//                readOnly = true,
-//                label = { Text("Date of Birth") },
-//                placeholder = { Text("DD/MM/YYYY") },
-//                leadingIcon = {
-//                    RoundedIcon(Icons.Default.DateRange, ButtonBlue, White)
-//                },
-//                trailingIcon = {
-//                    IconButton(onClick = { showDatePicker = true }) {
-//                        Icon(Icons.Default.CalendarToday, contentDescription = "Select Date")
-//                    }
-//                },
-//                modifier = Modifier.fillMaxWidth()
-//            )
-//
-//            Box(
-//                modifier = Modifier
-//                    .matchParentSize()
-//                    .clickable { showDatePicker = true }
-//            )
-//        }
-//
-//        Spacer(Modifier.height(8.dp))
-//
-//        // HOME ADDRESS
-//        OutlinedTextField(
-//            value = homeAddress.value,
-//            onValueChange = { homeAddress.value = it },
-//            label = { Text("Home Address") },
-//            leadingIcon = {
-//                RoundedIcon(Icons.Default.Home, ButtonBlue, White)
-//            },
-//            singleLine = true,
-//            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-//            keyboardActions = KeyboardActions(
-//                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-//            ),
-//            modifier = Modifier.fillMaxWidth()
-//        )
-//
-//        Spacer(Modifier.height(8.dp))
-//
-//        // CITY
-//        OutlinedTextField(
-//            value = city.value,
-//            onValueChange = { city.value = it },
-//            label = { Text("City") },
-//            leadingIcon = {
-//                RoundedIcon(Icons.Default.LocationCity, ButtonBlue, White)
-//            },
-//            singleLine = true,
-//            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-//            keyboardActions = KeyboardActions(
-//                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-//            ),
-//            modifier = Modifier.fillMaxWidth()
-//        )
-//
-//        Spacer(Modifier.height(8.dp))
-//
-//        // GENDER
-//        Box(modifier = Modifier.fillMaxWidth()) {
-//            OutlinedTextField(
-//                value = gender.value.name,
-//                onValueChange = {},
-//                readOnly = true,
-//                label = { Text("Gender") },
-//                leadingIcon = {
-//                    RoundedIcon(Icons.Default.Face, ButtonBlue, White)
-//                },
-//                trailingIcon = {
-//                    IconButton(onClick = { genderExpanded = true }) {
-//                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Gender")
-//                    }
-//                },
-//                modifier = Modifier.fillMaxWidth()
-//            )
-//
-//            Box(
-//                modifier = Modifier
-//                    .matchParentSize()
-//                    .clickable { genderExpanded = true }
-//            )
-//
-//            DropdownMenu(
-//                expanded = genderExpanded,
-//                onDismissRequest = { genderExpanded = false }
-//            ) {
-//                Gender.entries.forEach { option ->
-//                    DropdownMenuItem(
-//                        text = { Text(option.name) },
-//                        onClick = {
-//                            gender.value = option
-//                            genderExpanded = false
-//                            focusManager.moveFocus(FocusDirection.Down)
-//                        }
-//                    )
-//                }
-//            }
-//        }
-//
-//        Spacer(Modifier.height(8.dp))
-//
-//        // EMAIL
-//        OutlinedTextField(
-//            value = email.value,
-//            onValueChange = { email.value = it },
-//            label = { Text("Email") },
-//            leadingIcon = {
-//                RoundedIcon(Icons.Default.Email, ButtonBlue, White)
-//            },
-//            singleLine = true,
-//            keyboardOptions = KeyboardOptions(
-//                keyboardType = KeyboardType.Email,
-//                imeAction = ImeAction.Next
-//            ),
-//            keyboardActions = KeyboardActions(
-//                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-//            ),
-//            modifier = Modifier.fillMaxWidth()
-//        )
-//
-//        Spacer(Modifier.height(8.dp))
-//
-//        // PHONE
-//        val isPhoneValid = phoneNumber.value.length == 10 && phoneNumber.value.all { it.isDigit() }
-//
-//        OutlinedTextField(
-//            value = phoneNumber.value,
-//            onValueChange = { newValue ->
-//                if (newValue.length <= 10 && newValue.all { it.isDigit() }) {
-//                    phoneNumber.value = newValue
-//                }
-//            },
-//            label = { Text("Phone Number") },
-//            leadingIcon = {
-//                RoundedIcon(Icons.Default.Phone, ButtonBlue, White)
-//            },
-//            singleLine = true,
-//            isError = phoneNumber.value.isNotEmpty() && !isPhoneValid,
-//            supportingText = {
-//                if (phoneNumber.value.isNotEmpty() && !isPhoneValid) {
-//                    Text(
-//                        "Must be exactly 10 digits",
-//                        color = MaterialTheme.colorScheme.error
-//                    )
-//                }
-//            },
-//            keyboardOptions = KeyboardOptions(
-//                keyboardType = KeyboardType.Number,
-//                imeAction = ImeAction.Done
-//            ),
-//            keyboardActions = KeyboardActions(
-//                onDone = { focusManager.clearFocus() }
-//            ),
-//            modifier = Modifier.fillMaxWidth()
-//        )
-//    }
-//}
-
 
 @Composable
 fun EmergencyContactSection(
@@ -932,7 +685,7 @@ fun AccountFormBottom(
             .fillMaxWidth()
             .padding(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF5A9FBD)) // Darker blue
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF009688)) // Darker blue
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
@@ -951,9 +704,9 @@ fun AccountFormBottom(
                 ),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFF5A9FBD),
-                    unfocusedContainerColor = Color(0xFF5A9FBD),
-                    disabledContainerColor = Color(0xFF5A9FBD),
+                    focusedContainerColor = Color(0xFF009688),
+                    unfocusedContainerColor =  Color(0xFF009688),
+                    disabledContainerColor =  Color(0xFF009688),
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     cursorColor = Color.White,
@@ -982,9 +735,9 @@ fun AccountFormBottom(
                 ),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFF5A9FBD),
-                    unfocusedContainerColor = Color(0xFF5A9FBD),
-                    disabledContainerColor = Color(0xFF5A9FBD),
+                    focusedContainerColor =  Color(0xFF009688),
+                    unfocusedContainerColor =  Color(0xFF009688),
+                    disabledContainerColor =  Color(0xFF009688),
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     cursorColor = Color.White,
@@ -1016,9 +769,9 @@ fun AccountFormBottom(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFF5A9FBD),
-                        unfocusedContainerColor = Color(0xFF5A9FBD),
-                        disabledContainerColor = Color(0xFF5A9FBD),
+                        focusedContainerColor =  Color(0xFF009688),
+                        unfocusedContainerColor =  Color(0xFF009688),
+                        disabledContainerColor =  Color(0xFF009688),
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
                         disabledTextColor = Color.White,
@@ -1055,9 +808,9 @@ fun AccountFormBottom(
                 ),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFF5A9FBD),
-                    unfocusedContainerColor = Color(0xFF5A9FBD),
-                    disabledContainerColor = Color(0xFF5A9FBD),
+                    focusedContainerColor =  Color(0xFF009688),
+                    unfocusedContainerColor =  Color(0xFF009688),
+                    disabledContainerColor =  Color(0xFF009688),
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     cursorColor = Color.White,
@@ -1086,9 +839,9 @@ fun AccountFormBottom(
                 ),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFF5A9FBD),
-                    unfocusedContainerColor = Color(0xFF5A9FBD),
-                    disabledContainerColor = Color(0xFF5A9FBD),
+                    focusedContainerColor =  Color(0xFF009688),
+                    unfocusedContainerColor =  Color(0xFF009688),
+                    disabledContainerColor =  Color(0xFF009688),
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     cursorColor = Color.White,
@@ -1119,9 +872,9 @@ fun AccountFormBottom(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFF5A9FBD),
-                        unfocusedContainerColor = Color(0xFF5A9FBD),
-                        disabledContainerColor = Color(0xFF5A9FBD),
+                        focusedContainerColor =  Color(0xFF009688),
+                        unfocusedContainerColor =  Color(0xFF009688),
+                        disabledContainerColor =  Color(0xFF009688),
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
                         disabledTextColor = Color.White,
@@ -1177,9 +930,9 @@ fun AccountFormBottom(
                 ),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFF5A9FBD),
-                    unfocusedContainerColor = Color(0xFF5A9FBD),
-                    disabledContainerColor = Color(0xFF5A9FBD),
+                    focusedContainerColor =  Color(0xFF009688),
+                    unfocusedContainerColor =  Color(0xFF009688),
+                    disabledContainerColor =  Color(0xFF009688),
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     cursorColor = Color.White,
@@ -1227,10 +980,10 @@ fun AccountFormBottom(
                 ),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFF5A9FBD),
-                    unfocusedContainerColor = Color(0xFF5A9FBD),
-                    disabledContainerColor = Color(0xFF5A9FBD),
-                    errorContainerColor = Color(0xFF5A9FBD),
+                    focusedContainerColor =  Color(0xFF009688),
+                    unfocusedContainerColor =  Color(0xFF009688),
+                    disabledContainerColor =  Color(0xFF009688),
+                    errorContainerColor =  Color(0xFF009688),
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     errorTextColor = Color.White,
@@ -1295,7 +1048,7 @@ fun AccountFormScreen(navController: NavHostController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFABE9B)), // Light green background for entire screen
+            .background(ChatGreen), // Light green background for entire screen
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // FIXED TOP SECTION (doesn't scroll)

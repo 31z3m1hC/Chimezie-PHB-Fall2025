@@ -42,6 +42,7 @@ import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.ui.theme.AccentOrange
 import com.unh.personal_health_buddy.ui.theme.BmiPink
+import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.ChatGreen
 import com.unh.personal_health_buddy.ui.theme.PrimaryDarkBlue
 
@@ -105,12 +106,14 @@ fun ProfileScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(ChatGreen)
+            .padding(0.dp)
+
     ) {
         // ---------- Top Profile Card ----------
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(ChatGreen),
+                .weight(0.5f)
+                .fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
             Column(
@@ -188,7 +191,7 @@ fun ProfileScreen(
                             .fillMaxWidth()
                             .padding(vertical = 8.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF009688))
+                            .background(ChatGreen)
                             .clickable {
                                 when (item) {
                                     is ProfileItem.Account -> {
@@ -218,13 +221,13 @@ fun ProfileScreen(
                             modifier = Modifier
                                 .size(50.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFE0EBFF)),
+                                .background(ButtonBlue),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 item.icon,
                                 contentDescription = item.title,
-                                tint = Color(0xFF1976D2)
+                                tint = Color(0xFFE0EBFF)
                             )
                         }
 

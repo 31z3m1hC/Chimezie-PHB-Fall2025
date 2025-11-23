@@ -1,11 +1,14 @@
 import android.Manifest
+import android.R.attr.onClick
 import android.app.Activity
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.util.Log
+import com.unh.personal_health_buddy.R
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,6 +16,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -35,7 +40,9 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.api.Context
 import com.google.maps.android.compose.*
+import com.unh.personal_health_buddy.ui.theme.AppSurfaceLight
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
+import com.unh.personal_health_buddy.ui.theme.ChatGreen
 import com.unh.personal_health_buddy.ui.theme.LightBlueBackground
 import com.unh.personal_health_buddy.ui.theme.MediumGray
 import com.unh.personal_health_buddy.ui.theme.PrimaryDarkBlue
@@ -45,6 +52,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
+
 
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
@@ -63,17 +71,20 @@ fun GoogleMapScreen(navController: NavController) {
     // Root background fills entire screen including behind system bars
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .offset(y = -(50).dp)
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .background(ChatGreen)
 
-            .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
             // Back button and Search Section with horizontal padding
             Column(
-                modifier = Modifier.padding(horizontal = 8.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+
             ) {
                 // Back button with IconButton (better UX)
                 IconButton(
@@ -89,12 +100,24 @@ fun GoogleMapScreen(navController: NavController) {
                     Icon(
                         imageVector = Icons.Default.ArrowBackIosNew,
                         contentDescription = "Back to Home",
-                        tint = Color(0xFF000000),
-                        modifier = Modifier.size(16.dp)
+                        tint = AppSurfaceLight,
+                        modifier = Modifier
+                            .size(20.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(30.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Google Map Icon
+                Image(
+                    painter = painterResource(id = R.drawable.google_map),
+                    contentDescription = "Google Map",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .align(Alignment.CenterHorizontally)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Search Section
                 Column(
@@ -108,6 +131,13 @@ fun GoogleMapScreen(navController: NavController) {
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
                         placeholder = { Text("Search location...", color = MediumGray) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search",
+                                tint = MediumGray
+                            )
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(Color.White, RoundedCornerShape(4.dp)),
@@ -124,14 +154,13 @@ fun GoogleMapScreen(navController: NavController) {
                         ),
                         singleLine = true
                     )
-
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp)
-                            .padding(top = 8.dp),
+                            .height(50.dp),
+
                         colors = ButtonDefaults.buttonColors(
                             containerColor = ButtonBlue,
                             contentColor = White
@@ -154,6 +183,9 @@ fun GoogleMapScreen(navController: NavController) {
                 }
             }
 
+
+            Spacer(modifier = Modifier.height(19.dp))
+
             // Map - fills remaining space with NO horizontal padding
             val hasLocationPermission = RequestLocationPermission()
 
@@ -161,7 +193,9 @@ fun GoogleMapScreen(navController: NavController) {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .offset(y = 50.dp)
+                    .offset(y = 5.dp)
+                    .padding(top = 8.dp, bottom = 0.dp)
+
             ) {
                 GoogleMap(
                     modifier = Modifier.fillMaxSize(),
@@ -196,6 +230,8 @@ fun GoogleMapScreen(navController: NavController) {
 
     Log.d("GoogleMapScreen", "Google Map screen displayed")
 }
+
+
 /**
  * Requests location permission and returns true when either fine or coarse location is granted.
  * Behavior unchanged from your original implementation.

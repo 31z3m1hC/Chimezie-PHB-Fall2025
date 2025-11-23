@@ -17,6 +17,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -58,13 +59,16 @@ import com.unh.personal_health_buddy.Authentication.FirestoreHelper
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.firebase.performSignIn
+import com.unh.personal_health_buddy.ui.theme.AppSurfaceLight
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
+import com.unh.personal_health_buddy.ui.theme.ChatGreen
 import com.unh.personal_health_buddy.ui.theme.White
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URL
+
 
 
 @Composable
@@ -252,6 +256,7 @@ fun SignInScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(ChatGreen)
             .padding(top = 16.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -265,7 +270,7 @@ fun SignInScreen(
             contentAlignment = Alignment.TopStart
         ) {
             IconButton(onClick = { navController.navigate("welcome") }) {
-                Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back")
+                Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back", tint = AppSurfaceLight)
             }
         }
 
@@ -273,7 +278,8 @@ fun SignInScreen(
 
         Text(
             text = "Sign In",
-            style = MaterialTheme.typography.headlineMedium
+            fontSize = 14.sp,
+            color = AppSurfaceLight
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -285,12 +291,18 @@ fun SignInScreen(
                 if (emailErrorState.value) emailErrorState.value = false
             },
             isError = emailErrorState.value,
-            label = { Text("Email") },
+            label = { Text("Email", fontSize = 14.sp) },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier.fillMaxWidth(0.9f),
-            enabled = !isLoading
+            enabled = !isLoading,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedContainerColor = Color.LightGray,
+                unfocusedContainerColor = Color.LightGray
+            )
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -302,7 +314,7 @@ fun SignInScreen(
                 if (passwordErrorState.value) passwordErrorState.value = false
             },
             isError = passwordErrorState.value,
-            label = { Text("Password") },
+            label = { Text("Password", fontSize = 14.sp) },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
             trailingIcon = {
                 val icon =
@@ -316,7 +328,13 @@ fun SignInScreen(
                 if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier.fillMaxWidth(0.9f),
-            enabled = !isLoading
+            enabled = !isLoading,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedContainerColor = Color.LightGray,
+                unfocusedContainerColor = Color.LightGray
+            )
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -324,7 +342,7 @@ fun SignInScreen(
         Text(
             text = "Forgot Password?",
             fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.primary,
+            color = AppSurfaceLight,
             textAlign = TextAlign.End,
             modifier = Modifier
                 .fillMaxWidth(0.9f)
@@ -390,12 +408,12 @@ fun SignInScreen(
                     strokeWidth = 2.dp
                 )
             } else {
-                Text("Sign In")
+                Text("Sign In", fontSize = 14.sp)
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
-        Text("OR")
+        Text("OR", color = AppSurfaceLight, fontSize = 14.sp)
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedButton(
@@ -445,7 +463,7 @@ fun SignInScreen(
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Sign in with Google")
+                Text("Sign in with Google", color = AppSurfaceLight, fontSize = 14.sp)
             }
         }
 
@@ -454,7 +472,7 @@ fun SignInScreen(
         Text(
             text = "Don't have an account? Sign Up",
             fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.primary,
+            color = AppSurfaceLight,
             modifier = Modifier.clickable(enabled = !isLoading) { navController.navigate("sign-up") }
         )
     }

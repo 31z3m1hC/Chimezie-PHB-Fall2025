@@ -741,7 +741,7 @@ fun AccountTopSection(
             Text(
                 text = firstName,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFFFFFFFF) // or use MaterialTheme.colorScheme.primary
+                color = Color(0xFFFFFFFF)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -790,11 +790,11 @@ fun AccountTopSection(
                             Icon(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = "Edit User Details",
-                                tint = Color(0xFFFFFFFF)
+                                tint = ChatGreen
                             )
                             Text(
                                 text = "Account Form",
-                                color = Color(0xFF1976D2)
+                                color = ChatGreen
                             )
 
                         }
@@ -874,14 +874,12 @@ fun AccountTopSection(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 0.dp)
-                .clip(RoundedCornerShape(10.dp))   // ← curve the edges
-                .background(Color(0xFF009688)),
+                .clip(RoundedCornerShape(10.dp)),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Your content here
 
-            Spacer(modifier = Modifier.height(32.dp))
+
 
             BackHeader(
                 title = "Profile",
@@ -889,13 +887,13 @@ fun AccountTopSection(
                 color = Color(0xFFFFFFFF)
             )
 
-            Text(
-                modifier = Modifier.offset(y = (-32).dp),
-                text = "User Information",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFFFFFFF)
-            )
+//            Text(
+//                modifier = Modifier.offset(y = (-32).dp),
+//                text = "User Information",
+//                fontSize = 16.sp,
+//                fontWeight = FontWeight.Bold,
+//                color = Color(0xFFFFFFFF)
+//            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -933,13 +931,13 @@ fun AccountTopSection(
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 32.dp, end = 8.dp)
+                .padding(top = 0.dp, end = 8.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .clickable(onClick = onOptionsClick)
-                    .padding(top = 18.dp, start = 8.dp, end = 8.dp)
+                    .padding(top = 16.dp, start = 8.dp, end = 8.dp)
 
             ) {
                 Text(
@@ -1604,7 +1602,11 @@ fun AccountScreen(navController: NavHostController) {
         )
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ChatGreen)
+    ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Top Section with Edit functionality integrated
             AccountTopSection(

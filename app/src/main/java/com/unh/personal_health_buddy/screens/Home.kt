@@ -158,15 +158,21 @@ fun HomeScreen(
 
                 Text(
                     greeting,
-                    style = MaterialTheme.typography.titleMedium.copy(color = Color.White)
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
                 Text(
                     firstName,
-                    style = MaterialTheme.typography.headlineSmall.copy(color = Color.White)
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
                 Text(
                     "How is it going today?",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.White)
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
             }
 
