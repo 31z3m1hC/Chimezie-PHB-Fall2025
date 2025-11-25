@@ -839,27 +839,25 @@ fun AccountTopSection(
     onOptionsClick: () -> Unit,
     onDismissDropdown: () -> Unit,
     onDeleteClick: () -> Unit,
-    // New parameters for Edit functionality
     isEditing: Boolean,
     onEditClick: () -> Unit,
     onSaveClick: () -> Unit,
     onCancelClick: () -> Unit,
     isLoading: Boolean
 ) {
-    var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var profileBitmap by remember { mutableStateOf<Bitmap?>(TempProfileStorage.tempProfileBitmap) }
     val firstName = user?.firstname ?: "User"
     var expandedEditDropdown by remember { mutableStateOf(false) }
 
-    LaunchedEffect(user?.profileImageUrl, TempProfileStorage.tempProfileBitmap) {
-        val tempBitmap = TempProfileStorage.tempProfileBitmap
-        if (tempBitmap != null) {
-            profileBitmap = tempBitmap
-        } else {
+    LaunchedEffect(user?.profileImageUrl) {
+        if (profileBitmap == null) {
             user?.profileImageUrl?.let { url ->
                 try {
                     withContext(Dispatchers.IO) {
                         val stream = URL(url).openStream()
-                        profileBitmap = BitmapFactory.decodeStream(stream)
+                        val bitmap = BitmapFactory.decodeStream(stream)
+                        profileBitmap = bitmap
+                        TempProfileStorage.tempProfileBitmap = bitmap // store for caching
                     }
                 } catch (e: Exception) {
                     Log.e("AccountTopSection", "Error loading image: ${e.message}")
@@ -877,23 +875,11 @@ fun AccountTopSection(
                 .clip(RoundedCornerShape(10.dp)),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Your content here
-
-
-
             BackHeader(
                 title = "Profile",
                 onBack = { navController.navigate("profile") },
-                color = Color(0xFFFFFFFF)
+                color = Color.White
             )
-
-//            Text(
-//                modifier = Modifier.offset(y = (-32).dp),
-//                text = "User Information",
-//                fontSize = 16.sp,
-//                fontWeight = FontWeight.Bold,
-//                color = Color(0xFFFFFFFF)
-//            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -921,13 +907,13 @@ fun AccountTopSection(
             Text(
                 text = firstName,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFFFFFFFF)
+                color = Color.White
             )
 
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        // Top-right main Options dropdown only
+        // Top-right dropdown (Options)
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -938,19 +924,18 @@ fun AccountTopSection(
                 modifier = Modifier
                     .clickable(onClick = onOptionsClick)
                     .padding(top = 16.dp, start = 8.dp, end = 8.dp)
-
             ) {
                 Text(
                     text = "Options",
                     style = MaterialTheme.typography.labelLarge,
-                    color = Color(0xFFFFFFFF),
+                    color = Color.White,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
                     contentDescription = "Show options",
-                    tint = Color(0xFFFFFFFF),
+                    tint = Color.White,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -960,22 +945,7 @@ fun AccountTopSection(
                 onDismissRequest = onDismissDropdown
             ) {
                 DropdownMenuItem(
-                    text = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit User Details",
-                                tint = Color(0xFF1976D2)
-                            )
-                            Text(
-                                text = "Account Form",
-                                color = Color(0xFF1976D2)
-                            )
-                        }
-                    },
+                    text = { Text("Account Form", color = Color(0xFF1976D2)) },
                     onClick = {
                         onDismissDropdown()
                         navController.navigate("account-form")
@@ -983,19 +953,7 @@ fun AccountTopSection(
                 )
                 Divider()
                 DropdownMenuItem(
-                    text = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete",
-                                tint = Color.Red
-                            )
-                            Text("Delete Account", color = Color.Red)
-                        }
-                    },
+                    text = { Text("Delete Account", color = Color.Red) },
                     onClick = {
                         onDismissDropdown()
                         onDeleteClick()
@@ -1004,7 +962,7 @@ fun AccountTopSection(
             }
         }
 
-        // Edit button at bottom-right of top section
+        // Bottom-right Edit dropdown
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -1015,20 +973,20 @@ fun AccountTopSection(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .clickable(onClick = { expandedEditDropdown = true })
+                            .clickable { expandedEditDropdown = true }
                             .padding(horizontal = 8.dp, vertical = 8.dp)
                     ) {
                         Text(
                             text = "Options",
                             style = MaterialTheme.typography.labelLarge,
-                            color = Color(0xFFFFFFFF),
+                            color = Color.White,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Icon(
                             imageVector = Icons.Default.ArrowDropDown,
                             contentDescription = "Show edit options",
-                            tint = Color(0xFFFFFFFF),
+                            tint = Color.White,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -1058,7 +1016,7 @@ fun AccountTopSection(
                 Text(
                     text = "Edit",
                     style = MaterialTheme.typography.labelLarge,
-                    color = Color(0xFFFFFFFF),
+                    color = Color.White,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
