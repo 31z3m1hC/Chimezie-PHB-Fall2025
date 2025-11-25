@@ -80,6 +80,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
 import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.database.EmergencyContact
+import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.ui.theme.AppSurfaceLight
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.ChatGreen
@@ -91,6 +92,7 @@ import kotlinx.coroutines.withContext
 
 
 
+
 @Composable
 fun EmergencyContactScreen(navController: NavHostController) {
     val scrollState = rememberScrollState()
@@ -99,18 +101,25 @@ fun EmergencyContactScreen(navController: NavHostController) {
     var isLoading by remember { mutableStateOf(false) }
     var contactToDelete by remember { mutableStateOf<EmergencyContact?>(null) }
 
-    // Load contacts on launch
+    // ------------------ LOAD CONTACTS WITH CACHE -------------------
     LaunchedEffect(Unit) {
-        val authUserId = FirebaseAuth.getInstance().currentUser?.uid
-        if (authUserId != null) {
-            isLoading = true
-            try {
-                emergencyContacts = FirestoreHelper.readAllEmergencyContacts()
-            } catch (e: Exception) {
-                Log.e("EmergencyContactScreen", "Error loading contacts: ${e.message}")
-            } finally {
-                isLoading = false
-            }
+        if (UserDataCache.isDataLoaded) {
+            emergencyContacts = UserDataCache.emergencyContacts
+            return@LaunchedEffect
+        }
+
+        isLoading = true
+        try {
+            val result = FirestoreHelper.readAllEmergencyContacts()
+            emergencyContacts = result
+
+            // Save to cache
+            UserDataCache.emergencyContacts = result
+            UserDataCache.isDataLoaded = true
+        } catch (e: Exception) {
+            Log.e("EmergencyContactScreen", "Error loading contacts: ${e.message}")
+        } finally {
+            isLoading = false
         }
     }
 
@@ -127,14 +136,11 @@ fun EmergencyContactScreen(navController: NavHostController) {
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // HEADER LIKE THE MOCKUP (back arrow + title in a bordered rectangle)
+            // HEADER (back arrow + title)
             Card(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(6.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF00A58A),
-                )
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF00A58A))
             ) {
                 Row(
                     modifier = Modifier
@@ -158,7 +164,7 @@ fun EmergencyContactScreen(navController: NavHostController) {
                         fontWeight = FontWeight.Bold,
                         color = AppSurfaceLight
                     )
-                    Spacer(modifier = Modifier.width(48.dp)) // to balance the back button space
+                    Spacer(modifier = Modifier.width(48.dp))
                 }
             }
 
@@ -175,36 +181,25 @@ fun EmergencyContactScreen(navController: NavHostController) {
                         CircularProgressIndicator()
                     }
                 }
-
                 emergencyContacts.isEmpty() -> {
-                    // EMPTY STATE UI LIKE YOUR MOCKUP
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.TopCenter
                     ) {
                         Card(
-                            modifier = Modifier
-                                .width(280.dp),
+                            modifier = Modifier.width(280.dp),
                             shape = RoundedCornerShape(12.dp),
                             border = BorderStroke(1.dp, Color(0xFF80CBC4)),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFFE0F2F1)
-                            )
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F2F1))
                         ) {
                             Column(
-                                modifier = Modifier
-                                    .padding(vertical = 24.dp, horizontal = 16.dp),
+                                modifier = Modifier.padding(vertical = 24.dp, horizontal = 16.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                // Circular icon area
                                 Box(
                                     modifier = Modifier
                                         .size(96.dp)
-                                        .background(
-                                            color = Color(0xFFB2DFDB),
-                                            shape = CircleShape
-                                        ),
+                                        .background(color = Color(0xFFB2DFDB), shape = CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
@@ -214,9 +209,7 @@ fun EmergencyContactScreen(navController: NavHostController) {
                                         modifier = Modifier.size(48.dp)
                                     )
                                 }
-
                                 Spacer(modifier = Modifier.height(16.dp))
-
                                 Text(
                                     text = "No Contacts Added",
                                     fontWeight = FontWeight.Bold,
@@ -224,9 +217,7 @@ fun EmergencyContactScreen(navController: NavHostController) {
                                     color = AppSurfaceLight,
                                     textAlign = TextAlign.Center
                                 )
-
                                 Spacer(modifier = Modifier.height(8.dp))
-
                                 Text(
                                     text = "Tap the + button to add an emergency contact.",
                                     fontSize = 14.sp,
@@ -238,7 +229,6 @@ fun EmergencyContactScreen(navController: NavHostController) {
                         }
                     }
                 }
-
                 else -> {
                     Text(
                         text = "Saved Contacts",
@@ -259,10 +249,10 @@ fun EmergencyContactScreen(navController: NavHostController) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(80.dp)) // Space for FAB
+            Spacer(modifier = Modifier.height(80.dp))
         }
 
-        // Square-ish FAB like the mockup
+        // FAB
         FloatingActionButton(
             onClick = { showDialog = true },
             shape = RoundedCornerShape(12.dp),
@@ -284,12 +274,13 @@ fun EmergencyContactScreen(navController: NavHostController) {
                 onDismiss = { showDialog = false },
                 onSave = { newContact ->
                     emergencyContacts = emergencyContacts + newContact
+                    UserDataCache.emergencyContacts = emergencyContacts
                     showDialog = false
                 }
             )
         }
 
-        // Delete Confirmation Dialog
+        // Delete Confirmation
         if (contactToDelete != null) {
             AlertDialog(
                 onDismissRequest = { contactToDelete = null },
@@ -310,16 +301,12 @@ fun EmergencyContactScreen(navController: NavHostController) {
                                         withContext(Dispatchers.Main) {
                                             emergencyContacts =
                                                 emergencyContacts.filter { it.contactId != contact.contactId }
+                                            UserDataCache.emergencyContacts = emergencyContacts
                                             contactToDelete = null
                                         }
                                     } catch (e: Exception) {
-                                        Log.e(
-                                            "EmergencyContactScreen",
-                                            "Error deleting contact: ${e.message}"
-                                        )
-                                        withContext(Dispatchers.Main) {
-                                            contactToDelete = null
-                                        }
+                                        Log.e("EmergencyContactScreen", "Error deleting: ${e.message}")
+                                        withContext(Dispatchers.Main) { contactToDelete = null }
                                     }
                                 }
                             }
