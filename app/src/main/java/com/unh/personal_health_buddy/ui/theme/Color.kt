@@ -49,3 +49,6 @@ val AppSurfaceDark = Color(0xFF2A3642)          // Dark cards/surfaces
 
 val StatusBarColor = Color(0xFF1976D2)          // Blue for status bar
 val BottomNavBar = Color(0xFF0D47A1)       // Darker blue for bottom nav bar
+
+val TextColor = Color(0xFF000000)                 // Black for text
+

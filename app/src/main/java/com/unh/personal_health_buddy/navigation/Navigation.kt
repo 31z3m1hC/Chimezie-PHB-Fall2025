@@ -28,6 +28,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.unh.personal_health_buddy.features.BloodGroupScreen
+import com.unh.personal_health_buddy.screens.EmergencyContactScreen
+import com.unh.personal_health_buddy.screens.HomeScreen
+import com.unh.personal_health_buddy.screens.MedicateScreen
+import com.unh.personal_health_buddy.screens.NotificationScreen
+import com.unh.personal_health_buddy.screens.ProfileScreen
+import com.unh.personal_health_buddy.screens.ResetPasswordDialog
+import com.unh.personal_health_buddy.screens.SignInScreen
+import com.unh.personal_health_buddy.screens.SignUpScreen
+import com.unh.personal_health_buddy.screens.WelcomeScreen
+import com.unh.personal_health_buddy.screens.profileItems
 import com.unh.personal_health_buddy.screens.*
 
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
@@ -132,13 +142,15 @@ fun AppNavigation(
             composable("blood_group_screen") { BloodGroupScreen(navController) }
             composable("medicates_screen") { MedicateScreen(navController) }
             composable("emergency-contacts") { EmergencyContactScreen(navController) }
-            //composable("bmi_screen") { BMIScreen(navController) }
+            composable("bmi_screen") { BmiScreen(navController) }
 
             // -------------------- PROFILE SUB-SCREENS (no bottom nav) --------------------
             composable("account") { AccountScreen(navController) }
             composable("account-form") { AccountFormScreen(navController) }
             //composable("appointment") { AppointmentScreen(navController) }
             //composable("faqs") { FaqsScreen(navController) }
+
+
 
             // -------------------- OTHER SCREENS --------------------
             //composable("chat_ai_screen") { ChatAIScreen(navController) }

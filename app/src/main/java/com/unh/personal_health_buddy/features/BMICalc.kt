@@ -59,11 +59,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.unh.personal_health_buddy.R
+import com.unh.personal_health_buddy.database.Gender
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import com.unh.personal_health_buddy.ui.theme.PrimaryDarkBlue
 import java.text.DecimalFormat
 
-enum class Gender { MALE, FEMALE }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,6 +106,8 @@ fun BmiScreen(navController: NavController) {
             newGradientEnd
         )
     )
+
+
 
     // Uses a Box to fill the entire screen.
     Box(
@@ -284,7 +287,7 @@ fun BmiScreen(navController: NavController) {
 @Composable
 fun GenderSelector(
     // Defines the composable for the MALE/FEMALE button row.
-    selectedGender: Gender,
+    selectedGender: com.unh.personal_health_buddy.database.Gender,
     onGenderSelect: (Gender) -> Unit,
     activeColor: Color // Pass the new color
 ) {

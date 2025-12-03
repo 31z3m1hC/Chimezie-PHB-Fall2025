@@ -44,10 +44,14 @@ import com.unh.personal_health_buddy.ui.theme.AccentOrange
 import com.unh.personal_health_buddy.ui.theme.BmiPink
 import com.unh.personal_health_buddy.ui.theme.ButtonBlue
 import com.unh.personal_health_buddy.ui.theme.ChatGreen
+import com.unh.personal_health_buddy.ui.theme.LightBlueBackground
 import com.unh.personal_health_buddy.ui.theme.PrimaryDarkBlue
+import com.unh.personal_health_buddy.ui.theme.TextColor
+import com.unh.personal_health_buddy.ui.theme.White
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jetbrains.annotations.Blocking
 import java.net.URL
 
 
@@ -105,7 +109,7 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(ChatGreen)
+            .background( LightBlueBackground)
             .padding(0.dp)
 
     ) {
@@ -157,7 +161,7 @@ fun ProfileScreen(
                 Text(
                     text = firstName,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color(0xFFFFFFFF)
+                    color = TextColor
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -191,7 +195,7 @@ fun ProfileScreen(
                             .fillMaxWidth()
                             .padding(vertical = 8.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(ChatGreen)
+                            .background(White)
                             .clickable {
                                 when (item) {
                                     is ProfileItem.Account -> {
@@ -236,7 +240,7 @@ fun ProfileScreen(
                         Text(
                             text = item.title,
                             style = MaterialTheme.typography.bodyLarge,
-                            color = Color.White,
+                            color = TextColor,
                             modifier = Modifier.weight(1f)
                         )
 

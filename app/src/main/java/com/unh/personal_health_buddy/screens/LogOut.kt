@@ -42,7 +42,7 @@ fun LogoutConfirmationDialog(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = ChatGreen)
+            colors = CardDefaults.cardColors(containerColor = White)
         ) {
             Column(
                 modifier = Modifier

@@ -133,7 +133,8 @@ private val LightColorScheme = lightColorScheme(
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF410002),
 
-    background = AppBackgroundLight,
+    //background = AppBackgroundLight,
+    background = White,
     onBackground = PrimaryDarkBlue,
 
     surface = AppSurfaceLight,

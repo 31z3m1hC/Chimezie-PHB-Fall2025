@@ -2,6 +2,11 @@ package com.unh.personal_health_buddy.screens
 
 import RoundedIcon
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,9 +30,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -56,6 +63,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -65,7 +73,6 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -76,9 +83,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.auth.FirebaseAuth
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
-import com.unh.personal_health_buddy.R
 import com.unh.personal_health_buddy.database.EmergencyContact
 import com.unh.personal_health_buddy.database.UserDataCache
 import com.unh.personal_health_buddy.ui.theme.AppSurfaceLight
@@ -87,11 +92,9 @@ import com.unh.personal_health_buddy.ui.theme.ChatGreen
 import com.unh.personal_health_buddy.ui.theme.White
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-
-
 
 @Composable
 fun EmergencyContactScreen(navController: NavHostController) {
@@ -101,7 +104,20 @@ fun EmergencyContactScreen(navController: NavHostController) {
     var isLoading by remember { mutableStateOf(false) }
     var contactToDelete by remember { mutableStateOf<EmergencyContact?>(null) }
 
-    // ------------------ LOAD CONTACTS WITH CACHE -------------------
+    // NEW: Notification State
+    var showNotification by remember { mutableStateOf(false) }
+    var notificationMessage by remember { mutableStateOf("") }
+    var notificationType by remember { mutableStateOf("success") } // "success" or "delete"
+
+    // Auto-hide notification after 3 seconds
+    LaunchedEffect(showNotification) {
+        if (showNotification) {
+            delay(3000)
+            showNotification = false
+        }
+    }
+
+    // Load contacts with cache
     LaunchedEffect(Unit) {
         if (UserDataCache.isDataLoaded) {
             emergencyContacts = UserDataCache.emergencyContacts
@@ -112,8 +128,6 @@ fun EmergencyContactScreen(navController: NavHostController) {
         try {
             val result = FirestoreHelper.readAllEmergencyContacts()
             emergencyContacts = result
-
-            // Save to cache
             UserDataCache.emergencyContacts = result
             UserDataCache.isDataLoaded = true
         } catch (e: Exception) {
@@ -136,7 +150,7 @@ fun EmergencyContactScreen(navController: NavHostController) {
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // HEADER (back arrow + title)
+            // Header
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(6.dp),
@@ -269,6 +283,7 @@ fun EmergencyContactScreen(navController: NavHostController) {
             )
         }
 
+        // Add Dialog
         if (showDialog) {
             AddEmergencyContactDialog(
                 onDismiss = { showDialog = false },
@@ -276,6 +291,11 @@ fun EmergencyContactScreen(navController: NavHostController) {
                     emergencyContacts = emergencyContacts + newContact
                     UserDataCache.emergencyContacts = emergencyContacts
                     showDialog = false
+
+                    // Show success notification
+                    notificationMessage = "Contact added: ${newContact.firstname} ${newContact.lastname}"
+                    notificationType = "success"
+                    showNotification = true
                 }
             )
         }
@@ -303,6 +323,11 @@ fun EmergencyContactScreen(navController: NavHostController) {
                                                 emergencyContacts.filter { it.contactId != contact.contactId }
                                             UserDataCache.emergencyContacts = emergencyContacts
                                             contactToDelete = null
+
+                                            // Show delete notification
+                                            notificationMessage = "Contact deleted: ${contact.firstname} ${contact.lastname}"
+                                            notificationType = "delete"
+                                            showNotification = true
                                         }
                                     } catch (e: Exception) {
                                         Log.e("EmergencyContactScreen", "Error deleting: ${e.message}")
@@ -320,6 +345,70 @@ fun EmergencyContactScreen(navController: NavHostController) {
                         Text("Cancel")
                     }
                 }
+            )
+        }
+
+        // NEW: Notification Pop-up at Bottom
+        AnimatedVisibility(
+            visible = showNotification,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 90.dp, start = 16.dp, end = 16.dp)
+        ) {
+            EmergencyContactNotification(
+                message = notificationMessage,
+                type = notificationType
+            )
+        }
+    }
+}
+
+@Composable
+fun EmergencyContactNotification(
+    message: String,
+    type: String
+) {
+    val backgroundColor = if (type == "delete") Color(0xFFFFEBEE) else Color(0xFFE0F2F1)
+    val iconColor = if (type == "delete") Color(0xFFD32F2F) else Color(0xFF00897B)
+    val icon = if (type == "delete") Icons.Default.Delete else Icons.Default.PersonAdd
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.cardElevation(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(CircleShape)
+                    .background(iconColor.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconColor,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Text(
+                text = message,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF212121),
+                modifier = Modifier.weight(1f)
             )
         }
     }
@@ -414,12 +503,10 @@ fun AddEmergencyContactDialog(
     var isSaving by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
-    // Error states
     var firstnameError by remember { mutableStateOf(false) }
     var lastnameError by remember { mutableStateOf(false) }
     var phoneError by remember { mutableStateOf(false) }
 
-    // Create FocusRequesters for each field
     val firstnameFocus = remember { FocusRequester() }
     val lastnameFocus = remember { FocusRequester() }
     val phoneFocus = remember { FocusRequester() }
@@ -427,7 +514,6 @@ fun AddEmergencyContactDialog(
 
     val relationships = listOf("Parent", "Sibling", "Friend", "Others")
 
-    // Validation functions
     fun isValidName(name: String): Boolean {
         return name.isNotBlank() && name.all { it.isLetter() || it.isWhitespace() }
     }
@@ -455,7 +541,7 @@ fun AddEmergencyContactDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // FIRST NAME
+                // First Name
                 OutlinedTextField(
                     value = firstname,
                     onValueChange = {
@@ -481,9 +567,7 @@ fun AddEmergencyContactDialog(
                             if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
                                 lastnameFocus.requestFocus()
                                 true
-                            } else {
-                                false
-                            }
+                            } else false
                         },
                     leadingIcon = {
                         RoundedIcon(Icons.Default.Person, ButtonBlue, AppSurfaceLight)
@@ -504,7 +588,7 @@ fun AddEmergencyContactDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // LAST NAME
+                // Last Name
                 OutlinedTextField(
                     value = lastname,
                     onValueChange = {
@@ -530,9 +614,7 @@ fun AddEmergencyContactDialog(
                             if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
                                 phoneFocus.requestFocus()
                                 true
-                            } else {
-                                false
-                            }
+                            } else false
                         },
                     leadingIcon = {
                         RoundedIcon(Icons.Default.Person, ButtonBlue, AppSurfaceLight)
@@ -553,7 +635,7 @@ fun AddEmergencyContactDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // PHONE NUMBER
+                // Phone Number
                 OutlinedTextField(
                     value = phoneNumber,
                     onValueChange = {
@@ -579,9 +661,7 @@ fun AddEmergencyContactDialog(
                             if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
                                 relationshipFocus.requestFocus()
                                 true
-                            } else {
-                                false
-                            }
+                            } else false
                         },
                     leadingIcon = {
                         RoundedIcon(Icons.Default.Phone, ButtonBlue, AppSurfaceLight)
@@ -609,7 +689,7 @@ fun AddEmergencyContactDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // RELATIONSHIP DROPDOWN
+                // Relationship Dropdown
                 ExposedDropdownMenuBox(
                     expanded = expandedDropdown,
                     onExpandedChange = { expandedDropdown = it }
@@ -620,7 +700,7 @@ fun AddEmergencyContactDialog(
                         readOnly = true,
                         label = { Text("Relationship", color = AppSurfaceLight) },
                         leadingIcon = {
-                            RoundedIcon(Icons.Default.People,   ButtonBlue, AppSurfaceLight)
+                            RoundedIcon(Icons.Default.People, ButtonBlue, AppSurfaceLight)
                         },
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDropdown)
@@ -636,9 +716,7 @@ fun AddEmergencyContactDialog(
                                 } else if (keyEvent.key == Key.Enter && keyEvent.type == KeyEventType.KeyDown) {
                                     expandedDropdown = true
                                     true
-                                } else {
-                                    false
-                                }
+                                } else false
                             },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = AppSurfaceLight,
@@ -669,7 +747,6 @@ fun AddEmergencyContactDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // CANCEL BUTTON
                     Button(
                         onClick = onDismiss,
                         modifier = Modifier.weight(1f),
@@ -682,10 +759,8 @@ fun AddEmergencyContactDialog(
                         Text("Cancel")
                     }
 
-                    // SAVE BUTTON
                     Button(
                         onClick = {
-                            // Validate all fields
                             firstnameError = !isValidName(firstname)
                             lastnameError = !isValidName(lastname)
                             phoneError = phoneNumber.length != 10
@@ -742,13 +817,10 @@ fun AddEmergencyContactDialog(
         }
     }
 
-    // Request focus on first field when dialog opens
     LaunchedEffect(Unit) {
         firstnameFocus.requestFocus()
     }
 }
-
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

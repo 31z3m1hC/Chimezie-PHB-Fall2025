@@ -1,5 +1,6 @@
 package com.unh.personal_health_buddy.navigations
-
+import androidx.compose.material.icons.filled.*
+import android.R.attr.data
 import android.net.http.SslCertificate.restoreState
 import android.net.http.SslCertificate.saveState
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,17 +11,23 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -37,13 +44,20 @@ import com.unh.personal_health_buddy.ui.theme.MediumGray
 import com.unh.personal_health_buddy.database.*
 import com.unh.personal_health_buddy.navigation.bottomNavItems
 import com.unh.personal_health_buddy.ui.theme.BottomNavBar
+import com.unh.personal_health_buddy.notifications.InAppNotificationManager
 
-
+// -------------------- BottomNavBar --------------------
 @Composable
 fun BottomNavBar(
     currentRoute: String?,
-    innerNavController: NavHostController
+    navController: NavHostController,
+    onNotificationClick: () -> Unit
 ) {
+    val notifications = InAppNotificationManager.notifications
+    val unreadCount by remember {
+        derivedStateOf { notifications.count { !it.isRead } }
+    }
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -61,15 +75,40 @@ fun BottomNavBar(
                 NavigationBarItem(
                     selected = selected,
                     onClick = {
-                        if (!selected) {
-                            innerNavController.navigate(item.route) {
+                        if (item.route == "notifications") {
+                            onNotificationClick()
+                        } else if (!selected) {
+                            navController.navigate(item.route) {
                                 popUpTo("home") { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
                         }
                     },
-                    icon = { Icon(item.icon, contentDescription = item.label) },
+                    icon = {
+                        if (item.route == "notifications" && unreadCount > 0) {
+                            BadgedBox(
+                                badge = {
+                                    Badge {
+                                        Text(
+                                            text = if (unreadCount > 9) "9+" else unreadCount.toString(),
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = item.icon,
+                                    contentDescription = item.label
+                                )
+                            }
+                        } else {
+                            Icon(
+                                imageVector = item.icon,
+                                contentDescription = item.label
+                            )
+                        }
+                    },
                     label = { Text(item.label) },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = ButtonBlue,
@@ -83,12 +122,34 @@ fun BottomNavBar(
         }
     }
 }
+
+data class BottomNavItem(
+    val route: String,
+    val icon: ImageVector,
+    val label: String
+)
+
+val bottomNavItems = listOf(
+    BottomNavItem("home", Icons.Default.Home, "Home"),
+    BottomNavItem("medications", Icons.Default.Medication, "Medications"),
+    BottomNavItem("notifications", Icons.Default.Notifications, "Notifications"),
+    BottomNavItem("profile", Icons.Default.Person, "Profile")
+)
+
+
+
+// 3. Add notification icon to bottomNavItems list
+
+
+
+
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PreviewBottomNavBar() {
     val navController = rememberNavController()
     BottomNavBar(
         currentRoute = "home",
-        innerNavController = navController
+        navController = navController,
+        onNotificationClick = {} // Pass an empty lambda
     )
 }

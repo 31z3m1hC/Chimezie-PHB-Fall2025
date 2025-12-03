@@ -91,7 +91,7 @@ fun SignInScreen(
     var showAccountDialog by remember { mutableStateOf(false) }
     var existingUserEmail by remember { mutableStateOf<String?>(null) }
 
-    // ✅ Helper function to fetch user data after successful login
+    // Helper function to fetch user data after successful login
     suspend fun fetchUserDataAfterLogin() {
         try {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
@@ -136,7 +136,7 @@ fun SignInScreen(
                     FirebaseAuth.getInstance().signInWithCredential(firebaseCredential)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
-                                // ✅ Fetch user data before navigating
+                                // Fetch user data before navigating
                                 CoroutineScope(Dispatchers.Main).launch {
                                     withContext(Dispatchers.IO) {
                                         fetchUserDataAfterLogin()
@@ -204,7 +204,7 @@ fun SignInScreen(
                         onClick = {
                             showAccountDialog = false
                             isLoading = true
-                            // ✅ Fetch data before navigating
+                            // Fetch data before navigating
                             CoroutineScope(Dispatchers.Main).launch {
                                 withContext(Dispatchers.IO) {
                                     fetchUserDataAfterLogin()
@@ -235,7 +235,7 @@ fun SignInScreen(
         )
     }
 
-    // ✅ Loading overlay
+    // Loading overlay
     if (isLoading) {
         Box(
             modifier = Modifier
@@ -256,7 +256,7 @@ fun SignInScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(ChatGreen)
+            .background(AppSurfaceLight)
             .padding(top = 16.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -270,7 +270,7 @@ fun SignInScreen(
             contentAlignment = Alignment.TopStart
         ) {
             IconButton(onClick = { navController.navigate("welcome") }) {
-                Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back", tint = AppSurfaceLight)
+                Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back", tint = ButtonBlue)
             }
         }
 
@@ -279,7 +279,7 @@ fun SignInScreen(
         Text(
             text = "Sign In",
             fontSize = 14.sp,
-            color = AppSurfaceLight
+            color = ButtonBlue
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -299,9 +299,9 @@ fun SignInScreen(
             enabled = !isLoading,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                focusedContainerColor = Color.LightGray,
-                unfocusedContainerColor = Color.LightGray
+                unfocusedTextColor = ButtonBlue,
+                focusedContainerColor = AppSurfaceLight,
+                unfocusedContainerColor = AppSurfaceLight
             )
         )
 
@@ -330,10 +330,10 @@ fun SignInScreen(
             modifier = Modifier.fillMaxWidth(0.9f),
             enabled = !isLoading,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.White,
+                focusedTextColor = ButtonBlue,
                 unfocusedTextColor = Color.White,
-                focusedContainerColor = Color.LightGray,
-                unfocusedContainerColor = Color.LightGray
+                focusedContainerColor = AppSurfaceLight,
+                unfocusedContainerColor = AppSurfaceLight
             )
         )
 
@@ -342,7 +342,7 @@ fun SignInScreen(
         Text(
             text = "Forgot Password?",
             fontSize = 14.sp,
-            color = AppSurfaceLight,
+            color = ButtonBlue,
             textAlign = TextAlign.End,
             modifier = Modifier
                 .fillMaxWidth(0.9f)
@@ -366,7 +366,7 @@ fun SignInScreen(
                 FirebaseAuth.getInstance().signInWithEmailAndPassword(email.value, password.value)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            // ✅ Fetch user data before navigating
+                            // Fetch user data before navigating
                             CoroutineScope(Dispatchers.Main).launch {
                                 withContext(Dispatchers.IO) {
                                     fetchUserDataAfterLogin()
@@ -404,7 +404,7 @@ fun SignInScreen(
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = White,
+                    color = ChatGreen,
                     strokeWidth = 2.dp
                 )
             } else {
@@ -413,7 +413,7 @@ fun SignInScreen(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
-        Text("OR", color = AppSurfaceLight, fontSize = 14.sp)
+        Text("OR", color = ButtonBlue, fontSize = 14.sp)
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedButton(
@@ -463,7 +463,7 @@ fun SignInScreen(
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Sign in with Google", color = AppSurfaceLight, fontSize = 14.sp)
+                Text("Sign in with Google", color = ButtonBlue, fontSize = 14.sp)
             }
         }
 
@@ -472,7 +472,7 @@ fun SignInScreen(
         Text(
             text = "Don't have an account? Sign Up",
             fontSize = 14.sp,
-            color = AppSurfaceLight,
+            color = ButtonBlue,
             modifier = Modifier.clickable(enabled = !isLoading) { navController.navigate("sign-up") }
         )
     }

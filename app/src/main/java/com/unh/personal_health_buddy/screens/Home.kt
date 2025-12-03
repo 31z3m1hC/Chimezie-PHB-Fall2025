@@ -1,6 +1,7 @@
 package com.unh.personal_health_buddy.screens
 
 import TempProfileStorage
+import android.R.attr.background
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -59,6 +60,7 @@ import com.unh.personal_health_buddy.ui.theme.EmergencyRed
 import com.unh.personal_health_buddy.ui.theme.LightBlueBackground
 import com.unh.personal_health_buddy.ui.theme.PersonalHealthBuddyTheme
 import com.unh.personal_health_buddy.ui.theme.ReportsCyan
+import com.unh.personal_health_buddy.ui.theme.White
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URL
@@ -121,7 +123,7 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(ChatGreen ),
+            .background(White),
     ) {
         // ---------- TOP USER SECTION ----------
         Box(
@@ -160,19 +162,19 @@ fun HomeScreen(
                     greeting,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = Color.Black
                 )
                 Text(
                     firstName,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = Color.Black
                 )
                 Text(
                     "How is it going today?",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = Color.Black
                 )
             }
 

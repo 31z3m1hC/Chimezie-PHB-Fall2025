@@ -31,14 +31,16 @@ import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.unh.personal_health_buddy.database.Prescription
 import com.unh.personal_health_buddy.Authentication.FirestoreHelper
+import com.unh.personal_health_buddy.features.HealthNotificationDialog
+import com.unh.personal_health_buddy.features.generateHealthNotifications
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MedicateScreen(navController: NavController) {
-
     val softTeal = Color(0xFF009688)
     val tealLight = Color(0xFFE0F2F1)
     val scope = rememberCoroutineScope()
@@ -47,9 +49,11 @@ fun MedicateScreen(navController: NavController) {
     var showAddPrescriptionDialog by remember { mutableStateOf(false) }
     var prescriptions by remember { mutableStateOf(emptyList<Prescription>()) }
     var isLoading by remember { mutableStateOf(true) }
-
-    // holds the item to show in Details dialog
     var selectedPrescription by remember { mutableStateOf<Prescription?>(null) }
+
+    // --- NOTIFICATION STATE ---
+    var showNotifications by remember { mutableStateOf(false) }
+    var notifications by remember { mutableStateOf<List<com.unh.personal_health_buddy.features.HealthNotification>>(emptyList()) }
 
     // Load prescriptions from Firestore on launch
     LaunchedEffect(Unit) {
@@ -66,6 +70,24 @@ fun MedicateScreen(navController: NavController) {
         }
     }
 
+    // Generate notifications when prescriptions are loaded
+    LaunchedEffect(prescriptions, isLoading) {
+        if (!isLoading) {
+            notifications = generateHealthNotifications(
+                bmi = null,
+                bmiCategory = "",
+                bloodType = null,
+                hasPrescriptions = prescriptions.isNotEmpty(),
+                lastBmiCheckDays = 0
+            )
+            // Auto-show if there are prescriptions
+            if (prescriptions.isNotEmpty()) {
+                delay(1500)
+                showNotifications = true
+            }
+        }
+    }
+
     val backgroundGradient = Brush.verticalGradient(
         listOf(tealLight, Color.White)
     )
@@ -74,13 +96,10 @@ fun MedicateScreen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(backgroundGradient)
-        // ✅ FIX: Remove padding to allow background to extend into status bar
     ) {
-
         Scaffold(
             topBar = {
                 TopAppBar(
-                    // ✅ FIX: Remove the offset, use normal padding
                     modifier = Modifier.padding(top = 16.dp),
                     title = {
                         Text(
@@ -106,14 +125,12 @@ fun MedicateScreen(navController: NavController) {
                     )
                 )
             },
-
             floatingActionButton = {
                 Column(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(18.dp),
                     modifier = Modifier.padding(bottom = 80.dp)
                 ) {
-
                     AnimatedVisibility(isMenuExpanded) {
                         Column(
                             horizontalAlignment = Alignment.End,
@@ -160,10 +177,8 @@ fun MedicateScreen(navController: NavController) {
                     }
                 }
             },
-
             containerColor = Color.Transparent
         ) { paddingValues ->
-
             if (isLoading) {
                 Box(
                     modifier = Modifier
@@ -181,7 +196,6 @@ fun MedicateScreen(navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
                 ) {
-
                     if (prescriptions.isEmpty()) {
                         EmptyPrescriptionState(activeColor = softTeal)
                     } else {
@@ -213,7 +227,6 @@ fun MedicateScreen(navController: NavController) {
                             withContext(Dispatchers.IO) {
                                 FirestoreHelper.writePrescription(prescription)
                             }
-                            // Reload prescriptions
                             val updatedPrescriptions = withContext(Dispatchers.IO) {
                                 FirestoreHelper.readAllPrescriptions()
                             }
@@ -252,9 +265,23 @@ fun MedicateScreen(navController: NavController) {
                 }
             )
         }
+
+        // NOTIFICATION DIALOG
+        if (showNotifications && notifications.isNotEmpty()) {
+            HealthNotificationDialog(
+                notifications = notifications,
+                onDismiss = { showNotifications = false },
+                onClearNotification = { id ->
+                    notifications = notifications.filter { it.id != id }
+                    if (notifications.isEmpty()) {
+                        showNotifications = false
+                    }
+                }
+            )
+        }
     }
 }
-// Mini FAB row with label
+
 @Composable
 private fun MiniFabWithText(
     icon: ImageVector,
