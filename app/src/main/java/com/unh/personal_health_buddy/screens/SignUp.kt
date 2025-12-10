@@ -9,12 +9,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
@@ -27,9 +30,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,7 +70,93 @@ fun SignUpScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var isChecked by remember { mutableStateOf(false) }
     var showErrorDialog by remember { mutableStateOf(false) }
+    var showTermsDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
+
+    // Terms and Conditions Dialog
+    if (showTermsDialog) {
+        AlertDialog(
+            onDismissRequest = { showTermsDialog = false },
+            icon = {
+                Icon(
+                    Icons.Default.Info,
+                    contentDescription = "Terms and Conditions",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            },
+            title = {
+                Text(
+                    text = "Terms and Conditions",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 400.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append("1. Medical Disclaimer\n")
+                            }
+                            append("Personal Health Buddy does not provide medical advice. All health information (BMI, blood group info, chatbot responses) is for informational purposes only.\n\n")
+
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append("2. User Responsibility\n")
+                            }
+                            append("You must provide accurate information when creating and updating your profile.\n\n")
+
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append("3. Data Storage\n")
+                            }
+                            append("Your data will be stored securely in Firebase, including profile details, health info, emergency contacts, and photos.\n\n")
+
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append("4. Notifications\n")
+                            }
+                            append("The app may send notifications related to health reminders, profile updates, or emergency contact changes. Notifications may include BMI reminders, medication updates, profile changes, and emergency contact alerts.\n\n")
+
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append("5. Authentication & Security\n")
+                            }
+                            append("Google Sign-In and Firebase Authentication handle login securely. You are responsible for keeping your account credentials safe.\n\n")
+
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append("6. Location Access\n")
+                            }
+                            append("Location access is used only to show nearby health services on the map and is not stored.\n\n")
+
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append("7. Photo Upload Policy\n")
+                            }
+                            append("Uploaded photos must be your own, and by uploading them you allow the app to store them in Firebase Storage.")
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        lineHeight = 20.sp
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showTermsDialog = false
+                        isChecked = true
+                    }
+                ) {
+                    Text("Accept")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTermsDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
 
     // Error Dialog
     if (showErrorDialog) {
@@ -195,19 +288,23 @@ fun SignUpScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .toggleable(
-                    value = isChecked,
-                    onValueChange = { isChecked = it },
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() }
-                ),
+            modifier = Modifier.fillMaxWidth(0.9f),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Checkbox(checked = isChecked, onCheckedChange = { isChecked = it })
             Spacer(modifier = Modifier.width(8.dp))
-            Text("I agree to the Terms and Conditions")
+            Text(
+                text = buildAnnotatedString {
+                    append("I agree to the ")
+                    withStyle(style = SpanStyle(
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )) {
+                        append("Terms and Conditions")
+                    }
+                },
+                modifier = Modifier.clickable { showTermsDialog = true }
+            )
         }
 
         Spacer(modifier = Modifier.height(12.dp))

@@ -16,9 +16,6 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="CustomStatusBarPreview">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="BmiScreenPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
